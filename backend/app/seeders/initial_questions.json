@@ -1,0 +1,324 @@
+{
+  "categories": ["DevOps", "Backend", "Frontend", "Data", "Cloud", "Machine Learning"],
+  "questions": [
+    {
+      "text": "Have you worked with container technologies (Docker, Kubernetes)?",
+      "is_base": true,
+      "category": "DevOps",
+      "children": [
+        {
+          "text": "Have you built Docker images from scratch?",
+          "children": [
+            {
+              "text": "Have you optimized Docker images for production (multi-stage builds, layer caching)?"
+            }
+          ]
+        },
+        {
+          "text": "Have you deployed applications on Kubernetes?",
+          "children": [
+            {
+              "text": "Have you managed Kubernetes clusters in production?",
+              "children": [
+                {
+                  "text": "Have you implemented auto-scaling and load balancing in Kubernetes?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you developed REST APIs or web services?",
+      "is_base": true,
+      "category": "Backend",
+      "children": [
+        {
+          "text": "Have you implemented authentication and authorization systems?",
+          "children": [
+            {
+              "text": "Have you worked with OAuth2 or JWT tokens?",
+              "children": [
+                {
+                  "text": "Have you implemented single sign-on (SSO) solutions?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you optimized API performance and implemented caching?",
+          "children": [
+            {
+              "text": "Have you worked with Redis or Memcached?",
+              "children": [
+                {
+                  "text": "Have you implemented distributed caching strategies?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you built single-page applications (SPAs)?",
+      "is_base": true,
+      "category": "Frontend",
+      "children": [
+        {
+          "text": "Have you worked with React, Vue, or Angular?",
+          "children": [
+            {
+              "text": "Have you managed complex state in large applications?",
+              "children": [
+                {
+                  "text": "Have you implemented state management with Redux, Vuex, or similar?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you implemented responsive and accessible UI designs?",
+          "children": [
+            {
+              "text": "Have you worked with CSS frameworks (Tailwind, Bootstrap)?",
+              "children": [
+                {
+                  "text": "Have you created custom design systems or component libraries?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with databases (SQL or NoSQL)?",
+      "is_base": true,
+      "category": "Data",
+      "children": [
+        {
+          "text": "Have you designed database schemas?",
+          "children": [
+            {
+              "text": "Have you optimized database performance with indexing and query optimization?",
+              "children": [
+                {
+                  "text": "Have you worked with database replication or sharding?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with data pipelines or ETL processes?",
+          "children": [
+            {
+              "text": "Have you used Apache Spark, Airflow, or similar tools?",
+              "children": [
+                {
+                  "text": "Have you built real-time streaming data pipelines?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with cloud platforms (AWS, Azure, GCP)?",
+      "is_base": true,
+      "category": "Cloud",
+      "children": [
+        {
+          "text": "Have you implemented infrastructure as code (Terraform, CloudFormation)?",
+          "children": [
+            {
+              "text": "Have you managed multi-region or multi-cloud deployments?",
+              "children": [
+                {
+                  "text": "Have you implemented disaster recovery and high availability strategies?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with serverless architectures?",
+          "children": [
+            {
+              "text": "Have you built applications using Lambda, Functions, or similar?",
+              "children": [
+                {
+                  "text": "Have you optimized serverless applications for cost and performance?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you built or trained machine learning models?",
+      "is_base": true,
+      "category": "Machine Learning",
+      "children": [
+        {
+          "text": "Have you worked with deep learning frameworks (TensorFlow, PyTorch)?",
+          "children": [
+            {
+              "text": "Have you designed custom neural network architectures?",
+              "children": [
+                {
+                  "text": "Have you worked with transformers or large language models (LLMs)?",
+                  "children": [
+                    {
+                      "text": "Have you fine-tuned or deployed LLMs in production?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you performed feature engineering and data preprocessing?",
+          "children": [
+            {
+              "text": "Have you worked with unstructured data (text, images, audio)?",
+              "children": [
+                {
+                  "text": "Have you implemented computer vision or NLP solutions?",
+                  "children": [
+                    {
+                      "text": "Have you deployed these models at scale?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you evaluated models using cross-validation and metrics?",
+          "children": [
+            {
+              "text": "Have you implemented A/B testing for ML models?",
+              "children": [
+                {
+                  "text": "Have you built ML monitoring and observability systems?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you implemented CI/CD pipelines?",
+      "is_base": true,
+      "category": "DevOps",
+      "children": [
+        {
+          "text": "Have you worked with Jenkins, GitHub Actions, or GitLab CI?",
+          "children": [
+            {
+              "text": "Have you implemented automated testing in CI/CD pipelines?",
+              "children": [
+                {
+                  "text": "Have you implemented blue-green or canary deployments?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with microservices architecture?",
+      "is_base": true,
+      "category": "Backend",
+      "children": [
+        {
+          "text": "Have you implemented service discovery and communication patterns?",
+          "children": [
+            {
+              "text": "Have you worked with message queues (RabbitMQ, Kafka)?",
+              "children": [
+                {
+                  "text": "Have you implemented event-driven architectures?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you performed security testing or implemented security best practices?",
+      "is_base": true,
+      "category": "DevOps",
+      "children": [
+        {
+          "text": "Have you conducted penetration testing or vulnerability assessments?",
+          "children": [
+            {
+              "text": "Have you implemented security scanning in CI/CD pipelines?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you implemented MLOps practices?",
+      "is_base": true,
+      "category": "Machine Learning",
+      "children": [
+        {
+          "text": "Have you built ML pipelines for training and deployment?",
+          "children": [
+            {
+              "text": "Have you implemented model versioning and experiment tracking?",
+              "children": [
+                {
+                  "text": "Have you used tools like MLflow, Kubeflow, or SageMaker?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you implemented automated model retraining?",
+          "children": [
+            {
+              "text": "Have you built drift detection systems?",
+              "children": [
+                {
+                  "text": "Have you implemented automated model rollback strategies?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you mentored junior developers or led technical teams?",
+      "is_base": true,
+      "category": null,
+      "children": [
+        {
+          "text": "Have you conducted code reviews and established coding standards?",
+          "children": [
+            {
+              "text": "Have you architected systems or made key technical decisions?"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
