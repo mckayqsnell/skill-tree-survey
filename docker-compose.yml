@@ -30,20 +30,23 @@ services:
       retries: 3
       start_period: 40s
 
-  # Frontend service placeholder - to be implemented
   frontend:
-    image: node:18-alpine
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: skill-survey-frontend
-    working_dir: /app
-    command: echo "Frontend not yet implemented"
-    volumes:
-      - ./frontend:/app
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Prevent node_modules from being overwritten by host
     networks:
       - skill-survey-network
-    profiles:
-      - frontend  # This prevents it from starting by default
+    depends_on:
+      - backend
+    restart: unless-stopped
 
 networks:
   skill-survey-network:

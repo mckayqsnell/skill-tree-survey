@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Terminal/Retro-futuristic styles */
+@layer base {
+  :root {
+    --terminal-green: #00ff41;
+    --terminal-amber: #ffb000;
+    --terminal-red: #ff2f00;
+    --terminal-cyan: #00e7ff;
+    --terminal-dim: #00ff4180;
+    --scan-line: #00ff4110;
+  }
+
+  body {
+    @apply bg-black text-green-400;
+    font-family: 'Share Tech Mono', monospace;
+    text-shadow: 0 0 2px currentColor;
+  }
+
+  /* Subtle CRT effect */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 4px,
+      var(--scan-line) 4px,
+      var(--scan-line) 5px
+    );
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.3;
+    animation: scan 10s linear infinite;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.2) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  #app {
+    position: relative;
+    z-index: 3;
+  }
+}
+
+@layer components {
+  /* Terminal window - cleaner */
+  .terminal-window {
+    @apply bg-black border border-green-400/30;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Glass-card - simplified */
+  .glass-card {
+    @apply bg-black/90 border border-green-400/20 p-6;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Terminal prompt */
+  .terminal-prompt::before {
+    content: "> ";
+    @apply text-green-400;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* Primary button - cleaner */
+  .btn-primary {
+    @apply px-6 py-2 bg-black border border-green-400 text-green-400 font-semibold;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover {
+    @apply bg-green-400/10 border-green-400;
+    box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+    transform: translateY(-1px);
+  }
+
+  /* Secondary button - cleaner */
+  .btn-secondary {
+    @apply px-6 py-2 bg-black border border-amber-500/50 text-amber-500 font-semibold;
+    font-family: 'Orbitron', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    @apply bg-amber-500/10 border-amber-500;
+    box-shadow: 0 0 10px rgba(255, 176, 0, 0.3);
+  }
+
+  /* Input field - cleaner */
+  .input-field {
+    @apply w-full px-4 py-2 bg-black/50 border border-green-400/30 text-green-400;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .input-field:focus {
+    @apply border-green-400 outline-none bg-black/70;
+    box-shadow: 0 0 5px rgba(0, 255, 65, 0.2);
+  }
+
+  .input-field::placeholder {
+    @apply text-green-400/40;
+  }
+
+  /* Question card - simplified */
+  .question-card {
+    @apply bg-black/90 border border-green-400/30 p-8;
+    backdrop-filter: blur(5px);
+  }
+
+  /* HUD corners */
+  .hud-corners {
+    position: relative;
+  }
+
+  .hud-corners::before,
+  .hud-corners::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--terminal-green);
+  }
+
+  .hud-corners::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .hud-corners::after {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
+  }
+
+  /* Star field for background */
+  .star-field {
+    position: relative;
+    overflow: hidden;
+    background: black;
+  }
+
+  .star-field::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(1px 1px at 20% 30%, white, transparent),
+      radial-gradient(1px 1px at 60% 70%, #00ff41, transparent),
+      radial-gradient(1px 1px at 50% 50%, white, transparent),
+      radial-gradient(1px 1px at 80% 10%, #00e7ff, transparent),
+      radial-gradient(1px 1px at 90% 60%, white, transparent);
+    background-size: 500px 500px;
+    background-position: 0 0, 100px 50px, 200px 100px, 250px 200px, 50px 250px;
+    animation: stars 200s linear infinite;
+    opacity: 0.5;
+  }
+}
+
+/* Animations */
+@keyframes scan {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(4px); }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+@keyframes terminal-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes stars {
+  from { transform: translateY(0); }
+  to { transform: translateY(-500px); }
+}
+
+/* Custom scrollbar - terminal style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black;
+  border: 1px solid rgba(0, 255, 65, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-green-400/30;
+  border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-green-400/50;
+  box-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+}

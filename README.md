@@ -1,35 +1,34 @@
 # Skill Tree Survey
 
-Employee skills assessment tool using branching question logic. "Yes" answers unlock deeper questions in that skill area.
+A gamified employee skills assessment tool with branching question logic. Built with Vue 3, TypeScript, FastAPI, and a space-themed UI. Keyboard-driven for speed - complete in 5-10 minutes!
 
 ## Quick Start
 
 ```bash
-# Using Docker (recommended)
-docker-compose up -d
+# Start both frontend and backend with Docker
+docker-compose up
 
-# Verify
-curl http://localhost:8000/health
-
-# API docs
-http://localhost:8000/docs
+# Access the application
+http://localhost:5173      # Frontend (Vue app)
+http://localhost:8000/docs  # Backend API docs
 ```
 
-## Manual Setup
+## Features
 
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+- **Gamified Experience**: Space-themed UI with smooth animations
+- **Keyboard Navigation**: 
+  - `Space`/`Enter` = YES (go deeper)
+  - `N` = NO (next skill)
+- **Branching Logic**: "Yes" answers unlock deeper questions in that skill area
+- **Admin Panel**: Manage questions, view sessions, analytics
+- **Real-time Progress**: Visual progress tracking and depth indicators
+- **Clean Error Handling**: Comprehensive logging and error recovery
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy, SQLite
-- **Frontend**: Vue 3 (not implemented)
-- **Deployment**: Docker Compose
+- **Frontend**: Vue 3, TypeScript, Vite, Tailwind CSS
+- **Backend**: FastAPI, SQLAlchemy, SQLite, Pydantic
+- **Deployment**: Docker Compose with hot-reload
 
 ## Project Structure
 
@@ -82,13 +81,35 @@ Require header: `X-Admin-Password: admin123`
 - `PUT /api/admin/questions/{id}` - Update question
 - `DELETE /api/admin/questions/{id}` - Delete question
 
+## Usage Guide
+
+### Taking the Survey
+1. Navigate to http://localhost:5173
+2. Enter your information (name, email, company)
+3. Answer questions using keyboard:
+   - Press `Space` or `Enter` for YES
+   - Press `N` for NO
+4. View your results on completion
+
+### Admin Panel
+1. Navigate to http://localhost:5173/admin
+2. Enter password: `admin123`
+3. Manage questions, view sessions, analytics
+
 ## Environment Variables
 
+### Backend
 | Variable | Default | Description |
 |----------|---------|-------------|
 | DATABASE_URL | sqlite:///./skill_survey.db | Database path |
 | ADMIN_PASSWORD | admin123 | Admin API password |
 | SEED_ON_STARTUP | true | Auto-seed questions |
+
+### Frontend
+| Variable | Default | Description |
+|----------|---------|-------------|
+| VITE_API_URL | http://localhost:8000 | Backend API URL |
+| VITE_ADMIN_PASSWORD | admin123 | Admin password |
 
 ## Database Schema
 
