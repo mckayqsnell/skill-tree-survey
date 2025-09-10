@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle with space theme -->
+  <circle cx="32" cy="32" r="30" fill="#0f172a" stroke="#1e293b" stroke-width="2"/>
+  
+  <!-- Stars in background -->
+  <circle cx="12" cy="15" r="1" fill="#ffffff" opacity="0.8"/>
+  <circle cx="52" cy="18" r="1" fill="#ffffff" opacity="0.6"/>
+  <circle cx="18" cy="48" r="1" fill="#ffffff" opacity="0.7"/>
+  <circle cx="48" cy="45" r="1" fill="#ffffff" opacity="0.9"/>
+  
+  <!-- Central skill tree structure -->
+  <g transform="translate(32, 32)">
+    <!-- Main trunk/core -->
+    <rect x="-2" y="-8" width="4" height="16" fill="#22c55e" rx="2"/>
+    
+    <!-- Root node (bottom) -->
+    <circle cx="0" cy="8" r="4" fill="#16a34a" stroke="#22c55e" stroke-width="2"/>
+    
+    <!-- Mid-level branches -->
+    <line x1="0" y1="0" x2="-12" y2="-6" stroke="#22c55e" stroke-width="2"/>
+    <line x1="0" y1="0" x2="12" y2="-6" stroke="#22c55e" stroke-width="2"/>
+    <line x1="0" y1="0" x2="-8" y2="8" stroke="#22c55e" stroke-width="2"/>
+    <line x1="0" y1="0" x2="8" y2="8" stroke="#22c55e" stroke-width="2"/>
+    
+    <!-- Branch nodes -->
+    <circle cx="-12" cy="-6" r="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1.5"/>
+    <circle cx="12" cy="-6" r="3" fill="#3b82f6" stroke="#60a5fa" stroke-width="1.5"/>
+    <circle cx="-8" cy="8" r="3" fill="#8b5cf6" stroke="#a78bfa" stroke-width="1.5"/>
+    <circle cx="8" cy="8" r="3" fill="#8b5cf6" stroke="#a78bfa" stroke-width="1.5"/>
+    
+    <!-- Top branches -->
+    <line x1="-12" y1="-6" x2="-18" y2="-12" stroke="#60a5fa" stroke-width="1.5"/>
+    <line x1="12" y1="-6" x2="18" y2="-12" stroke="#60a5fa" stroke-width="1.5"/>
+    
+    <!-- Leaf nodes -->
+    <circle cx="-18" cy="-12" r="2" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+    <circle cx="18" cy="-12" r="2" fill="#fbbf24" stroke="#f59e0b" stroke-width="1"/>
+    
+    <!-- Center core node -->
+    <circle cx="0" cy="0" r="5" fill="#1f2937" stroke="#22c55e" stroke-width="2"/>
+    <circle cx="0" cy="0" r="2" fill="#22c55e"/>
+  </g>
+  
+  <!-- Orbital rings suggesting progression -->
+  <circle cx="32" cy="32" r="25" fill="none" stroke="#374151" stroke-width="1" opacity="0.3" stroke-dasharray="2,2"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#374151" stroke-width="1" opacity="0.2" stroke-dasharray="1,3"/>
+</svg>
