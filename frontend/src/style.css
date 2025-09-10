@@ -184,6 +184,7 @@
     background-position: 0 0, 100px 50px, 200px 100px, 250px 200px, 50px 250px;
     animation: stars 200s linear infinite;
     opacity: 0.5;
+    pointer-events: none;
   }
 }
 

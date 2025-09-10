@@ -1,11 +1,18 @@
 <template>
   <div class="min-h-screen bg-black star-field flex flex-col">
     <!-- Progress Bar -->
-    <div class="w-full h-1 bg-green-400/10">
-      <div 
-        class="h-full bg-green-400/50 transition-all duration-500"
-        :style="{ width: `${progressPercentage}%` }"
-      />
+    <div class="w-full px-4 pt-4">
+      <div class="max-w-3xl mx-auto">
+        <div class="h-2 bg-green-400/10 rounded-full overflow-hidden">
+          <div 
+            class="h-full bg-gradient-to-r from-green-400 to-cyan-400 transition-all duration-500 rounded-full"
+            :style="{ width: `${progressPercentage}%` }"
+          />
+        </div>
+        <p class="text-xs text-green-400/50 font-mono mt-2 text-center">
+          Progress: {{ Math.round(progressPercentage) }}%
+        </p>
+      </div>
     </div>
 
     <!-- Main Content -->
@@ -23,15 +30,9 @@
       </div>
 
       <div v-else-if="currentQuestion" class="w-full max-w-3xl">
-        <!-- Question Counter -->
+        <!-- Category Display -->
         <div class="text-center mb-6">
-          <p class="text-sm text-green-400/60 font-mono">
-            Question {{ baseQuestionIndex + 1 }} of {{ baseQuestions.length }}
-            <span v-if="questionPath.length > 0" class="text-cyan-400">
-              • Level {{ questionPath.length }}
-            </span>
-          </p>
-          <p v-if="currentQuestion.category" class="text-xs text-green-400/40 font-mono mt-1">
+          <p v-if="currentQuestion.category" class="text-sm text-green-400/60 font-mono">
             {{ currentQuestion.category }}
           </p>
         </div>
@@ -126,12 +127,16 @@ const loadSurvey = async () => {
     error.value = '';
     
     // Verify session exists
-    logger.info('Loading survey for session', { sessionId: props.sessionId });
+    if (import.meta.env.DEV) {
+      logger.info('Loading survey for session', { sessionId: props.sessionId });
+    }
     await sessionsApi.getSession(Number(props.sessionId));
     
     // Load base questions
     const questions = await questionsApi.getBaseQuestions();
-    logger.info(`Loaded ${questions.length} base questions`);
+    if (import.meta.env.DEV) {
+      logger.info(`Loaded ${questions.length} base questions`);
+    }
     
     if (questions.length === 0) {
       throw new Error('No questions available');
@@ -161,10 +166,12 @@ const handleAnswer = async (answer: boolean) => {
     lastKey.value = answer ? 'yes' : 'no';
     
     // Log the answer
-    logger.info(`Question answered: ${answer ? 'YES' : 'NO'}`, {
-      questionId: currentQuestion.value.id,
-      question: currentQuestion.value.text
-    });
+    if (import.meta.env.DEV) {
+      logger.info(`Question answered: ${answer ? 'YES' : 'NO'}`, {
+        questionId: currentQuestion.value.id,
+        question: currentQuestion.value.text
+      });
+    }
     
     // Mark as answered
     answeredQuestions.value.add(currentQuestion.value.id);
@@ -218,7 +225,9 @@ const goDeeper = async () => {
       if (nextChild) {
         questionPath.value.push(currentQuestion.value);
         currentQuestion.value = nextChild;
-        logger.info(`Going deeper to: ${nextChild.text}`);
+        if (import.meta.env.DEV) {
+          logger.info(`Going deeper to: ${nextChild.text}`);
+        }
         return;
       }
     }
@@ -232,19 +241,38 @@ const goDeeper = async () => {
 };
 
 // Go back in the tree or to next base
-const goBack = () => {
-  if (questionPath.value.length > 0) {
-    // Go back to parent
-    const parent = questionPath.value.pop();
-    if (parent) {
-      currentQuestion.value = parent;
-      // Try to find another child
-      goDeeper();
+const goBack = async () => {
+  // Pop up the tree and look for siblings
+  while (questionPath.value.length > 0) {
+    const parent = questionPath.value[questionPath.value.length - 1];
+    
+    try {
+      // Get siblings (children of the parent)
+      const siblings = await questionsApi.getChildQuestions(parent.id);
+      const sortedSiblings = siblings.sort((a, b) => a.order_index - b.order_index);
+      
+      // Find the next unanswered sibling
+      const nextSibling = sortedSiblings.find(q => !answeredQuestions.value.has(q.id));
+      
+      if (nextSibling) {
+        // Found an unanswered sibling
+        currentQuestion.value = nextSibling;
+        if (import.meta.env.DEV) {
+          logger.info(`Moving to sibling: ${nextSibling.text}`);
+        }
+        return;
+      }
+      
+      // No unanswered siblings at this level, go up one level
+      questionPath.value.pop();
+    } catch (err) {
+      logger.error('Failed to get siblings', err);
+      questionPath.value.pop();
     }
-  } else {
-    // Move to next base question
-    goToNextBase();
   }
+  
+  // We're back at the base level with no more children to explore
+  goToNextBase();
 };
 
 // Move to next base question
@@ -254,7 +282,9 @@ const goToNextBase = () => {
   if (baseQuestionIndex.value < baseQuestions.value.length) {
     currentQuestion.value = baseQuestions.value[baseQuestionIndex.value];
     questionPath.value = [];
-    logger.info(`Moving to base question ${baseQuestionIndex.value + 1}`);
+    if (import.meta.env.DEV) {
+      logger.info(`Moving to base question ${baseQuestionIndex.value + 1}`);
+    }
   } else {
     // Survey complete
     completeSurvey();
@@ -265,7 +295,9 @@ const goToNextBase = () => {
 const sendResponse = async (response: ResponseCreate) => {
   try {
     await responsesApi.createResponse(Number(props.sessionId), response);
-    logger.debug('Response sent successfully');
+    if (import.meta.env.DEV) {
+      logger.debug('Response sent successfully');
+    }
   } catch (err) {
     logger.error('Failed to send response', err);
     // Continue survey even if response fails
@@ -275,7 +307,9 @@ const sendResponse = async (response: ResponseCreate) => {
 // Complete survey
 const completeSurvey = async () => {
   try {
-    logger.info('Completing survey');
+    if (import.meta.env.DEV) {
+      logger.info('Completing survey');
+    }
     currentQuestion.value = null;
     
     // Mark session as complete

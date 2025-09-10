@@ -123,13 +123,37 @@ Require header: `X-Admin-Password: admin123`
 - Database auto-seeds with questions across DevOps, Backend, Frontend, Data, Cloud, ML
 - SQLite database persists in Docker volume
 
+## Database Management
+
+### Reset Database (Fresh Start)
+```bash
+# Complete reset - removes all data and re-seeds
+docker-compose down -v
+docker-compose up -d
+```
+
+**Note:** The `-v` flag removes the Docker volume containing the SQLite database. On restart, the seeder will automatically populate fresh data from `backend/app/seeders/initial_questions.json`.
+
+### Normal Restart (Keep Data)
+```bash
+# Restart services without losing data
+docker-compose restart
+
+# Or stop and start
+docker-compose down    # No -v flag keeps the volume
+docker-compose up -d
+```
+
 ## Troubleshooting
 
 ```bash
 # View logs
 docker-compose logs backend
+docker-compose logs frontend
 
-# Reset database
-docker-compose down -v
-docker-compose up -d
+# View real-time logs
+docker-compose logs -f backend
+
+# Check if services are running
+docker-compose ps
 ```

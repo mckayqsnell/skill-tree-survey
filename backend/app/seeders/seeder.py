@@ -53,7 +53,8 @@ class Seeder:
         self,
         question_data: Dict[str, Any],
         parent: Question = None,
-        order: int = 0
+        order: int = 0,
+        parent_category: str = None
     ) -> Question:
         """
         Recursively create question tree.
@@ -62,16 +63,22 @@ class Seeder:
             question_data: Question data from JSON
             parent: Parent question (None for base questions)
             order: Order index
+            parent_category: Category to inherit from parent
             
         Returns:
             Question: Created question
         """
+        # Determine category - use provided category or inherit from parent
+        category = question_data.get("category")
+        if not category and parent_category:
+            category = parent_category
+        
         # Create the question
         question = Question(
             text=question_data["text"],
             parent_id=parent.id if parent else None,
             is_base=question_data.get("is_base", False),
-            category=question_data.get("category"),
+            category=category,
             order_index=order
         )
         
@@ -81,7 +88,7 @@ class Seeder:
         # Create children recursively
         children = question_data.get("children", [])
         for idx, child_data in enumerate(children):
-            self.create_question_tree(child_data, question, idx)
+            self.create_question_tree(child_data, question, idx, category)
         
         return question
     
@@ -105,7 +112,7 @@ class Seeder:
             # Create all base questions and their trees
             base_count = 0
             for idx, question_data in enumerate(questions):
-                self.create_question_tree(question_data, None, idx)
+                self.create_question_tree(question_data, None, idx, None)
                 base_count += 1
             
             self.db.commit()

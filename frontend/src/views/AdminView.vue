@@ -35,7 +35,7 @@
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-green-400" style="font-family: 'Orbitron', monospace;">ADMIN PANEL</h1>
         <button 
-          @click="handleLogout" 
+          @click="logout" 
           class="btn-secondary text-sm" 
           type="button"
           style="position: relative; z-index: 20;"
@@ -47,7 +47,7 @@
       <!-- Tabs -->
       <div class="flex gap-2 mb-6" style="position: relative; z-index: 10;">
         <button
-          @click="handleTabSwitch('questions')"
+          @click="switchTab('questions')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
           :class="activeTab === 'questions' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
@@ -55,7 +55,7 @@
           Questions
         </button>
         <button
-          @click="handleTabSwitch('sessions')"
+          @click="switchTab('sessions')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
           :class="activeTab === 'sessions' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
@@ -63,7 +63,7 @@
           Sessions
         </button>
         <button
-          @click="handleTabSwitch('analytics')"
+          @click="switchTab('analytics')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
           :class="activeTab === 'analytics' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
@@ -251,7 +251,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { questionsApi, sessionsApi, adminClient } from '@/api';
 import { logger } from '@/api/client';
@@ -301,9 +301,6 @@ const authenticate = async () => {
     
     // Load initial data
     await loadData();
-    
-    // Ensure button functionality after authentication
-    ensureButtonFunctionality();
   } catch (err: any) {
     logger.error('Authentication failed', err);
     authError.value = 'Invalid password';
@@ -311,11 +308,6 @@ const authenticate = async () => {
     // Clear the invalid password from admin client
     adminClient.defaults.headers['X-Admin-Password'] = '';
   }
-};
-
-// Tab switching handler
-const handleTabSwitch = (tab: 'questions' | 'sessions' | 'analytics') => {
-  switchTab(tab);
 };
 
 // Tab switching
@@ -333,11 +325,6 @@ const switchTab = async (tab: 'questions' | 'sessions' | 'analytics') => {
   error.value = '';
   // Load data for the new tab
   await loadData();
-};
-
-// Logout handler
-const handleLogout = () => {
-  logout();
 };
 
 // Logout
@@ -515,45 +502,6 @@ const formatDate = (dateStr: string): string => {
 
 // Watch tab changes - removed since we're calling loadData directly in switchTab
 
-// Ensure button functionality after render
-const ensureButtonFunctionality = () => {
-  // Only in development mode for fallback click handling
-  if (import.meta.env.DEV) {
-    setTimeout(() => {
-      const buttons = document.querySelectorAll('button');
-      const navButtons = ['Logout', 'Sessions', 'Analytics', 'Questions'];
-      
-      buttons.forEach((btn) => {
-        const text = btn.textContent?.trim();
-        // Add fallback listeners only for navigation buttons
-        if (text && navButtons.includes(text)) {
-          btn.removeEventListener('click', () => {});
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (text === 'Logout') {
-              handleLogout();
-            } else if (text === 'Sessions') {
-              handleTabSwitch('sessions');
-            } else if (text === 'Analytics') {
-              handleTabSwitch('analytics');
-            } else if (text === 'Questions') {
-              handleTabSwitch('questions');
-            }
-          });
-        }
-      });
-    }, 500);
-  }
-};
-
-// Watch for authentication changes
-watch(authenticated, async (newVal) => {
-  if (newVal) {
-    await nextTick();
-    ensureButtonFunctionality();
-  }
-});
 
 // Lifecycle
 onMounted(async () => {
@@ -562,8 +510,5 @@ onMounted(async () => {
   sessionStorage.removeItem('adminPassword');
   adminClient.defaults.headers['X-Admin-Password'] = '';
   password.value = '';
-  
-  // Ensure button functionality
-  ensureButtonFunctionality();
 });
 </script>

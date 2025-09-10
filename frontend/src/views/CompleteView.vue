@@ -78,10 +78,18 @@
 
       <!-- Actions -->
       <div class="flex gap-4 justify-center">
-        <button @click="startNewSurvey" class="btn-primary">
+        <button 
+          @click="startNewSurvey"
+          class="btn-primary" 
+          type="button"
+        >
           New Survey
         </button>
-        <button @click="goToAdmin" class="btn-secondary">
+        <button 
+          @click="goToAdmin"
+          class="btn-secondary" 
+          type="button"
+        >
           Admin Panel
         </button>
       </div>
@@ -121,7 +129,9 @@ const loadSummary = async () => {
     loading.value = true;
     error.value = '';
     
-    logger.info('Loading session summary', { sessionId: props.sessionId });
+    if (import.meta.env.DEV) {
+      logger.info('Loading session summary', { sessionId: props.sessionId });
+    }
     
     // Get session summary
     const sessionSummary = await sessionsApi.getSessionSummary(Number(props.sessionId));
@@ -139,7 +149,9 @@ const loadSummary = async () => {
         }))
         .filter(s => s.yes_count > 0)
         .sort((a, b) => b.percentage_yes - a.percentage_yes);
-      logger.info(`Loaded ${categoryStats.value.length} category statistics`);
+      if (import.meta.env.DEV) {
+        logger.info(`Loaded ${categoryStats.value.length} category statistics`);
+      }
     } catch (err) {
       logger.warn('Failed to load category stats', err);
       // Non-critical, continue
@@ -166,21 +178,24 @@ const formatDate = (dateStr: string | null): string => {
 
 // Start new survey
 const startNewSurvey = () => {
-  router.push({ name: 'Home' });
+  if (import.meta.env.DEV) {
+    logger.info('Starting new survey from complete page');
+  }
+  router.push('/');
 };
 
 // Go to admin panel
 const goToAdmin = () => {
-  router.push({ name: 'Admin' });
+  if (import.meta.env.DEV) {
+    logger.info('Navigating to admin from complete page');
+  }
+  // Clear any existing admin session to force re-authentication
+  sessionStorage.removeItem('adminPassword');
+  router.push('/admin');
 };
 
 // Lifecycle
 onMounted(() => {
   loadSummary();
-  
-  // Trigger confetti or celebration animation
-  setTimeout(() => {
-    logger.info('Survey completion celebration triggered');
-  }, 500);
 });
 </script>

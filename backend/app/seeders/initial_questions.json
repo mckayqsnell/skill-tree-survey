@@ -1,60 +1,83 @@
 {
-  "categories": ["DevOps", "Backend", "Frontend", "Data", "Cloud", "Machine Learning"],
+  "categories": [
+    "Backend",
+    "Frontend", 
+    "DevOps",
+    "Cloud",
+    "Data",
+    "Machine Learning",
+    "Mobile",
+    "Security",
+    "Architecture",
+    "Testing",
+    "Leadership"
+  ],
   "questions": [
     {
-      "text": "Have you worked with container technologies (Docker, Kubernetes)?",
-      "is_base": true,
-      "category": "DevOps",
-      "children": [
-        {
-          "text": "Have you built Docker images from scratch?",
-          "children": [
-            {
-              "text": "Have you optimized Docker images for production (multi-stage builds, layer caching)?"
-            }
-          ]
-        },
-        {
-          "text": "Have you deployed applications on Kubernetes?",
-          "children": [
-            {
-              "text": "Have you managed Kubernetes clusters in production?",
-              "children": [
-                {
-                  "text": "Have you implemented auto-scaling and load balancing in Kubernetes?"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "text": "Have you developed REST APIs or web services?",
+      "text": "Have you developed backend applications?",
       "is_base": true,
       "category": "Backend",
       "children": [
         {
-          "text": "Have you implemented authentication and authorization systems?",
+          "text": "Have you built RESTful APIs?",
           "children": [
             {
-              "text": "Have you worked with OAuth2 or JWT tokens?",
+              "text": "Have you implemented authentication and authorization?",
               "children": [
                 {
-                  "text": "Have you implemented single sign-on (SSO) solutions?"
+                  "text": "Have you worked with OAuth 2.0 or JWT?",
+                  "children": [
+                    {
+                      "text": "Have you built multi-tenant systems?"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with GraphQL or gRPC?",
+              "children": [
+                {
+                  "text": "Have you optimized API performance at scale?"
                 }
               ]
             }
           ]
         },
         {
-          "text": "Have you optimized API performance and implemented caching?",
+          "text": "Have you worked with databases?",
           "children": [
             {
-              "text": "Have you worked with Redis or Memcached?",
+              "text": "Have you designed database schemas?",
               "children": [
                 {
-                  "text": "Have you implemented distributed caching strategies?"
+                  "text": "Have you optimized queries and indexes?",
+                  "children": [
+                    {
+                      "text": "Have you implemented database sharding?"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with NoSQL databases?",
+              "children": [
+                {
+                  "text": "Have you implemented eventual consistency patterns?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with message queues (RabbitMQ, Kafka)?",
+          "children": [
+            {
+              "text": "Have you built event-driven architectures?",
+              "children": [
+                {
+                  "text": "Have you implemented CQRS or Event Sourcing?"
                 }
               ]
             }
@@ -63,31 +86,57 @@
       ]
     },
     {
-      "text": "Have you built single-page applications (SPAs)?",
+      "text": "Have you developed frontend applications?",
       "is_base": true,
       "category": "Frontend",
       "children": [
         {
-          "text": "Have you worked with React, Vue, or Angular?",
+          "text": "Have you built single-page applications (SPAs)?",
           "children": [
             {
-              "text": "Have you managed complex state in large applications?",
+              "text": "Have you worked with React, Vue, or Angular?",
               "children": [
                 {
-                  "text": "Have you implemented state management with Redux, Vuex, or similar?"
+                  "text": "Have you managed complex state (Redux, Vuex)?",
+                  "children": [
+                    {
+                      "text": "Have you implemented micro-frontends?"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Have you implemented server-side rendering (SSR)?",
+              "children": [
+                {
+                  "text": "Have you optimized Core Web Vitals?"
                 }
               ]
             }
           ]
         },
         {
-          "text": "Have you implemented responsive and accessible UI designs?",
+          "text": "Have you built responsive and accessible interfaces?",
           "children": [
             {
-              "text": "Have you worked with CSS frameworks (Tailwind, Bootstrap)?",
+              "text": "Have you implemented WCAG compliance?",
               "children": [
                 {
-                  "text": "Have you created custom design systems or component libraries?"
+                  "text": "Have you built component libraries or design systems?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you optimized frontend performance?",
+          "children": [
+            {
+              "text": "Have you implemented code splitting and lazy loading?",
+              "children": [
+                {
+                  "text": "Have you built Progressive Web Apps (PWAs)?"
                 }
               ]
             }
@@ -96,31 +145,54 @@
       ]
     },
     {
-      "text": "Have you worked with databases (SQL or NoSQL)?",
+      "text": "Have you worked with DevOps practices?",
       "is_base": true,
-      "category": "Data",
+      "category": "DevOps",
       "children": [
         {
-          "text": "Have you designed database schemas?",
+          "text": "Have you containerized applications with Docker?",
           "children": [
             {
-              "text": "Have you optimized database performance with indexing and query optimization?",
+              "text": "Have you deployed to Kubernetes?",
               "children": [
                 {
-                  "text": "Have you worked with database replication or sharding?"
+                  "text": "Have you written Helm charts?",
+                  "children": [
+                    {
+                      "text": "Have you implemented GitOps?"
+                    }
+                  ]
                 }
               ]
             }
           ]
         },
         {
-          "text": "Have you worked with data pipelines or ETL processes?",
+          "text": "Have you built CI/CD pipelines?",
           "children": [
             {
-              "text": "Have you used Apache Spark, Airflow, or similar tools?",
+              "text": "Have you worked with Jenkins, GitHub Actions, or GitLab CI?",
               "children": [
                 {
-                  "text": "Have you built real-time streaming data pipelines?"
+                  "text": "Have you implemented automated testing in pipelines?",
+                  "children": [
+                    {
+                      "text": "Have you done blue-green or canary deployments?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you implemented monitoring and observability?",
+          "children": [
+            {
+              "text": "Have you worked with Prometheus and Grafana?",
+              "children": [
+                {
+                  "text": "Have you implemented distributed tracing?"
                 }
               ]
             }
@@ -129,31 +201,44 @@
       ]
     },
     {
-      "text": "Have you worked with cloud platforms (AWS, Azure, GCP)?",
+      "text": "Have you worked with cloud platforms?",
       "is_base": true,
       "category": "Cloud",
       "children": [
         {
-          "text": "Have you implemented infrastructure as code (Terraform, CloudFormation)?",
+          "text": "Have you deployed to AWS, Azure, or GCP?",
           "children": [
             {
-              "text": "Have you managed multi-region or multi-cloud deployments?",
+              "text": "Have you worked with compute services (EC2, Lambda)?",
               "children": [
                 {
-                  "text": "Have you implemented disaster recovery and high availability strategies?"
+                  "text": "Have you implemented auto-scaling?",
+                  "children": [
+                    {
+                      "text": "Have you optimized cloud costs?"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Have you built serverless applications?",
+              "children": [
+                {
+                  "text": "Have you worked with API Gateway and Lambda?"
                 }
               ]
             }
           ]
         },
         {
-          "text": "Have you worked with serverless architectures?",
+          "text": "Have you implemented Infrastructure as Code?",
           "children": [
             {
-              "text": "Have you built applications using Lambda, Functions, or similar?",
+              "text": "Have you worked with Terraform or CloudFormation?",
               "children": [
                 {
-                  "text": "Have you optimized serverless applications for cost and performance?"
+                  "text": "Have you built reusable infrastructure modules?"
                 }
               ]
             }
@@ -162,21 +247,67 @@
       ]
     },
     {
-      "text": "Have you built or trained machine learning models?",
+      "text": "Have you worked with data engineering?",
+      "is_base": true,
+      "category": "Data",
+      "children": [
+        {
+          "text": "Have you built ETL/ELT pipelines?",
+          "children": [
+            {
+              "text": "Have you worked with Apache Airflow or similar?",
+              "children": [
+                {
+                  "text": "Have you built real-time streaming pipelines?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with data warehouses?",
+          "children": [
+            {
+              "text": "Have you worked with Snowflake, BigQuery, or Redshift?",
+              "children": [
+                {
+                  "text": "Have you designed dimensional models?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with big data technologies?",
+          "children": [
+            {
+              "text": "Have you used Apache Spark?",
+              "children": [
+                {
+                  "text": "Have you optimized Spark jobs for performance?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with machine learning?",
       "is_base": true,
       "category": "Machine Learning",
       "children": [
         {
-          "text": "Have you worked with deep learning frameworks (TensorFlow, PyTorch)?",
+          "text": "Have you built and trained ML models?",
           "children": [
             {
-              "text": "Have you designed custom neural network architectures?",
+              "text": "Have you worked with scikit-learn or XGBoost?",
               "children": [
                 {
-                  "text": "Have you worked with transformers or large language models (LLMs)?",
+                  "text": "Have you performed feature engineering?",
                   "children": [
                     {
-                      "text": "Have you fine-tuned or deployed LLMs in production?"
+                      "text": "Have you deployed models to production?"
                     }
                   ]
                 }
@@ -185,16 +316,16 @@
           ]
         },
         {
-          "text": "Have you performed feature engineering and data preprocessing?",
+          "text": "Have you worked with deep learning?",
           "children": [
             {
-              "text": "Have you worked with unstructured data (text, images, audio)?",
+              "text": "Have you used TensorFlow or PyTorch?",
               "children": [
                 {
-                  "text": "Have you implemented computer vision or NLP solutions?",
+                  "text": "Have you built neural networks for computer vision or NLP?",
                   "children": [
                     {
-                      "text": "Have you deployed these models at scale?"
+                      "text": "Have you fine-tuned large language models?"
                     }
                   ]
                 }
@@ -203,13 +334,13 @@
           ]
         },
         {
-          "text": "Have you evaluated models using cross-validation and metrics?",
+          "text": "Have you implemented MLOps practices?",
           "children": [
             {
-              "text": "Have you implemented A/B testing for ML models?",
+              "text": "Have you used MLflow or similar tools?",
               "children": [
                 {
-                  "text": "Have you built ML monitoring and observability systems?"
+                  "text": "Have you built automated retraining pipelines?"
                 }
               ]
             }
@@ -218,86 +349,39 @@
       ]
     },
     {
-      "text": "Have you implemented CI/CD pipelines?",
+      "text": "Have you developed mobile applications?",
       "is_base": true,
-      "category": "DevOps",
+      "category": "Mobile",
       "children": [
         {
-          "text": "Have you worked with Jenkins, GitHub Actions, or GitLab CI?",
+          "text": "Have you built native mobile apps?",
           "children": [
             {
-              "text": "Have you implemented automated testing in CI/CD pipelines?",
+              "text": "Have you developed for iOS with Swift?",
               "children": [
                 {
-                  "text": "Have you implemented blue-green or canary deployments?"
+                  "text": "Have you published apps to the App Store?"
                 }
               ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "text": "Have you worked with microservices architecture?",
-      "is_base": true,
-      "category": "Backend",
-      "children": [
-        {
-          "text": "Have you implemented service discovery and communication patterns?",
-          "children": [
+            },
             {
-              "text": "Have you worked with message queues (RabbitMQ, Kafka)?",
+              "text": "Have you developed for Android with Kotlin?",
               "children": [
                 {
-                  "text": "Have you implemented event-driven architectures?"
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "text": "Have you performed security testing or implemented security best practices?",
-      "is_base": true,
-      "category": "DevOps",
-      "children": [
-        {
-          "text": "Have you conducted penetration testing or vulnerability assessments?",
-          "children": [
-            {
-              "text": "Have you implemented security scanning in CI/CD pipelines?"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "text": "Have you implemented MLOps practices?",
-      "is_base": true,
-      "category": "Machine Learning",
-      "children": [
-        {
-          "text": "Have you built ML pipelines for training and deployment?",
-          "children": [
-            {
-              "text": "Have you implemented model versioning and experiment tracking?",
-              "children": [
-                {
-                  "text": "Have you used tools like MLflow, Kubeflow, or SageMaker?"
+                  "text": "Have you published apps to Google Play?"
                 }
               ]
             }
           ]
         },
         {
-          "text": "Have you implemented automated model retraining?",
+          "text": "Have you built cross-platform apps?",
           "children": [
             {
-              "text": "Have you built drift detection systems?",
+              "text": "Have you worked with React Native or Flutter?",
               "children": [
                 {
-                  "text": "Have you implemented automated model rollback strategies?"
+                  "text": "Have you optimized cross-platform app performance?"
                 }
               ]
             }
@@ -306,15 +390,170 @@
       ]
     },
     {
-      "text": "Have you mentored junior developers or led technical teams?",
+      "text": "Have you worked with security practices?",
       "is_base": true,
-      "category": null,
+      "category": "Security",
       "children": [
         {
-          "text": "Have you conducted code reviews and established coding standards?",
+          "text": "Have you implemented application security?",
           "children": [
             {
-              "text": "Have you architected systems or made key technical decisions?"
+              "text": "Have you addressed OWASP Top 10 vulnerabilities?",
+              "children": [
+                {
+                  "text": "Have you prevented SQL injection and XSS?",
+                  "children": [
+                    {
+                      "text": "Have you implemented secure authentication?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you performed security testing?",
+          "children": [
+            {
+              "text": "Have you conducted penetration testing?",
+              "children": [
+                {
+                  "text": "Have you implemented security scanning in CI/CD?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you designed software architectures?",
+      "is_base": true,
+      "category": "Architecture",
+      "children": [
+        {
+          "text": "Have you designed microservices architectures?",
+          "children": [
+            {
+              "text": "Have you implemented service discovery and API gateways?",
+              "children": [
+                {
+                  "text": "Have you designed event-driven systems?",
+                  "children": [
+                    {
+                      "text": "Have you implemented distributed transactions?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you implemented resilience patterns?",
+          "children": [
+            {
+              "text": "Have you implemented circuit breakers and retries?",
+              "children": [
+                {
+                  "text": "Have you conducted chaos engineering?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you implemented testing strategies?",
+      "is_base": true,
+      "category": "Testing",
+      "children": [
+        {
+          "text": "Have you written unit tests?",
+          "children": [
+            {
+              "text": "Have you achieved high test coverage (>80%)?",
+              "children": [
+                {
+                  "text": "Have you practiced TDD?",
+                  "children": [
+                    {
+                      "text": "Have you implemented property-based testing?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you written integration and E2E tests?",
+          "children": [
+            {
+              "text": "Have you worked with Cypress, Playwright, or Selenium?",
+              "children": [
+                {
+                  "text": "Have you implemented contract testing?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you performed performance testing?",
+          "children": [
+            {
+              "text": "Have you used JMeter or K6?",
+              "children": [
+                {
+                  "text": "Have you implemented load testing in CI/CD?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you led technical teams or projects?",
+      "is_base": true,
+      "category": "Leadership",
+      "children": [
+        {
+          "text": "Have you mentored other developers?",
+          "children": [
+            {
+              "text": "Have you conducted code reviews?",
+              "children": [
+                {
+                  "text": "Have you created technical documentation?",
+                  "children": [
+                    {
+                      "text": "Have you led technical training?"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you managed technical projects?",
+          "children": [
+            {
+              "text": "Have you made architectural decisions?",
+              "children": [
+                {
+                  "text": "Have you managed technical debt?",
+                  "children": [
+                    {
+                      "text": "Have you driven technical strategy?"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         }

@@ -209,7 +209,9 @@ const startSurvey = async () => {
   try {
     // Validate form
     if (!validateForm()) {
-      logger.warn('Form validation failed', formData);
+      if (import.meta.env.DEV) {
+        logger.warn('Form validation failed', formData);
+      }
       return;
     }
     
@@ -219,7 +221,9 @@ const startSurvey = async () => {
     // Combine first and last name
     const userName = `${formData.firstName.trim()} ${formData.lastName.trim()}`;
     
-    logger.info('Starting survey session', { userName, email: formData.email });
+    if (import.meta.env.DEV) {
+      logger.info('Starting survey session', { userName, email: formData.email });
+    }
     
     // Create session
     const session = await sessionsApi.createSession({
@@ -228,7 +232,9 @@ const startSurvey = async () => {
       company: formData.company.trim()
     });
     
-    logger.info('Session created successfully', { sessionId: session.id });
+    if (import.meta.env.DEV) {
+      logger.info('Session created successfully', { sessionId: session.id });
+    }
     
     // Navigate to survey
     await router.push({
