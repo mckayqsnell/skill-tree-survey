@@ -20,8 +20,11 @@ http://localhost:8000/docs  # Backend API docs
   - `Space`/`Enter` = YES (go deeper)
   - `N` = NO (next skill)
 - **Branching Logic**: "Yes" answers unlock deeper questions in that skill area
-- **Admin Panel**: Manage questions, view sessions, analytics
+- **Admin Panel**: Manage questions, view sessions, analytics with radar charts
+- **Individual Session Analysis**: Detailed skill breakdowns with spider web visualizations
+- **Session Management**: Delete individual sessions or bulk clear all data
 - **Real-time Progress**: Visual progress tracking and depth indicators
+- **Performance Metrics**: Tooltips explain all metrics, API health monitoring
 - **Clean Error Handling**: Comprehensive logging and error recovery
 
 ## Tech Stack

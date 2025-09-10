@@ -51,23 +51,26 @@
           <div class="flex justify-center gap-6">
             <button
               @click="handleAnswer(true)"
-              class="flex flex-col items-center gap-2 px-8 py-4 bg-black/50 border border-green-400/50 hover:bg-green-400/10 hover:border-green-400 transition-all"
-              :class="{ 'scale-105 bg-green-400/10': lastKey === 'yes' }"
+              class="group relative flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-green-400/50 hover:bg-green-400/10 hover:border-green-400 transition-all duration-200 transform hover:scale-105"
+              :class="{ 'scale-110 bg-green-400/20 border-green-400': lastKey === 'yes' }"
             >
-              <span class="text-green-400 text-xl font-bold">YES</span>
-              <div class="flex gap-1 text-xs">
-                <kbd class="px-2 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/60">Space</kbd>
-                <kbd class="px-2 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/60">Enter</kbd>
+              <span class="text-green-400 text-2xl font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;">YES</span>
+              <div class="flex gap-1 text-xs opacity-70">
+                <kbd class="px-1.5 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/80 rounded text-xs">SPACE</kbd>
+                <span class="text-green-400/50">/</span>
+                <kbd class="px-1.5 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/80 rounded text-xs">↵</kbd>
               </div>
+              <div class="absolute inset-0 bg-green-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
 
             <button
               @click="handleAnswer(false)"
-              class="flex flex-col items-center gap-2 px-8 py-4 bg-black/50 border border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all"
-              :class="{ 'scale-105 bg-red-500/10': lastKey === 'no' }"
+              class="group relative flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all duration-200 transform hover:scale-105"
+              :class="{ 'scale-110 bg-red-500/20 border-red-500': lastKey === 'no' }"
             >
-              <span class="text-red-500 text-xl font-bold">NO</span>
-              <kbd class="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500/60 text-xs">N</kbd>
+              <span class="text-red-500 text-2xl font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;">NO</span>
+              <kbd class="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500/80 text-xs rounded">N</kbd>
+              <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
           </div>
         </div>
@@ -80,7 +83,18 @@
 
     <!-- Footer -->
     <div class="p-4 text-center">
-      <p class="text-xs text-green-400/30 font-mono">Session: {{ sessionId }}</p>
+      <div class="flex justify-center items-center gap-4 text-xs font-mono">
+        <span class="text-green-400/60">
+          Question {{ baseQuestionIndex + 1 }} of {{ baseQuestions.length }}
+        </span>
+        <span class="text-green-400/30">•</span>
+        <span class="text-cyan-400/60" v-if="questionPath.length > 0">
+          Depth {{ questionPath.length + 1 }}
+        </span>
+        <span class="text-amber-400/60" v-else>
+          Base Level
+        </span>
+      </div>
     </div>
   </div>
 </template>

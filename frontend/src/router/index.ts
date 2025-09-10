@@ -29,6 +29,13 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Admin Panel', requiresAuth: true }
   },
   {
+    path: '/admin/session/:sessionId',
+    name: 'SessionStats',
+    component: () => import('@/views/SessionStatsView.vue'),
+    props: true,
+    meta: { title: 'Session Analysis', requiresAuth: true }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/NotFoundView.vue'),

@@ -9,6 +9,9 @@ A gamified employee skills assessment tool that uses branching logic to efficien
 - **Question Management**: Admin interface to create, edit, delete, and reorder questions while maintaining tree structure
 - **Employee Tracking**: Store responses per session with user information
 - **Skills Summary**: Admin view to see aggregated skills data per employee
+- **Individual Session Analysis**: Detailed per-session view with radar charts and performance metrics
+- **Session Management**: Delete individual sessions or bulk clear all data
+- **Real-time Progress**: Visual progress tracking with depth indicators and question counts
 
 ## Technical Stack
 - **Backend**: FastAPI with SQLAlchemy ORM, Pydantic for validation
@@ -26,7 +29,10 @@ A gamified employee skills assessment tool that uses branching logic to efficien
   - `/app/config/` - Configuration and settings
 - **Frontend Structure**: Single-page application with component-based architecture
   - Focus on single survey component for entire flow
-  - Admin panel for question management
+  - Admin panel for question management and analytics
+  - Shared authentication state with session persistence
+  - SVG-based radar chart visualizations
+  - Component reusability with TypeScript composables
 
 ## Database Schema
 
@@ -76,24 +82,31 @@ responses:
 - `DELETE /api/admin/questions/{id}` - Delete question and children
 - `PUT /api/admin/questions/reorder` - Bulk update order_index
 - `GET /api/admin/sessions` - Get all sessions with responses
-- `GET /api/admin/analytics` - Get aggregated skills data
+- `DELETE /api/admin/sessions/{id}` - Delete individual session
+- `POST /api/admin/sessions/cleanup` - Bulk delete incomplete sessions
+- `GET /api/admin/analytics` - Get aggregated skills data with health metrics
 
 ## Key Features to Implement
 
-### Phase 1 (MVP)
+### Phase 1 (MVP) - COMPLETED
 - [x] Basic backend structure with proper separation of concerns
 - [x] Database models and migrations
 - [x] Seeder for initial questions
 - [x] CRUD operations for questions
 - [x] Session and response tracking
-- [ ] Basic Vue frontend with survey flow
-- [ ] Keyboard navigation
-- [ ] Docker Compose setup
+- [x] Vue frontend with survey flow
+- [x] Keyboard navigation
+- [x] Docker Compose setup
 
-### Phase 2 (Enhanced)
+### Phase 2 (Enhanced) - COMPLETED
+- [x] Question categories
+- [x] Admin dashboard with analytics
+- [x] Individual session analysis with radar charts
+- [x] Session management (delete/cleanup)
+- [x] Performance metrics with tooltips
+- [x] API health monitoring
+- [x] Admin authentication persistence
 - [ ] Drag-and-drop question reordering
-- [ ] Question categories
-- [ ] Admin dashboard with analytics
 - [ ] Export functionality (CSV)
 - [ ] Response time tracking
 - [ ] Bulk question import
@@ -153,29 +166,64 @@ responses:
 
 ## Docker Deployment
 
-The application uses Docker Compose with:
-- Backend service (FastAPI on port 8000)
-- Frontend service (Vite dev server on port 5173)
+### Development (docker-compose.yml)
+- Backend service (FastAPI on port 8000) with hot-reload
+- Frontend service (Vite dev server on port 5173) with hot-reload
 - SQLite volume for data persistence
 - Automatic database initialization and seeding
+
+### Production (docker-compose.prod.yml)
+- Multi-stage build with optimized images
+- Frontend served via nginx on port 80
+- Backend on port 8000 with production settings
+- Environment variables for configuration
+- Health checks and restart policies
 
 ## Common Commands
 
 ```bash
-# Start entire application
-docker-compose up
+# Development
+docker-compose up                    # Start with hot-reload
+docker-compose up --build           # Rebuild after changes
+docker-compose logs -f backend      # View backend logs
+docker-compose logs -f frontend     # View frontend logs
+docker-compose down -v && docker-compose up  # Reset database
 
-# Rebuild after changes
-docker-compose up --build
-
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
-
-# Reset database
-docker-compose down -v
-docker-compose up
+# Production
+docker-compose -f docker-compose.prod.yml up -d  # Start production build
+docker-compose -f docker-compose.prod.yml logs -f  # View production logs
 ```
+
+## Component Architecture
+
+### Key Frontend Components
+- **SurveyView.vue**: Main survey interface with keyboard navigation and progress tracking
+- **SessionStatsView.vue**: Individual session analysis with SVG radar charts and performance metrics
+- **AdminView.vue**: Admin dashboard with analytics, session management, and question CRUD
+- **useAdminAuth.ts**: Shared authentication composable with session persistence
+
+### Development Patterns
+- Vue 3 Composition API with TypeScript
+- Shared state management via composables
+- SVG-based data visualization (radar charts)
+- Authentication caching in sessionStorage
+- Proper error handling with user feedback
+- Responsive design with Tailwind CSS
+
+## Production Deployment
+
+### Performance Optimizations
+- Multi-stage Docker builds for minimal image size
+- Frontend served via nginx for static assets
+- SQLite with persistent volumes
+- Environment-based configuration
+- Health checks for service monitoring
+
+### Security Considerations
+- Admin password protection for sensitive endpoints
+- CORS configuration for frontend origins
+- No sensitive data in environment defaults
+- Session-based authentication caching
 
 ## Notes for Future Development
 - Consider adding Redis for session management if scaling
@@ -183,3 +231,5 @@ docker-compose up
 - Add WebSocket support for real-time admin updates
 - Consider PostgreSQL if concurrent writes become an issue
 - Add rate limiting for public endpoints
+- Export functionality (CSV) for analytics data
+- Drag-and-drop question reordering interface
