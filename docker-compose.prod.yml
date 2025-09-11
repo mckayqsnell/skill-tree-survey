@@ -16,7 +16,7 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       
       # CORS - Update with your actual frontend URL
-      - CORS_ORIGINS=["http://localhost","http://localhost:80","https://your-domain.com"]
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost","http://localhost:80"]}
       
       # Auto-seed on first run
       - SEED_ON_STARTUP=true
