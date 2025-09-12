@@ -1,0 +1,310 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_message:
+        description: 'Deployment message/reason'
+        required: false
+        default: 'Manual production deployment'
+      skip_health_check:
+        description: 'Skip health checks (use with caution)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://skills-survey.heal.engineering
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log deployment start
+      run: |
+        echo "🚀 Starting production deployment"
+        echo "Initiated by: ${{ github.actor }}"
+        echo "Deployment message: ${{ github.event.inputs.deployment_message }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Configure AWS credentials
+      if: vars.USE_AWS_ECR == 'true'
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+    - name: Login to AWS ECR
+      if: vars.USE_AWS_ECR == 'true'
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Set Docker registry
+      id: registry
+      run: |
+        if [ "${{ vars.USE_AWS_ECR }}" == "true" ]; then
+          echo "registry=${{ steps.login-ecr.outputs.registry }}" >> $GITHUB_OUTPUT
+        else
+          echo "registry=docker.io" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build and tag Docker images locally
+      run: |
+        # Build backend
+        docker build \
+          -f backend/Dockerfile.prod \
+          -t skill-survey-backend:latest \
+          -t skill-survey-backend:${{ github.sha }} \
+          ./backend
+        
+        # Build frontend with production API URL
+        docker build \
+          -f frontend/Dockerfile.prod \
+          -t skill-survey-frontend:latest \
+          -t skill-survey-frontend:${{ github.sha }} \
+          --build-arg VITE_API_URL="${{ secrets.VITE_API_URL }}" \
+          ./frontend
+
+    - name: Save Docker images as tar files
+      run: |
+        docker save skill-survey-backend:latest skill-survey-backend:${{ github.sha }} \
+          -o /tmp/backend-images.tar
+        docker save skill-survey-frontend:latest skill-survey-frontend:${{ github.sha }} \
+          -o /tmp/frontend-images.tar
+        
+        # Compress the tar files
+        gzip /tmp/backend-images.tar
+        gzip /tmp/frontend-images.tar
+        
+        ls -lh /tmp/*.tar.gz
+
+    - name: Copy Docker images to EC2
+      uses: appleboy/scp-action@v0.1.5
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: ${{ secrets.EC2_PORT || 22 }}
+        source: "/tmp/backend-images.tar.gz,/tmp/frontend-images.tar.gz"
+        target: "/tmp"
+        timeout: 10m
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: ${{ secrets.EC2_PORT || 22 }}
+        timeout: 10m
+        script: |
+          set -e
+          
+          echo "📦 Loading Docker images..."
+          cd /tmp
+          gunzip -f backend-images.tar.gz frontend-images.tar.gz
+          docker load -i backend-images.tar
+          docker load -i frontend-images.tar
+          
+          # Clean up tar files
+          rm -f backend-images.tar frontend-images.tar
+          
+          echo "📝 Creating production environment file..."
+          cd ~/skill-tree-survey || cd /home/${{ secrets.EC2_USERNAME }}/skill-tree-survey || cd /opt/skill-tree-survey
+          
+          # Backup current .env.production if it exists
+          if [ -f .env.production ]; then
+            cp .env.production .env.production.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+          
+          # Create new .env.production file
+          cat > .env.production << 'EOF'
+          # Backend Configuration
+          ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          DATABASE_URL=sqlite:////app/data/skill_survey.db
+          CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
+          SEED_ON_STARTUP=true
+          
+          # Frontend Configuration
+          VITE_API_URL=${{ secrets.VITE_API_URL }}
+          EOF
+          
+          echo "🔄 Updating docker-compose services..."
+          
+          # Check current running services
+          docker-compose -f docker-compose.prod.yml ps
+          
+          # Pull any base images if needed
+          docker-compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
+          
+          # Stop and remove old containers
+          echo "Stopping old containers..."
+          docker-compose -f docker-compose.prod.yml down
+          
+          # Start new containers with updated images
+          echo "Starting new containers..."
+          docker-compose -f docker-compose.prod.yml up -d
+          
+          # Wait for services to be ready
+          echo "⏳ Waiting for services to start..."
+          sleep 20
+          
+          # Check if skip health check is enabled
+          if [ "${{ github.event.inputs.skip_health_check }}" != "true" ]; then
+            echo "🏥 Running health checks..."
+            
+            # Health check for backend
+            max_attempts=15
+            attempt=1
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f http://localhost:8000/health; then
+                echo "✅ Backend is healthy"
+                break
+              fi
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ Backend health check failed"
+                docker-compose -f docker-compose.prod.yml logs --tail=50 backend
+                exit 1
+              fi
+              
+              echo "Waiting for backend... (attempt $attempt/$max_attempts)"
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            
+            # Health check for frontend
+            attempt=1
+            while [ $attempt -le $max_attempts ]; do
+              if curl -f http://localhost:8080; then
+                echo "✅ Frontend is accessible"
+                break
+              fi
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ Frontend health check failed"
+                docker-compose -f docker-compose.prod.yml logs --tail=50 frontend
+                exit 1
+              fi
+              
+              echo "Waiting for frontend... (attempt $attempt/$max_attempts)"
+              sleep 5
+              attempt=$((attempt + 1))
+            done
+            
+            # Final check through nginx if configured
+            if curl -f https://skills-survey.heal.engineering/api/health 2>/dev/null; then
+              echo "✅ Application is accessible via public URL"
+            else
+              echo "⚠️  Could not verify public URL (this might be expected if nginx is configured separately)"
+            fi
+          else
+            echo "⚠️  Health checks skipped by user request"
+          fi
+          
+          # Clean up old Docker images to save space
+          echo "🧹 Cleaning up old Docker images..."
+          docker image prune -f
+          
+          # Show final status
+          echo "📊 Deployment complete! Current status:"
+          docker-compose -f docker-compose.prod.yml ps
+          
+          echo "✅ Deployment successful!"
+
+    - name: Verify deployment
+      if: github.event.inputs.skip_health_check != 'true'
+      run: |
+        echo "🔍 Verifying deployment from GitHub Actions..."
+        max_attempts=5
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          if curl -f -k https://skills-survey.heal.engineering/api/health; then
+            echo "✅ Production deployment verified successfully!"
+            break
+          fi
+          
+          if [ $attempt -eq $max_attempts ]; then
+            echo "⚠️  Could not verify production URL from GitHub Actions"
+            echo "This might be due to network restrictions. Please verify manually."
+          fi
+          
+          echo "Verification attempt $attempt/$max_attempts..."
+          sleep 10
+          attempt=$((attempt + 1))
+        done
+
+    - name: Create deployment summary
+      if: always()
+      run: |
+        echo "## 📋 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Deployment message**: ${{ github.event.inputs.deployment_message }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "- **Production URL**: https://skills-survey.heal.engineering" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ job.status }}" == "success" ]; then
+          echo "### ✅ Deployment successful!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The application has been successfully deployed to production." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "### ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please check the logs for more information." >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Send deployment notification
+      if: always()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const status = '${{ job.status }}';
+          const emoji = status === 'success' ? '✅' : '❌';
+          
+          // Create a deployment status
+          await github.rest.repos.createDeploymentStatus({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            deployment_id: context.payload.deployment?.id || 1,
+            state: status === 'success' ? 'success' : 'failure',
+            environment: 'production',
+            environment_url: 'https://skills-survey.heal.engineering',
+            description: `Deployment ${status}`,
+          }).catch(() => {
+            console.log('Could not create deployment status (deployment might not exist)');
+          });
+
+  rollback:
+    name: Rollback Option
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: failure()
+    
+    steps:
+    - name: Rollback instructions
+      run: |
+        echo "❌ Deployment failed. To rollback:"
+        echo "1. SSH into the EC2 instance"
+        echo "2. Navigate to the project directory"
+        echo "3. Run: docker-compose -f docker-compose.prod.yml down"
+        echo "4. Restore previous images or redeploy last known good version"
+        echo "5. Run: docker-compose -f docker-compose.prod.yml up -d"

@@ -1,0 +1,64 @@
+name: Test EC2 Connection
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Test SSH Connection
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: ${{ secrets.EC2_PORT || 22 }}
+        script: |
+          echo "✅ Connection successful!"
+          echo "========================================="
+          echo "Current directory:"
+          pwd
+          echo ""
+          echo "Directory contents:"
+          ls -la
+          echo ""
+          echo "========================================="
+          echo "Docker version:"
+          docker --version || echo "❌ Docker not found"
+          echo ""
+          echo "Docker Compose version:"
+          docker-compose --version || echo "❌ Docker Compose not found"
+          echo ""
+          echo "========================================="
+          echo "Checking for skill-tree-survey directory:"
+          if [ -d ~/skill-tree-survey ]; then
+            echo "✅ Project directory found at ~/skill-tree-survey"
+            cd ~/skill-tree-survey
+            echo "Contents:"
+            ls -la
+            if [ -f docker-compose.prod.yml ]; then
+              echo "✅ docker-compose.prod.yml found"
+            else
+              echo "⚠️  docker-compose.prod.yml not found"
+            fi
+          else
+            echo "⚠️  Project directory not found at ~/skill-tree-survey"
+            echo "Searching for project directory:"
+            find ~ -maxdepth 3 -name "skill-tree-survey" -type d 2>/dev/null || echo "Not found"
+          fi
+          echo ""
+          echo "========================================="
+          echo "Docker containers running:"
+          docker ps || echo "Could not list containers"
+          echo ""
+          echo "========================================="
+          echo "System info:"
+          uname -a
+          echo ""
+          echo "User info:"
+          echo "Username: $(whoami)"
+          echo "Groups: $(groups)"
+          echo ""
+          echo "========================================="
+          echo "Test complete!"
