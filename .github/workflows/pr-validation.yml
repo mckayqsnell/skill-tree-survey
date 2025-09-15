@@ -10,10 +10,15 @@ on:
       - 'Dockerfile*'
       - '.github/workflows/pr-validation.yml'
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -58,7 +63,7 @@ jobs:
 
     - name: Test Docker Compose Configuration
       run: |
-        docker-compose -f docker-compose.prod.yml config -q
+        docker compose -f docker-compose.prod.yml config -q
         if [ $? -eq 0 ]; then
           echo "✅ Docker Compose configuration is valid"
         else
@@ -79,7 +84,7 @@ jobs:
           > docker-compose.test.yml
         
         # Start services
-        docker-compose -f docker-compose.test.yml up -d
+        docker compose -f docker-compose.test.yml up -d
         
         # Wait for services to be healthy
         echo "Waiting for services to start..."
@@ -100,7 +105,7 @@ jobs:
           
           if [ $attempt -eq $max_attempts ]; then
             echo "❌ Backend health check failed after $max_attempts attempts"
-            docker-compose -f docker-compose.test.yml logs backend
+            docker compose -f docker-compose.test.yml logs backend
             exit 1
           fi
           
@@ -123,7 +128,7 @@ jobs:
           
           if [ $attempt -eq $max_attempts ]; then
             echo "❌ Frontend health check failed after $max_attempts attempts"
-            docker-compose -f docker-compose.test.yml logs frontend
+            docker compose -f docker-compose.test.yml logs frontend
             exit 1
           fi
           
@@ -156,7 +161,7 @@ jobs:
     - name: Cleanup
       if: always()
       run: |
-        docker-compose -f docker-compose.test.yml down -v || true
+        docker compose -f docker-compose.test.yml down -v || true
         rm -f docker-compose.test.yml || true
         
         # Move cache to preserve it
