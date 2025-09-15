@@ -33,6 +33,25 @@ http://localhost:8000/docs  # Backend API docs
 - **Backend**: FastAPI, SQLAlchemy, SQLite, Pydantic
 - **Deployment**: Docker Compose with hot-reload
 
+## 🌍 Environments
+
+This project supports multiple environments with proper separation:
+
+- **Development**: Local development with hot-reload
+- **Test**: Staging environment for testing
+- **Production**: Live production environment
+
+### Quick Start by Environment
+```bash
+# Development
+docker-compose up
+
+# Test
+docker-compose -f docker-compose.test.yml up -d
+
+# Production  
+docker-compose -f docker-compose.prod.yml up -d
+
 ## Project Structure
 
 ```

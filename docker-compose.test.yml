@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    container_name: test-skill-survey-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/data/skill_survey_test.db
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-test-admin-password}
+      - CORS_ORIGINS=${CORS_ORIGINS:-["https://test-skills-survey.heal.engineering","http://test-skills-survey.heal.engineering"]}
+      - SEED_ON_STARTUP=true
+      - ENVIRONMENT=test
+      - API_PREFIX=/api
+      - APP_NAME=Skill Tree Survey - Test
+      - APP_VERSION=1.0.0-test
+      - DEBUG=false
+    volumes:
+      - test_sqlite_data:/app/data
+    networks:
+      - test-skill-survey-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+      args:
+        - VITE_API_URL=${VITE_API_URL:-https://test-skills-survey.heal.engineering}
+    container_name: test-skill-survey-frontend
+    ports:
+      - "8080:80"
+    networks:
+      - test-skill-survey-network
+    depends_on:
+      - backend
+    restart: always
+
+networks:
+  test-skill-survey-network:
+    driver: bridge
+
+volumes:
+  test_sqlite_data:
+    driver: local
