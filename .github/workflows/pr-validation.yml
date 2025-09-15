@@ -73,19 +73,10 @@ jobs:
 
     - name: Start Services with Docker Compose
       run: |
-        # Create a test compose file with the PR-specific images
-        cat docker-compose.prod.yml | \
-          sed 's|build:|# build:|g' | \
-          sed 's|dockerfile: Dockerfile.prod|# dockerfile: Dockerfile.prod|g' | \
-          sed 's|context: ./backend|# context: ./backend|g' | \
-          sed 's|context: ./frontend|# context: ./frontend|g' | \
-          sed 's|skill-survey-backend|skill-survey-backend:pr-${{ github.event.pull_request.number }}|g' | \
-          sed 's|skill-survey-frontend|skill-survey-frontend:pr-${{ github.event.pull_request.number }}|g' \
-          > docker-compose.test.yml
-        
-        # Start services
-        docker compose -f docker-compose.test.yml up -d
-        
+        # Start services directly using the production compose file
+        # The images were already built in previous steps
+        docker compose -f docker-compose.prod.yml up -d
+
         # Wait for services to be healthy
         echo "Waiting for services to start..."
         sleep 30
