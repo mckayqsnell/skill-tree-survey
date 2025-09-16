@@ -186,7 +186,7 @@
             <!-- Radar Chart -->
             <div class="flex-shrink-0 w-full md:w-auto skill-chart-wrapper" :class="isStiffMode ? 'order-2 md:order-2' : ''">
               <div class="relative w-[320px] md:w-[380px] h-[320px] md:h-[380px] mx-auto p-1 skill-chart-container">
-                <svg width="100%" height="100%" viewBox="0 0 380 380" class="transform" preserveAspectRatio="xMidYMid meet">
+                <svg width="100%" height="100%" viewBox="-15 0 395 380" class="transform" preserveAspectRatio="xMidYMid meet">
                   <!-- Background Grid -->
                   <g :class="isStiffMode ? 'opacity-60' : 'opacity-20'">
                     <!-- Concentric circles -->
@@ -274,29 +274,46 @@
             </div>
             
             <!-- Legend & Stats -->
-            <div class="flex-1 space-y-2 min-w-0 w-full md:max-w-sm skill-stats-container" :class="isStiffMode ? 'order-1 md:order-1' : ''">
-              <div class="grid grid-cols-1 gap-1">
+            <div class="flex-1 space-y-2 min-w-0 w-full skill-stats-container" :class="isStiffMode ? 'md:max-w-sm order-1 md:order-1' : ''">
+              <div class="grid grid-cols-1" :class="isStiffMode ? 'gap-1' : 'gap-2'">
                 <div 
                   v-for="cat in categoryStats"
                   :key="cat.category"
-                  class="flex items-center justify-between px-2 py-1 bg-overlay border border-primary-faint rounded"
+                  class="flex items-center justify-between bg-overlay border border-primary-faint rounded"
+                  :class="isStiffMode ? 'px-2 py-1' : 'p-3'"
                 >
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center" :class="isStiffMode ? 'gap-2' : 'gap-3'">
                     <div 
-                      class="w-2 h-2 rounded-full flex-shrink-0"
+                      class="rounded-full flex-shrink-0"
+                      :class="isStiffMode ? 'w-2 h-2' : 'w-3 h-3'"
                       :style="{ backgroundColor: getRadarPointColor(cat.percentage_yes) }"
                     ></div>
                     <div class="min-w-0 flex-1">
-                      <div class="flex items-baseline gap-2">
+                      <div v-if="isStiffMode" class="flex items-baseline gap-2">
                         <h3 class="text-primary font-semibold text-sm truncate">{{ cat.category }}</h3>
+                        <p class="text-xs text-primary-dim font-mono-primary">
+                          {{ cat.yes_count }}/{{ cat.total_questions }}
+                        </p>
+                      </div>
+                      <div v-else class="text-right">
+                        <h3 class="text-primary font-semibold text-sm">{{ cat.category }}</h3>
                         <p class="text-xs text-primary-dim font-mono-primary">
                           {{ cat.yes_count }}/{{ cat.total_questions }}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div class="flex items-center gap-2 flex-shrink-0">
+                  <div v-if="isStiffMode" class="flex items-center gap-2 flex-shrink-0">
                     <p class="text-sm font-bold text-info">{{ Math.round(cat.percentage_yes) }}%</p>
+                    <p 
+                      class="text-xs font-mono font-semibold"
+                      :class="getSkillLevelClass(cat.percentage_yes)"
+                    >
+                      {{ getSkillLevel(cat.percentage_yes) }}
+                    </p>
+                  </div>
+                  <div v-else class="text-right flex-shrink-0">
+                    <p class="text-lg font-bold text-info">{{ Math.round(cat.percentage_yes) }}%</p>
                     <p 
                       class="text-xs font-mono font-semibold"
                       :class="getSkillLevelClass(cat.percentage_yes)"
