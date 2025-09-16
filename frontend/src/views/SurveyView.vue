@@ -4,7 +4,7 @@
     <div class="w-full px-4 pt-4">
       <div class="max-w-3xl mx-auto">
         <div class="h-2 bg-green-400/10 rounded-full overflow-hidden">
-          <div 
+          <div
             class="h-full bg-gradient-to-r from-green-400 to-cyan-400 transition-all duration-500 rounded-full"
             :style="{ width: `${progressPercentage}%` }"
           />
@@ -38,7 +38,7 @@
         </div>
 
         <!-- Question Card -->
-        <div 
+        <div
           class="glass-card text-center"
           :key="currentQuestion.id"
           :class="{ 'scale-95': animating }"
@@ -73,6 +73,15 @@
               <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
           </div>
+          <button
+            v-if="answerHistory.length > 0 && canUndo"
+            @click="undoAnswer"
+            class="mt-6 text-xs flex-col items-center text-cyan-400/60 hover:text-cyan-400 transition-colors"
+          >
+            <span class="text-cyan-400/60 text-[14px] font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;"> ← Undo <br></span>
+            <kbd class="px-2 py-0.5 bg-red-500/10 border border-cyan-400/60 text-cyan-400/60 text-[10px] rounded">BACKSPACE</kbd>
+            <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+          </button>
         </div>
       </div>
 
@@ -127,6 +136,13 @@ const baseQuestionIndex = ref(0);
 const answeredQuestions = ref(new Set<number>());
 const pendingResponses = ref<ResponseCreate[]>([]);
 
+// Undo Logic
+const UNDO_TIMEOUT = 10000;
+const canUndo = ref(false);
+let undoTimer: ReturnType<typeof setTimeout> | null = null;
+let lastPendingSend: (() => void) | null = null;
+const answerHistory = ref<Question[]>([]);
+
 // Computed
 const progressPercentage = computed(() => {
   if (baseQuestions.value.length === 0) return 0;
@@ -139,23 +155,23 @@ const loadSurvey = async () => {
   try {
     loading.value = true;
     error.value = '';
-    
+
     // Verify session exists
     if (import.meta.env.DEV) {
       logger.info('Loading survey for session', { sessionId: props.sessionId });
     }
     await sessionsApi.getSession(Number(props.sessionId));
-    
+
     // Load base questions
     const questions = await questionsApi.getBaseQuestions();
     if (import.meta.env.DEV) {
       logger.info(`Loaded ${questions.length} base questions`);
     }
-    
+
     if (questions.length === 0) {
       throw new Error('No questions available');
     }
-    
+
     baseQuestions.value = questions.sort((a, b) => a.order_index - b.order_index);
     currentQuestion.value = baseQuestions.value[0];
   } catch (err: any) {
@@ -174,11 +190,11 @@ const retryLoad = () => {
 // Handle answer
 const handleAnswer = async (answer: boolean) => {
   if (!currentQuestion.value || animating.value) return;
-  
+
   try {
     animating.value = true;
     lastKey.value = answer ? 'yes' : 'no';
-    
+
     // Log the answer
     if (import.meta.env.DEV) {
       logger.info(`Question answered: ${answer ? 'YES' : 'NO'}`, {
@@ -186,35 +202,68 @@ const handleAnswer = async (answer: boolean) => {
         question: currentQuestion.value.text
       });
     }
-    
+    // Add answer to history for undo
+    answerHistory.value.push(currentQuestion.value);
+
     // Mark as answered
     answeredQuestions.value.add(currentQuestion.value.id);
-    
+
     // Store response
     const response: ResponseCreate = {
       question_id: currentQuestion.value.id,
       answer
     };
     pendingResponses.value.push(response);
-    
-    // Send response to API (fire and forget for speed)
-    sendResponse(response);
-    
-    // Determine next question
-    if (answer) {
-      // YES - try to go deeper
-      await goDeeper();
-    } else {
-      // NO - go back or next base
-      goBack();
+
+    // Clear Undo Timer if Exists
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      undoTimer = null;
     }
-    
-    // Animation cleanup
-    setTimeout(() => {
+    // If there is a pending response, send it
+    if (lastPendingSend) {
+      lastPendingSend();
+      lastPendingSend = null;
+    }
+    // If this is the last question, send to API immediately
+    const isLastBase =
+      baseQuestionIndex.value === baseQuestions.value.length - 1;
+    const isLastQuestion = isLastBase && questionPath.value.length === 0;
+    if (isLastQuestion) {
+      sendResponse(response);
+      lastPendingSend = null;
+      canUndo.value = false;
+    } else {
+      // Otherwise, set up a delayed send for when the response is certain
+      lastPendingSend = () => {
+        sendResponse(response);
+      };
+    }
+    // Wait for animation to load next question
+    setTimeout(async () => {
       animating.value = false;
       lastKey.value = null;
-    }, 300);
-    
+      // Determine next question
+      if (answer) {
+        // YES - try to go deeper
+        await goDeeper();
+      } else {
+        // NO - go back or next base
+        goBack();
+      }
+      canUndo.value = true;
+      // Start new undo timer
+      undoTimer = setTimeout(() => {
+        canUndo.value = false;
+        undoTimer = null;
+        // Send the pending response if still present
+        if (lastPendingSend) {
+          lastPendingSend();
+          lastPendingSend = null;
+        }
+        }, UNDO_TIMEOUT);
+      }, 300);
+
   } catch (err: any) {
     logger.error('Error handling answer', err);
     error.value = 'Failed to submit answer';
@@ -225,17 +274,17 @@ const handleAnswer = async (answer: boolean) => {
 // Go deeper into the tree
 const goDeeper = async () => {
   if (!currentQuestion.value) return;
-  
+
   try {
     // Get child questions
     const children = await questionsApi.getChildQuestions(currentQuestion.value.id);
-    
+
     if (children.length > 0) {
       // Go to first unanswered child
       const nextChild = children
         .sort((a, b) => a.order_index - b.order_index)
         .find(q => !answeredQuestions.value.has(q.id));
-      
+
       if (nextChild) {
         questionPath.value.push(currentQuestion.value);
         currentQuestion.value = nextChild;
@@ -245,12 +294,40 @@ const goDeeper = async () => {
         return;
       }
     }
-    
+
     // No children or all answered, go back
     goBack();
   } catch (err) {
     logger.error('Failed to get child questions', err);
     goBack();
+  }
+};
+const undoAnswer = async () => {
+  try{
+    logger.info("Attempting to undo answer")
+    if (animating.value || !currentQuestion.value || answerHistory.value.length === 0) return;
+    if (undoTimer) {
+      clearTimeout(undoTimer);
+      undoTimer = null;
+    }
+    canUndo.value = false;
+    lastPendingSend = null;
+    const previousQuestion = answerHistory.value.pop();
+    if (previousQuestion) {
+      if (baseQuestions.value.some(q => q.id === currentQuestion.value!.id)) {
+        baseQuestionIndex.value -= 1;
+      } else {
+        questionPath.value.pop();
+      }
+      currentQuestion.value = previousQuestion;
+      pendingResponses.value.pop();
+      answeredQuestions.value.delete(previousQuestion.id);
+      if (import.meta.env.DEV) {
+        logger.info(`Undoing to: ${previousQuestion.text}`);
+      }
+    }
+  } catch (err) {
+    logger.error("Failed to undo answer", err)
   }
 };
 
@@ -259,15 +336,15 @@ const goBack = async () => {
   // Pop up the tree and look for siblings
   while (questionPath.value.length > 0) {
     const parent = questionPath.value[questionPath.value.length - 1];
-    
+
     try {
       // Get siblings (children of the parent)
       const siblings = await questionsApi.getChildQuestions(parent.id);
       const sortedSiblings = siblings.sort((a, b) => a.order_index - b.order_index);
-      
+
       // Find the next unanswered sibling
       const nextSibling = sortedSiblings.find(q => !answeredQuestions.value.has(q.id));
-      
+
       if (nextSibling) {
         // Found an unanswered sibling
         currentQuestion.value = nextSibling;
@@ -276,7 +353,7 @@ const goBack = async () => {
         }
         return;
       }
-      
+
       // No unanswered siblings at this level, go up one level
       questionPath.value.pop();
     } catch (err) {
@@ -284,7 +361,7 @@ const goBack = async () => {
       questionPath.value.pop();
     }
   }
-  
+
   // We're back at the base level with no more children to explore
   goToNextBase();
 };
@@ -292,7 +369,7 @@ const goBack = async () => {
 // Move to next base question
 const goToNextBase = () => {
   baseQuestionIndex.value++;
-  
+
   if (baseQuestionIndex.value < baseQuestions.value.length) {
     currentQuestion.value = baseQuestions.value[baseQuestionIndex.value];
     questionPath.value = [];
@@ -325,10 +402,10 @@ const completeSurvey = async () => {
       logger.info('Completing survey');
     }
     currentQuestion.value = null;
-    
+
     // Mark session as complete
     await sessionsApi.completeSession(Number(props.sessionId));
-    
+
     // Navigate to completion page
     await router.push({
       name: 'Complete',
@@ -343,7 +420,7 @@ const completeSurvey = async () => {
 // Keyboard event handler
 const handleKeyPress = (event: KeyboardEvent) => {
   if (animating.value || !currentQuestion.value) return;
-  
+
   switch (event.key.toLowerCase()) {
     case ' ':
     case 'enter':
@@ -353,6 +430,12 @@ const handleKeyPress = (event: KeyboardEvent) => {
     case 'n':
       event.preventDefault();
       handleAnswer(false);
+      break;
+    case 'backspace':
+      if (canUndo.value) {
+        event.preventDefault();
+        undoAnswer();
+      }
       break;
   }
 };
