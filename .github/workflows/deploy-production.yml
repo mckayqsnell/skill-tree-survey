@@ -149,21 +149,24 @@ jobs:
           VITE_API_URL=${{ secrets.VITE_API_URL }}
           EOF
           
+          echo "🏷️ Tagging images for docker-compose..."
+          # Tag the loaded images to match what docker-compose expects
+          docker tag skill-survey-backend:latest skill-tree-survey-backend:latest
+          docker tag skill-survey-frontend:latest skill-tree-survey-frontend:latest
+
           echo "🔄 Updating docker-compose services..."
-          
+
           # Check current running services
           docker-compose -f docker-compose.prod.yml ps
-          
-          # Pull any base images if needed
-          docker-compose -f docker-compose.prod.yml pull --ignore-pull-failures || true
-          
+
           # Stop and remove old containers
           echo "Stopping old containers..."
           docker-compose -f docker-compose.prod.yml down
-          
-          # Start new containers with updated images
-          echo "Starting new containers..."
-          docker-compose -f docker-compose.prod.yml up -d
+
+          # Start new containers with the pre-built images
+          echo "Starting new containers with pre-built images..."
+          # Use --no-build to prevent docker-compose from building new images
+          docker-compose -f docker-compose.prod.yml up -d --no-build
           
           # Wait for services to be ready
           echo "⏳ Waiting for services to start..."
@@ -224,7 +227,19 @@ jobs:
           
           # Clean up old Docker images to save space
           echo "🧹 Cleaning up old Docker images..."
+
+          # Remove old tagged images (keep only latest)
+          echo "Removing old image versions..."
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "skill-survey-(backend|frontend):" | grep -v ":latest" | xargs -r docker rmi 2>/dev/null || true
+
+          # Remove dangling images
           docker image prune -f
+
+          # Optional: More aggressive cleanup (commented out by default)
+          # docker system prune -af --volumes --filter "until=24h"
+
+          echo "Disk space after cleanup:"
+          df -h /var/lib/docker
           
           # Show final status
           echo "📊 Deployment complete! Current status:"

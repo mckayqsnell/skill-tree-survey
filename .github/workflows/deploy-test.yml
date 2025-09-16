@@ -161,21 +161,24 @@ jobs:
           VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
           EOF
 
+          echo "🏷️ Tagging images for docker-compose..."
+          # Tag the loaded images to match what docker-compose expects
+          docker tag skill-survey-backend:test-latest test-skill-survey-backend:latest
+          docker tag skill-survey-frontend:test-latest test-skill-survey-frontend:latest
+
           echo "🔄 Updating docker-compose test services..."
 
           # Check current running services
           docker-compose -f docker-compose.test.yml ps
 
-          # Pull any base images if needed
-          docker-compose -f docker-compose.test.yml pull --ignore-pull-failures || true
-
           # Stop and remove old containers
           echo "Stopping old test containers..."
           docker-compose -f docker-compose.test.yml down
 
-          # Start new containers with updated images
-          echo "Starting new test containers..."
-          docker-compose -f docker-compose.test.yml up -d
+          # Start new containers with the pre-built images
+          echo "Starting new test containers with pre-built images..."
+          # Use --no-build to prevent docker-compose from building new images
+          docker-compose -f docker-compose.test.yml up -d --no-build
 
           # Wait for services to be ready
           echo "⏳ Waiting for test services to start..."
@@ -236,7 +239,19 @@ jobs:
 
           # Clean up old Docker images to save space
           echo "🧹 Cleaning up old Docker images..."
+
+          # Remove old tagged images (keep only latest)
+          echo "Removing old test image versions..."
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "skill-survey-(backend|frontend):test-" | grep -v ":test-latest" | xargs -r docker rmi 2>/dev/null || true
+
+          # Remove dangling images
           docker image prune -f
+
+          # Optional: More aggressive cleanup (commented out by default)
+          # docker system prune -af --volumes --filter "until=24h"
+
+          echo "Disk space after cleanup:"
+          df -h /var/lib/docker
 
           # Show final status
           echo "📊 Test deployment complete! Current status:"
