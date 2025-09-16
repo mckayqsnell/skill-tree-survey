@@ -98,14 +98,14 @@ jobs:
         # Ensure files are readable
         chmod 644 *.tar.gz
 
-    - name: Copy Docker images to EC2
+    - name: Copy Docker images and compose file to EC2
       uses: appleboy/scp-action@v0.1.5
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         port: ${{ secrets.EC2_PORT || 22 }}
-        source: "backend-images.tar.gz,frontend-images.tar.gz"
+        source: "backend-images.tar.gz,frontend-images.tar.gz,docker-compose.prod.yml"
         target: "/tmp"
         timeout: 10m
 
@@ -155,10 +155,17 @@ jobs:
           rm -f backend-images.tar frontend-images.tar
 
           echo "✅ New images loaded and ready for deployment"
-          
-          echo "📝 Creating production environment file..."
+
+          echo "📝 Updating docker-compose configuration..."
           cd ~/skill-tree-survey || cd /home/${{ secrets.EC2_USERNAME }}/skill-tree-survey || cd /opt/skill-tree-survey
-          
+
+          # Backup and update docker-compose.prod.yml
+          if [ -f docker-compose.prod.yml ]; then
+            cp docker-compose.prod.yml docker-compose.prod.yml.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+          cp /tmp/docker-compose.prod.yml ./docker-compose.prod.yml
+          echo "✅ Updated docker-compose.prod.yml"
+
           # Backup current .env.production if it exists
           if [ -f .env.production ]; then
             cp .env.production .env.production.backup.$(date +%Y%m%d_%H%M%S)

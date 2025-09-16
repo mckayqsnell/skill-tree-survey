@@ -108,14 +108,14 @@ jobs:
         # Ensure files are readable
         chmod 644 *-test-images.tar.gz
 
-    - name: Copy Docker images to TEST EC2
+    - name: Copy Docker images and compose file to TEST EC2
       uses: appleboy/scp-action@v0.1.5
       with:
         host: ${{ secrets.TEST_EC2_HOST }}
         username: ${{ secrets.TEST_EC2_USERNAME }}
         key: ${{ secrets.TEST_EC2_SSH_KEY }}
         port: ${{ secrets.TEST_EC2_PORT || 22 }}
-        source: "backend-test-images.tar.gz,frontend-test-images.tar.gz"
+        source: "backend-test-images.tar.gz,frontend-test-images.tar.gz,docker-compose.test.yml"
         target: "/tmp"
         timeout: 10m
 
@@ -167,8 +167,15 @@ jobs:
 
           echo "✅ New test images loaded and ready for deployment"
 
-          echo "📝 Creating test environment file..."
+          echo "📝 Updating docker-compose configuration..."
           cd ~/skill-tree-survey || cd /home/${{ secrets.TEST_EC2_USERNAME }}/skill-tree-survey || cd /opt/skill-tree-survey
+
+          # Backup and update docker-compose.test.yml
+          if [ -f docker-compose.test.yml ]; then
+            cp docker-compose.test.yml docker-compose.test.yml.backup.$(date +%Y%m%d_%H%M%S)
+          fi
+          cp /tmp/docker-compose.test.yml ./docker-compose.test.yml
+          echo "✅ Updated docker-compose.test.yml"
 
           # Backup current .env if it exists
           if [ -f .env ]; then
