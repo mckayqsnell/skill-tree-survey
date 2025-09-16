@@ -143,9 +143,9 @@ jobs:
           echo "📦 Loading new Docker images..."
           gunzip -f backend-images.tar.gz frontend-images.tar.gz
 
-          # Remove current :latest tags to ensure clean replacement
+          # Force remove current :latest tags to ensure clean replacement
           echo "Preparing to replace current images..."
-          docker rmi skill-survey-backend:latest skill-survey-frontend:latest 2>/dev/null || true
+          docker rmi -f skill-survey-backend:latest skill-survey-frontend:latest 2>/dev/null || true
 
           # Load new images (they will be tagged as :latest)
           docker load -i backend-images.tar
@@ -182,16 +182,16 @@ jobs:
           # which matches what's in docker-compose.prod.yml
 
           # Check current running services
-          docker-compose -f docker-compose.prod.yml ps
+          docker-compose -f docker-compose.prod.yml ps 2>/dev/null || true
 
-          # Stop and remove old containers
+          # Stop and remove old containers (force recreate to ensure new images are used)
           echo "Stopping old containers..."
-          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans
 
           # Start new containers with the pre-built images
           echo "Starting new containers..."
-          # Docker-compose will now use the images specified in the yml file
-          docker-compose -f docker-compose.prod.yml up -d
+          # Force recreate to ensure fresh containers with new images
+          docker-compose -f docker-compose.prod.yml up -d --force-recreate
           
           # Wait for services to be ready
           echo "⏳ Waiting for services to start..."

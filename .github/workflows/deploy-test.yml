@@ -73,15 +73,15 @@ jobs:
         # Build backend
         docker build \
           -f backend/Dockerfile.prod \
-          -t skill-survey-backend:test-latest \
-          -t skill-survey-backend:test-${{ github.sha }} \
+          -t test-skill-survey-backend:latest \
+          -t test-skill-survey-backend:test-${{ github.sha }} \
           ./backend
 
         # Build frontend with test API URL
         docker build \
           -f frontend/Dockerfile.prod \
-          -t skill-survey-frontend:test-latest \
-          -t skill-survey-frontend:test-${{ github.sha }} \
+          -t test-skill-survey-frontend:latest \
+          -t test-skill-survey-frontend:test-${{ github.sha }} \
           --build-arg VITE_API_URL="${{ secrets.TEST_VITE_API_URL }}" \
           ./frontend
 
@@ -92,9 +92,9 @@ jobs:
         echo "💾 Saving Docker images for transfer..."
 
         # Save Docker images directly to workspace root
-        docker save skill-survey-backend:test-latest skill-survey-backend:test-${{ github.sha }} \
+        docker save test-skill-survey-backend:latest test-skill-survey-backend:test-${{ github.sha }} \
           -o backend-test-images.tar
-        docker save skill-survey-frontend:test-latest skill-survey-frontend:test-${{ github.sha }} \
+        docker save test-skill-survey-frontend:latest test-skill-survey-frontend:test-${{ github.sha }} \
           -o frontend-test-images.tar
 
         # Compress the tar files
@@ -155,8 +155,8 @@ jobs:
 
           # Remove current :latest tags to ensure clean replacement
           echo "Preparing to replace current test images..."
-          docker rmi test-skill-survey-backend:latest test-skill-survey-frontend:latest 2>/dev/null || true
-          docker rmi skill-survey-backend:test-latest skill-survey-frontend:test-latest 2>/dev/null || true
+          # Force remove old images to ensure fresh deployment
+          docker rmi -f test-skill-survey-backend:latest test-skill-survey-frontend:latest 2>/dev/null || true
 
           # Load new images
           docker load -i backend-test-images.tar
@@ -189,24 +189,24 @@ jobs:
           VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
           EOF
 
-          echo "🏷️ Tagging images for docker-compose..."
-          # Tag the loaded images to match what docker-compose expects
-          docker tag skill-survey-backend:test-latest test-skill-survey-backend:latest
-          docker tag skill-survey-frontend:test-latest test-skill-survey-frontend:latest
+          # Images are already tagged correctly, no need for additional tagging
+          echo "✅ Images are properly tagged for docker-compose"
 
           echo "🔄 Updating docker-compose test services..."
 
           # Check current running services
-          docker-compose -f docker-compose.test.yml ps
+          docker-compose -f docker-compose.test.yml ps 2>/dev/null || true
 
-          # Stop and remove old containers
+          # Stop and remove old containers (including volumes for fresh state)
           echo "Stopping old test containers..."
-          docker-compose -f docker-compose.test.yml down
+          docker-compose -f docker-compose.test.yml down --volumes --remove-orphans
+
+          # Pull images (will use local ones we just loaded)
+          echo "Using freshly built images..."
 
           # Start new containers with the pre-built images
           echo "Starting new test containers..."
-          # Docker-compose will now use the images specified in the yml file
-          docker-compose -f docker-compose.test.yml up -d
+          docker-compose -f docker-compose.test.yml up -d --force-recreate
 
           # Wait for services to be ready
           echo "⏳ Waiting for test services to start..."
