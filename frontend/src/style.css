@@ -61,6 +61,535 @@
 }
 
 @layer components {
+  /* Text styles */
+  .text-primary {
+    @apply text-green-400;
+  }
+  
+  .text-primary-dim {
+    @apply text-green-400/60;
+  }
+  
+  .text-primary-dimmer {
+    @apply text-green-400/40;
+  }
+  
+  .text-primary-subtle {
+    @apply text-green-400/70;
+  }
+  
+  .text-primary-faint {
+    @apply text-green-400/20;
+  }
+  
+  .text-accent {
+    @apply text-amber-500;
+  }
+  
+  .text-accent-dim {
+    @apply text-amber-500/60;
+  }
+  
+  .text-danger {
+    @apply text-red-500;
+  }
+  
+  /* Font styles */
+  .font-heading {
+    font-family: 'Orbitron', monospace;
+  }
+  
+  .font-mono-primary {
+    font-family: 'Share Tech Mono', monospace;
+  }
+  
+  /* Border styles */
+  .border-primary {
+    @apply border-green-400;
+  }
+  
+  .border-primary-dim {
+    @apply border-green-400/50;
+  }
+  
+  .border-primary-faint {
+    @apply border-green-400/20;
+  }
+  
+  .border-danger {
+    @apply border-red-500;
+  }
+  
+  .border-danger-dim {
+    @apply border-red-500/50;
+  }
+  
+  /* Background styles */
+  .bg-overlay {
+    @apply bg-black/30;
+  }
+  
+  .bg-danger-overlay {
+    @apply bg-red-500/10;
+  }
+
+  /* Status text */
+  .status-ready {
+    @apply text-sm text-amber-500 font-mono mb-1;
+  }
+  
+  .status-info {
+    @apply text-sm text-green-400/60 font-mono;
+  }
+  
+  /* Admin link styling */
+  .admin-link {
+    @apply text-sm text-accent-dim hover:text-accent font-mono transition-colors;
+  }
+  
+  /* Background utilities */
+  .bg-primary {
+    @apply bg-green-400;
+  }
+  
+  .from-primary {
+    @apply from-green-400;
+  }
+  
+  .bg-primary\/10 {
+    background-color: rgb(74 222 128 / 0.1);
+  }
+  
+  .bg-primary\/50 {
+    background-color: rgb(74 222 128 / 0.5);
+  }
+  
+  /* Survey buttons */
+  .btn-yes {
+    @apply flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-green-400/50 transition-all duration-200;
+  }
+  
+  .btn-yes:hover {
+    @apply bg-green-400/10 border-green-400 transform scale-105;
+  }
+  
+  .btn-yes-active {
+    @apply scale-110 bg-green-400/20 border-green-400;
+  }
+  
+  .btn-yes-text {
+    @apply text-green-400 text-2xl font-bold mb-1 tracking-wider;
+    font-family: 'Orbitron', monospace;
+  }
+  
+  .btn-no {
+    @apply flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-red-500/50 transition-all duration-200;
+  }
+  
+  .btn-no:hover {
+    @apply bg-red-500/10 border-red-500 transform scale-105;
+  }
+  
+  .btn-no-active {
+    @apply scale-110 bg-red-500/20 border-red-500;
+  }
+  
+  .btn-no-text {
+    @apply text-red-500 text-2xl font-bold mb-1 tracking-wider;
+    font-family: 'Orbitron', monospace;
+  }
+  
+  .kbd-key {
+    @apply px-1.5 py-0.5 rounded text-xs;
+  }
+  
+  .kbd-yes {
+    @apply bg-green-400/10 border border-green-400/30 text-green-400/80;
+  }
+  
+  .kbd-no {
+    @apply bg-red-500/10 border border-red-500/30 text-red-500/80;
+  }
+  
+  /* Tab buttons */
+  .tab-active {
+    @apply bg-green-400/10 border border-green-400 text-green-400;
+  }
+  
+  .tab-inactive {
+    @apply border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80;
+  }
+  
+  /* Analytics cards */
+  .stat-card {
+    @apply bg-black/30 border border-green-400/20 p-4 text-center rounded;
+  }
+  
+  .stat-card-red {
+    @apply bg-black/30 border border-red-400/20 p-4 text-center rounded;
+  }
+  
+  .stat-card-amber {
+    @apply bg-black/30 border border-amber-500/20 p-4 text-center rounded;
+  }
+  
+  .analytics-card {
+    @apply bg-black/30 border border-green-400/10 p-6 rounded;
+  }
+  
+  .skill-badge {
+    @apply flex justify-between items-center p-2 bg-black/20 rounded;
+  }
+  
+  .bg-primary\/5 {
+    background-color: rgb(74 222 128 / 0.05);
+  }
+  
+  /* View stats button */
+  .btn-view-stats {
+    @apply text-xs px-2 py-1 border border-cyan-400/30 text-cyan-400/80 hover:bg-cyan-400/10 hover:border-cyan-400 transition-all rounded;
+  }
+
+  /* Stiff mode - Apple-like design */
+  .stiff-mode {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  }
+  
+  /* Remove hacker-style effects in stiff mode */
+  .stiff-mode::before,
+  .stiff-mode::after {
+    display: none !important;
+  }
+  
+  /* Clean white background */
+  .stiff-mode.star-field {
+    @apply bg-gray-50 !important;
+  }
+  
+  .stiff-mode.star-field::before {
+    display: none !important;
+  }
+  
+  /* Fix cyan text in stiff mode */
+  .stiff-mode .text-cyan-400,
+  .stiff-mode .text-cyan-400\/50,
+  .stiff-mode .text-cyan-400\/60 {
+    @apply text-blue-600 !important;
+  }
+  
+  /* Text colors - Apple style */
+  .stiff-mode .text-primary {
+    @apply text-gray-900 !important;
+  }
+  
+  .stiff-mode .text-primary-dim {
+    @apply text-gray-600 !important;
+  }
+  
+  .stiff-mode .text-primary-dimmer {
+    @apply text-gray-400 !important;
+  }
+  
+  .stiff-mode .text-primary-subtle {
+    @apply text-gray-700 !important;
+  }
+  
+  .stiff-mode .text-primary-faint {
+    @apply text-gray-500 !important;
+  }
+  
+  .stiff-mode .text-accent {
+    @apply text-blue-600 !important;
+  }
+  
+  .stiff-mode .text-accent-dim {
+    @apply text-blue-500 !important;
+  }
+  
+  .stiff-mode .text-danger {
+    @apply text-red-600 !important;
+  }
+  
+  /* Borders - subtle and clean */
+  .stiff-mode .border-primary {
+    @apply border-gray-300 !important;
+  }
+  
+  .stiff-mode .border-primary-dim {
+    @apply border-gray-200 !important;
+  }
+  
+  .stiff-mode .border-primary-faint {
+    @apply border-gray-100 !important;
+  }
+  
+  .stiff-mode .border-danger {
+    @apply border-red-300 !important;
+  }
+  
+  .stiff-mode .border-danger-dim {
+    @apply border-red-200 !important;
+  }
+  
+  /* Remove text shadows */
+  .stiff-mode * {
+    text-shadow: none !important;
+  }
+  
+  /* Apple-style card */
+  .stiff-mode .glass-card {
+    @apply bg-white border-gray-200 shadow-lg !important;
+    backdrop-filter: none !important;
+    border-radius: 16px !important;
+  }
+  
+  /* Clean input fields */
+  .stiff-mode .input-field {
+    @apply bg-gray-50 border-gray-300 text-gray-900 !important;
+    border-radius: 8px !important;
+  }
+  
+  .stiff-mode .input-field:focus {
+    @apply border-blue-500 bg-white !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  .stiff-mode .input-field::placeholder {
+    @apply text-gray-400 !important;
+  }
+  
+  /* Apple-style primary button */
+  .stiff-mode .btn-primary {
+    @apply bg-blue-600 border-blue-600 text-white !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+  }
+  
+  .stiff-mode .btn-primary:hover {
+    @apply bg-blue-700 border-blue-700 !important;
+    transform: translateY(0) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+  }
+  
+  .stiff-mode .btn-primary:disabled {
+    @apply bg-gray-300 border-gray-300 !important;
+  }
+  
+  /* Secondary button - Apple style */
+  .stiff-mode .btn-secondary {
+    @apply bg-gray-200 border-gray-300 text-gray-700 !important;
+    border-radius: 8px !important;
+    font-weight: 500 !important;
+  }
+  
+  .stiff-mode .btn-secondary:hover {
+    @apply bg-gray-300 border-gray-400 !important;
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Status section - clean design */
+  .stiff-mode .bg-overlay {
+    @apply bg-blue-50 !important;
+    border-radius: 8px !important;
+  }
+  
+  .stiff-mode .status-ready {
+    @apply text-orange-600 !important;
+    font-weight: 500 !important;
+  }
+  
+  .stiff-mode .status-info {
+    @apply text-gray-600 !important;
+  }
+  
+  /* Error states */
+  .stiff-mode .bg-danger-overlay {
+    @apply bg-red-50 !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Admin link */
+  .stiff-mode .admin-link {
+    @apply text-blue-600 hover:text-blue-800 !important;
+    text-decoration: none !important;
+  }
+  
+  .stiff-mode .admin-link:hover {
+    text-decoration: underline !important;
+  }
+  
+  /* Font styles */
+  .stiff-mode .font-heading {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.025em !important;
+  }
+  
+  .stiff-mode .font-mono-primary,
+  .stiff-mode .font-mono {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  }
+  
+  /* Progress bar overrides */
+  .stiff-mode .bg-primary {
+    @apply bg-blue-600 !important;
+  }
+  
+  .stiff-mode .from-primary {
+    @apply from-blue-600 !important;
+  }
+  
+  .stiff-mode .bg-primary\/10 {
+    background-color: rgb(37 99 235 / 0.1) !important;
+  }
+  
+  .stiff-mode .bg-primary\/50 {
+    background-color: rgb(37 99 235 / 0.5) !important;
+  }
+  
+  .stiff-mode .bg-primary\/5 {
+    background-color: rgb(37 99 235 / 0.05) !important;
+  }
+  
+  /* Loading spinner */
+  .stiff-mode .border-t-primary {
+    @apply border-t-blue-600 !important;
+  }
+  
+  .stiff-mode .border-primary-faint {
+    @apply border-gray-200 !important;
+  }
+  
+  /* Survey button overrides for Apple style */
+  .stiff-mode .btn-yes {
+    @apply bg-blue-600 border-0 text-white !important;
+    border-radius: 24px !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+    width: 140px !important;
+    height: 48px !important;
+  }
+  
+  .stiff-mode .btn-yes:hover {
+    @apply bg-blue-700 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
+  }
+  
+  .stiff-mode .btn-yes-active {
+    @apply bg-blue-700 !important;
+    transform: scale(0.98) !important;
+  }
+  
+  .stiff-mode .btn-yes-text {
+    @apply text-white !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 1.125rem !important;
+  }
+  
+  .stiff-mode .btn-no {
+    @apply bg-red-600 border-0 text-white !important;
+    border-radius: 24px !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+    width: 140px !important;
+    height: 48px !important;
+  }
+  
+  .stiff-mode .btn-no:hover {
+    @apply bg-red-700 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
+  }
+  
+  .stiff-mode .btn-no-active {
+    @apply bg-red-700 !important;
+    transform: scale(0.98) !important;
+  }
+  
+  .stiff-mode .btn-no-text {
+    @apply text-white !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 1.125rem !important;
+  }
+  
+  /* Hide keyboard hints in stiff mode */
+  .stiff-mode .kbd-key,
+  .stiff-mode .kbd-yes,
+  .stiff-mode .kbd-no {
+    display: none !important;
+  }
+  
+  /* Hide the slash between keyboard hints */
+  .stiff-mode .btn-yes div:has(.kbd-key),
+  .stiff-mode .btn-no div:has(.kbd-key) {
+    display: none !important;
+  }
+  
+  /* Tab buttons in stiff mode */
+  .stiff-mode .tab-active {
+    @apply bg-blue-600 border-blue-600 text-white !important;
+    border-radius: 6px !important;
+  }
+  
+  .stiff-mode .tab-inactive {
+    @apply bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200 hover:border-gray-400 hover:text-gray-800 !important;
+    border-radius: 6px !important;
+  }
+  
+  /* Analytics cards in stiff mode */
+  .stiff-mode .stat-card {
+    @apply bg-white border-gray-200 shadow-sm !important;
+    border-radius: 12px !important;
+  }
+  
+  .stiff-mode .stat-card-red {
+    @apply bg-red-50 border-red-200 !important;
+    border-radius: 12px !important;
+  }
+  
+  .stiff-mode .stat-card-amber {
+    @apply bg-amber-50 border-amber-200 !important;
+    border-radius: 12px !important;
+  }
+  
+  .stiff-mode .analytics-card {
+    @apply bg-white border-gray-200 shadow-sm !important;
+    border-radius: 12px !important;
+  }
+  
+  .stiff-mode .skill-badge {
+    @apply bg-gray-100 border-gray-200 !important;
+    border-radius: 8px !important;
+  }
+  
+  /* View stats button in stiff mode */
+  .stiff-mode .btn-view-stats {
+    @apply text-xs px-2 py-1 bg-blue-50 border-blue-300 text-blue-600 hover:bg-blue-100 hover:border-blue-400 transition-all !important;
+    border-radius: 6px !important;
+  }
+  
+  /* Analytics text colors */
+  .stiff-mode .text-cyan-400 {
+    @apply text-blue-600 !important;
+  }
+  
+  .stiff-mode .text-red-400 {
+    @apply text-red-600 !important;
+  }
+  
+  .stiff-mode .text-red-400\/50 {
+    @apply text-red-500 !important;
+  }
+  
+  .stiff-mode .text-amber-500 {
+    color: rgb(217 119 6) !important; /* amber-600 */
+  }
+  
+  .stiff-mode .text-amber-500\/50 {
+    color: rgb(245 158 11) !important; /* amber-500 */
+  }
   /* Terminal window - cleaner */
   .terminal-window {
     @apply bg-black border border-green-400/30;

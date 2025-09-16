@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { sessionsApi, adminClient } from '@/api';
 import { logger } from '@/api/client';
 
@@ -11,6 +11,7 @@ const loading = ref(false);
 
 export function useAdminAuth() {
   const router = useRouter();
+  const route = useRoute();
 
   // Check if already authenticated from storage
   const checkExistingAuth = async (): Promise<boolean> => {
@@ -94,8 +95,9 @@ export function useAdminAuth() {
     sessionStorage.removeItem('adminPassword');
     adminClient.defaults.headers['X-Admin-Password'] = '';
     
-    // Navigate to home
-    router.push('/');
+    // Navigate to home, preserving mode if present
+    const query = route.query.mode === 'stiff' ? { mode: 'stiff' } : {};
+    router.push({ path: '/', query });
   };
 
   const requireAuth = async (): Promise<boolean> => {

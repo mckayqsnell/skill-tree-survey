@@ -1,13 +1,13 @@
 <template>
-  <div class="min-h-screen bg-black star-field">
+  <div class="min-h-screen bg-black star-field" :class="{ 'stiff-mode': isStiffMode }">
     <!-- Auth Modal -->
     <div v-if="!authenticated" class="min-h-screen flex items-center justify-center px-4">
       <div class="max-w-md w-full">
         <div class="glass-card">
-          <h2 class="text-xl font-bold mb-6 text-green-400" style="font-family: 'Orbitron', monospace;">ADMIN ACCESS</h2>
+          <h2 class="text-xl font-bold mb-6 text-primary font-heading">ADMIN ACCESS</h2>
           <form @submit.prevent="handleAuthenticate">
             <div class="mb-6">
-              <label for="password" class="block text-xs text-green-400/70 mb-2 font-mono uppercase">
+              <label for="password" class="block text-xs text-primary-subtle mb-2 font-mono-primary uppercase">
                 Password
               </label>
               <input
@@ -17,10 +17,10 @@
                 required
                 class="input-field"
                 placeholder="Enter password"
-                :class="{ 'border-red-500': authError }"
+                :class="{ 'border-danger': authError }"
                 :disabled="authLoading"
               />
-              <p v-if="authError" class="text-red-500 text-xs mt-2">{{ authError }}</p>
+              <p v-if="authError" class="text-danger text-xs mt-2">{{ authError }}</p>
             </div>
             <button type="submit" class="w-full btn-primary" :disabled="authLoading">
               <span v-if="!authLoading">Authenticate</span>
@@ -35,7 +35,7 @@
     <div v-else class="p-6">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-green-400" style="font-family: 'Orbitron', monospace;">ADMIN PANEL</h1>
+        <h1 class="text-2xl font-bold text-primary font-heading">ADMIN PANEL</h1>
         <button 
           @click="handleLogout" 
           class="btn-secondary text-sm" 
@@ -52,7 +52,7 @@
           @click="switchTab('questions')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
-          :class="activeTab === 'questions' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
+          :class="activeTab === 'questions' ? 'tab-active' : 'tab-inactive'"
         >
           Questions
         </button>
@@ -60,7 +60,7 @@
           @click="switchTab('sessions')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
-          :class="activeTab === 'sessions' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
+          :class="activeTab === 'sessions' ? 'tab-active' : 'tab-inactive'"
         >
           Sessions
         </button>
@@ -68,7 +68,7 @@
           @click="switchTab('analytics')"
           type="button"
           class="px-4 py-2 text-sm transition-all cursor-pointer"
-          :class="activeTab === 'analytics' ? 'bg-green-400/10 border border-green-400 text-green-400' : 'border border-green-400/30 text-green-400/60 hover:border-green-400/50 hover:text-green-400/80'"
+          :class="activeTab === 'analytics' ? 'tab-active' : 'tab-inactive'"
         >
           Analytics
         </button>
@@ -79,7 +79,7 @@
         <!-- Questions Tab -->
         <div v-if="activeTab === 'questions'">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg text-green-400">Question Management</h2>
+            <h2 class="text-lg text-primary">Question Management</h2>
             <button @click="() => { parentQuestionId = null; newQuestionText = ''; newQuestionCategory = ''; showAddQuestion = true; }" class="btn-primary text-sm">
               Add Question
             </button>
@@ -87,7 +87,7 @@
 
           <!-- Loading State -->
           <div v-if="loading" class="text-center py-8">
-            <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin"></div>
+            <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin"></div>
           </div>
 
           <!-- Question Tree -->
@@ -104,14 +104,14 @@
 
           <!-- Empty State -->
           <div v-else class="text-center py-8">
-            <p class="text-green-400/50 text-sm">No questions found</p>
+            <p class="text-primary-dim text-sm">No questions found</p>
           </div>
         </div>
 
         <!-- Sessions Tab -->
         <div v-if="activeTab === 'sessions'">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg text-green-400">Recent Sessions</h2>
+            <h2 class="text-lg text-primary">Recent Sessions</h2>
             <div class="flex items-center gap-4">
               <button
                 @click="showDeleteAllConfirm = true"
@@ -123,21 +123,21 @@
                 </svg>
                 Clear All
               </button>
-              <p class="text-xs text-green-400/50 font-mono">Click on a session to view detailed analysis</p>
+              <p class="text-xs text-primary-dim font-mono-primary">Click on a session to view detailed analysis</p>
             </div>
           </div>
           
           <!-- Loading State -->
           <div v-if="loading" class="text-center py-8">
-            <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-2"></div>
-            <p class="text-green-400/60 text-sm">Loading sessions...</p>
+            <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-2"></div>
+            <p class="text-primary-dim text-sm">Loading sessions...</p>
           </div>
 
           <!-- Sessions List -->
           <div v-else-if="sessions.length > 0" class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead>
-                <tr class="border-b border-green-400/30 text-green-400/70">
+                <tr class="border-b border-primary-faint text-primary-subtle">
                   <th class="text-left py-2 px-3">ID</th>
                   <th class="text-left py-2 px-3">User</th>
                   <th class="text-left py-2 px-3">Email</th>
@@ -151,20 +151,20 @@
                 <tr 
                   v-for="session in sessions" 
                   :key="session.id" 
-                  class="border-b border-green-400/10 hover:bg-green-400/5 transition-colors cursor-pointer group"
+                  class="border-b border-primary-faint hover:bg-primary/5 transition-colors cursor-pointer group"
                   @click="viewSessionStats(session.id)"
                 >
-                  <td class="py-2 px-3 text-green-400/80 group-hover:text-green-400">{{ session.id }}</td>
-                  <td class="py-2 px-3 text-green-400/80 group-hover:text-green-400">{{ session.user_name }}</td>
-                  <td class="py-2 px-3 text-green-400/80 group-hover:text-green-400 font-mono text-xs">{{ session.user_email }}</td>
-                  <td class="py-2 px-3 text-green-400/80 group-hover:text-green-400">{{ session.company }}</td>
-                  <td class="py-2 px-3 text-green-400/80 group-hover:text-green-400 text-xs">{{ formatDate(session.started_at) }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.id }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.user_name }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary font-mono-primary text-xs">{{ session.user_email }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.company }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary text-xs">{{ formatDate(session.started_at) }}</td>
                   <td class="py-2 px-3">
                     <span v-if="session.completed_at" class="flex items-center gap-1">
-                      <svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
-                      <span class="text-green-400 text-xs">Complete</span>
+                      <span class="text-primary text-xs">Complete</span>
                     </span>
                     <span v-else class="flex items-center gap-1">
                       <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +177,7 @@
                     <div class="flex items-center gap-2">
                       <button
                         @click.stop="viewSessionStats(session.id)"
-                        class="text-xs px-2 py-1 border border-cyan-400/30 text-cyan-400/80 hover:bg-cyan-400/10 hover:border-cyan-400 transition-all rounded"
+                        class="btn-view-stats"
                       >
                         View Stats
                       </button>
@@ -199,22 +199,22 @@
 
           <!-- Empty State -->
           <div v-else class="text-center py-8">
-            <p class="text-green-400/50 text-sm">No sessions found</p>
+            <p class="text-primary-dim text-sm">No sessions found</p>
           </div>
         </div>
 
         <!-- Analytics Tab -->
         <div v-if="activeTab === 'analytics'">
           <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg text-green-400">Analytics Overview</h2>
+            <h2 class="text-lg text-primary">Analytics Overview</h2>
             <!-- API Health Status -->
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-1">
                 <div 
                   class="w-2 h-2 rounded-full"
-                  :class="apiHealthy ? 'bg-green-400' : 'bg-red-500'"
+                  :class="apiHealthy ? 'bg-primary' : 'bg-danger'"
                 ></div>
-                <span class="text-xs font-mono" :class="apiHealthy ? 'text-green-400' : 'text-red-500'">
+                <span class="text-xs font-mono-primary" :class="apiHealthy ? 'text-primary' : 'text-danger'">
                   API {{ apiHealthy ? 'CONNECTED' : 'DISCONNECTED' }}
                 </span>
               </div>
@@ -223,84 +223,84 @@
           
           <!-- Loading State -->
           <div v-if="loading" class="text-center py-8">
-            <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-2"></div>
-            <p class="text-green-400/60 text-sm">Loading analytics...</p>
+            <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-2"></div>
+            <p class="text-primary-dim text-sm">Loading analytics...</p>
           </div>
 
           <!-- Analytics Data -->
           <div v-else-if="analytics" class="space-y-6">
             <!-- Main Stats Grid -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="bg-black/30 border border-green-400/20 p-4 text-center rounded">
+              <div class="stat-card">
                 <p class="text-2xl font-bold text-cyan-400">{{ analytics.total_sessions }}</p>
-                <p class="text-xs text-green-400/50 font-mono uppercase">Total Sessions</p>
+                <p class="text-xs text-primary-dim font-mono-primary uppercase">Total Sessions</p>
               </div>
-              <div class="bg-black/30 border border-green-400/20 p-4 text-center rounded">
-                <p class="text-2xl font-bold text-green-400">{{ analytics.completed_sessions }}</p>
-                <p class="text-xs text-green-400/50 font-mono uppercase">Completed</p>
+              <div class="stat-card">
+                <p class="text-2xl font-bold text-primary">{{ analytics.completed_sessions }}</p>
+                <p class="text-xs text-primary-dim font-mono-primary uppercase">Completed</p>
               </div>
-              <div class="bg-black/30 border border-red-400/20 p-4 text-center rounded">
+              <div class="stat-card-red">
                 <p class="text-2xl font-bold text-red-400">{{ getInProgressSessions() }}</p>
-                <p class="text-xs text-red-400/50 font-mono uppercase">In Progress</p>
+                <p class="text-xs text-red-400/50 font-mono-primary uppercase">In Progress</p>
               </div>
-              <div class="bg-black/30 border border-amber-500/20 p-4 text-center rounded">
+              <div class="stat-card-amber">
                 <p class="text-2xl font-bold text-amber-500">{{ getCompletionRate() }}%</p>
-                <p class="text-xs text-amber-500/50 font-mono uppercase">Completion Rate</p>
+                <p class="text-xs text-amber-500/50 font-mono-primary uppercase">Completion Rate</p>
               </div>
             </div>
 
             <!-- Additional Stats -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- User Stats -->
-              <div class="bg-black/30 border border-green-400/10 p-6 rounded">
-                <h3 class="text-green-400 font-semibold mb-4">User Engagement</h3>
+              <div class="analytics-card">
+                <h3 class="text-primary font-semibold mb-4">User Engagement</h3>
                 <div class="space-y-3">
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">Unique Users:</span>
-                    <span class="text-green-400 font-mono">{{ getTotalUsers() }}</span>
+                    <span class="text-primary-dim text-sm">Unique Users:</span>
+                    <span class="text-primary font-mono-primary">{{ getTotalUsers() }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">Avg Sessions per User:</span>
-                    <span class="text-cyan-400 font-mono">{{ getAvgSessionsPerUser() }}</span>
+                    <span class="text-primary-dim text-sm">Avg Sessions per User:</span>
+                    <span class="text-cyan-400 font-mono-primary">{{ getAvgSessionsPerUser() }}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">Est. Avg Duration:</span>
-                    <span class="text-amber-500 font-mono">{{ getEstimatedAvgDuration() }}</span>
+                    <span class="text-primary-dim text-sm">Est. Avg Duration:</span>
+                    <span class="text-amber-500 font-mono-primary">{{ getEstimatedAvgDuration() }}</span>
                   </div>
                 </div>
               </div>
 
               <!-- Performance Stats -->
-              <div class="bg-black/30 border border-green-400/10 p-6 rounded">
-                <h3 class="text-green-400 font-semibold mb-4">System Performance</h3>
+              <div class="analytics-card">
+                <h3 class="text-primary font-semibold mb-4">System Performance</h3>
                 <div class="space-y-3">
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">API Response:</span>
-                    <span class="text-green-400 font-mono">{{ apiResponseTime }}ms</span>
+                    <span class="text-primary-dim text-sm">API Response:</span>
+                    <span class="text-primary font-mono-primary">{{ apiResponseTime }}ms</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">Success Rate:</span>
-                    <span class="text-cyan-400 font-mono">{{ getSuccessRate() }}%</span>
+                    <span class="text-primary-dim text-sm">Success Rate:</span>
+                    <span class="text-cyan-400 font-mono-primary">{{ getSuccessRate() }}%</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-green-400/60 text-sm">Last Updated:</span>
-                    <span class="text-amber-500 font-mono text-xs">{{ formatLastUpdate() }}</span>
+                    <span class="text-primary-dim text-sm">Last Updated:</span>
+                    <span class="text-amber-500 font-mono-primary text-xs">{{ formatLastUpdate() }}</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Top Skills -->
-            <div v-if="analytics.top_skills && analytics.top_skills.length > 0" class="bg-black/30 border border-green-400/10 p-6 rounded">
-              <h3 class="text-green-400 font-semibold mb-4">Most Common Skills</h3>
+            <div v-if="analytics.top_skills && analytics.top_skills.length > 0" class="analytics-card">
+              <h3 class="text-primary font-semibold mb-4">Most Common Skills</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div 
                   v-for="skill in analytics.top_skills.slice(0, 6)"
                   :key="skill.skill"
-                  class="flex justify-between items-center p-2 bg-black/20 rounded"
+                  class="skill-badge"
                 >
-                  <span class="text-green-400 text-sm">{{ skill.skill }}</span>
-                  <span class="text-cyan-400 font-mono text-sm">{{ skill.count }}</span>
+                  <span class="text-primary text-sm">{{ skill.skill }}</span>
+                  <span class="text-cyan-400 font-mono-primary text-sm">{{ skill.count }}</span>
                 </div>
               </div>
             </div>
@@ -309,22 +309,22 @@
       </div>
 
       <!-- Error Message -->
-      <div v-if="error" class="mt-4 p-4 bg-red-500/10 border border-red-500/30">
-        <p class="text-red-500 text-sm">{{ error }}</p>
+      <div v-if="error" class="mt-4 p-4 bg-danger-overlay border border-danger-dim">
+        <p class="text-danger text-sm">{{ error }}</p>
       </div>
     </div>
 
     <!-- Add Question Modal -->
     <div v-if="showAddQuestion" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="glass-card max-w-md w-full">
-        <h3 class="text-lg font-bold mb-4 text-green-400">Add New Question</h3>
+        <h3 class="text-lg font-bold mb-4 text-primary">Add New Question</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Question Text</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Question Text</label>
             <input v-model="newQuestionText" type="text" class="input-field" placeholder="Enter question text..." />
           </div>
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Category (optional)</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Category (optional)</label>
             <input v-model="newQuestionCategory" type="text" class="input-field" placeholder="e.g. DevOps, Frontend..." />
           </div>
           <div class="flex gap-2">
@@ -338,14 +338,14 @@
     <!-- Edit Question Modal -->
     <div v-if="showEditQuestion" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="glass-card max-w-md w-full">
-        <h3 class="text-lg font-bold mb-4 text-green-400">Edit Question</h3>
+        <h3 class="text-lg font-bold mb-4 text-primary">Edit Question</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Question Text</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Question Text</label>
             <input v-model="newQuestionText" type="text" class="input-field" placeholder="Enter question text..." />
           </div>
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Category (optional)</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Category (optional)</label>
             <input v-model="newQuestionCategory" type="text" class="input-field" placeholder="e.g. DevOps, Frontend..." />
           </div>
           <div class="flex gap-2">
@@ -359,14 +359,14 @@
     <!-- Add Child Question Modal -->
     <div v-if="showAddChildQuestion" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="glass-card max-w-md w-full">
-        <h3 class="text-lg font-bold mb-4 text-green-400">Add Child Question</h3>
+        <h3 class="text-lg font-bold mb-4 text-primary">Add Child Question</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Question Text</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Question Text</label>
             <input v-model="newQuestionText" type="text" class="input-field" placeholder="Enter question text..." />
           </div>
           <div>
-            <label class="block text-xs text-green-400/70 mb-1 font-mono uppercase">Category (optional)</label>
+            <label class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">Category (optional)</label>
             <input v-model="newQuestionCategory" type="text" class="input-field" placeholder="e.g. DevOps, Frontend..." />
           </div>
           <div class="flex gap-2">
@@ -383,8 +383,8 @@
         <h3 class="text-lg font-bold mb-4 text-red-500">Delete Session</h3>
         <div class="space-y-4">
           <div v-if="sessionToDelete" class="p-4 bg-red-500/10 border border-red-500/20 rounded">
-            <p class="text-sm text-green-400 mb-2">Are you sure you want to delete this session?</p>
-            <div class="text-xs text-green-400/60 space-y-1">
+            <p class="text-sm text-primary mb-2">Are you sure you want to delete this session?</p>
+            <div class="text-xs text-primary-dim space-y-1">
               <p><strong>User:</strong> {{ sessionToDelete.user_name }}</p>
               <p><strong>Email:</strong> {{ sessionToDelete.user_email }}</p>
               <p><strong>Company:</strong> {{ sessionToDelete.company }}</p>
@@ -408,8 +408,8 @@
         <h3 class="text-lg font-bold mb-4 text-red-500">Clear All Sessions</h3>
         <div class="space-y-4">
           <div class="p-4 bg-red-500/10 border border-red-500/20 rounded">
-            <p class="text-sm text-green-400 mb-2">Are you sure you want to delete ALL sessions?</p>
-            <p class="text-xs text-green-400/60">
+            <p class="text-sm text-primary mb-2">Are you sure you want to delete ALL sessions?</p>
+            <p class="text-xs text-primary-dim">
               This will permanently delete <strong>{{ sessions.length }} sessions</strong> and all associated data.
             </p>
           </div>
@@ -427,8 +427,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { questionsApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { QuestionTree, Session, SessionAnalytics } from '@/types';
@@ -437,6 +437,10 @@ import { useAdminAuth } from '@/composables/useAdminAuth';
 
 // Router
 const router = useRouter();
+const route = useRoute();
+
+// Check if stiff mode is active
+const isStiffMode = computed(() => route.query.mode === 'stiff');
 
 // Admin authentication
 const { authenticated, authError, loading: authLoading, authenticate, logout, requireAuth, passwordInput } = useAdminAuth();
@@ -773,7 +777,8 @@ const viewSessionStats = (sessionId: number) => {
   }
   router.push({
     name: 'SessionStats',
-    params: { sessionId: sessionId.toString() }
+    params: { sessionId: sessionId.toString() },
+    query: isStiffMode.value ? { mode: 'stiff' } : {}
   });
 };
 

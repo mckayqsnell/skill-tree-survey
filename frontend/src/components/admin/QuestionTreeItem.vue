@@ -1,28 +1,28 @@
 <template>
-  <div class="border-l-2 border-green-400/20 pl-4">
-    <div class="flex items-center justify-between p-2 hover:bg-green-400/5 group">
+  <div class="border-l-2 border-primary-faint pl-4">
+    <div class="flex items-center justify-between p-2 hover:bg-primary/5 group">
       <div class="flex-1">
-        <span class="text-green-400/80">{{ question.text }}</span>
-        <span v-if="question.category" class="ml-2 text-xs text-cyan-400/60">
+        <span class="text-primary-subtle">{{ question.text }}</span>
+        <span v-if="question.category" class="ml-2 text-xs text-accent-dim">
           [{{ question.category }}]
         </span>
       </div>
       <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           @click="$emit('add-child', question.id)"
-          class="text-green-400 hover:text-green-300 text-xs font-mono"
+          class="text-primary hover:text-primary-subtle text-xs font-mono-primary"
         >
           +Child
         </button>
         <button
           @click="$emit('edit', question)"
-          class="text-cyan-400 hover:text-cyan-300 text-xs font-mono"
+          class="text-accent hover:text-accent-dim text-xs font-mono-primary"
         >
           Edit
         </button>
         <button
           @click="$emit('delete', question.id)"
-          class="text-red-500 hover:text-red-400 text-xs font-mono"
+          class="text-danger hover:text-danger text-xs font-mono-primary opacity-80 hover:opacity-100"
         >
           Delete
         </button>
