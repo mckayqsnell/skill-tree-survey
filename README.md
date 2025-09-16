@@ -2,6 +2,23 @@
 
 A gamified employee skills assessment tool with branching question logic. Built with Vue 3, TypeScript, FastAPI, and a space-themed UI. Keyboard-driven for speed - complete in 5-10 minutes!
 
+## 🔧 Development
+
+For information on contributing to this project:
+- [Contributing Guidelines](./CONTRIBUTING.md) - Development workflow and standards
+- [Deployment Documentation](./docs/DEPLOYMENT.md) - CI/CD pipeline and deployment process
+- [Workflow Examples](./docs/WORKFLOW_EXAMPLES.md) - Common development scenarios
+- [AWS Setup Guide](./docs/AWS_SETUP.md) - Infrastructure setup instructions
+
+### Quick Start for Developers
+1. Clone the repository
+2. Check out the `develop` branch
+3. Create a feature branch
+4. Make your changes
+5. Submit a PR to `develop`
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed instructions.
+
 ## Quick Start
 
 ```bash

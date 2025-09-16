@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-black star-field">
+  <div class="min-h-screen bg-black star-field" :class="{ 'stiff-mode': isStiffMode }">
     <div class="p-6">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
@@ -10,19 +10,19 @@
           >
             ← Back to Sessions
           </button>
-          <h1 class="text-2xl font-bold text-green-400" style="font-family: 'Orbitron', monospace;">
+          <h1 class="text-2xl font-bold text-primary font-heading">
             SESSION ANALYSIS
           </h1>
         </div>
         <div class="text-right">
-          <p class="text-xs text-green-400/50 font-mono">Session ID: {{ sessionId }}</p>
+          <p class="text-xs text-primary-dim font-mono-primary">Session ID: {{ sessionId }}</p>
         </div>
       </div>
 
       <!-- Loading State -->
       <div v-if="loading" class="glass-card text-center">
-        <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-4"></div>
-        <p class="text-green-400/60 font-mono text-sm">Loading session data...</p>
+        <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-4"></div>
+        <p class="text-primary-dim font-mono-primary text-sm">Loading session data...</p>
       </div>
 
       <!-- Error State -->
@@ -31,7 +31,7 @@
           <svg class="w-12 h-12 text-red-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
-          <p class="text-red-500 font-mono text-sm mb-2">{{ error }}</p>
+          <p class="text-danger font-mono-primary text-sm mb-2">{{ error }}</p>
         </div>
         <div class="text-center">
           <button @click="loadSessionData" class="btn-primary mr-2">Retry</button>
@@ -44,115 +44,115 @@
         <!-- User Info Card -->
         <div class="glass-card">
           <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg text-green-400" style="font-family: 'Orbitron', monospace;">USER PROFILE</h2>
+            <h2 class="text-lg text-primary font-heading">USER PROFILE</h2>
             <div class="flex items-center gap-2">
               <div v-if="summary.is_completed" class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="text-xs text-green-400 font-mono">COMPLETED</span>
+                <span class="text-xs text-primary font-mono-primary">COMPLETED</span>
               </div>
               <div v-else class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span class="text-xs text-amber-500 font-mono">IN PROGRESS</span>
+                <span class="text-xs text-accent font-mono-primary">IN PROGRESS</span>
               </div>
             </div>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Name</p>
-              <p class="text-green-400 font-semibold">{{ summary.user_name }}</p>
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Name</p>
+              <p class="text-primary font-semibold">{{ summary.user_name }}</p>
             </div>
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Email</p>
-              <p class="text-green-400 font-mono text-sm">{{ summary.user_email }}</p>
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Email</p>
+              <p class="text-primary font-mono-primary text-sm">{{ summary.user_email }}</p>
             </div>
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Company</p>
-              <p class="text-green-400 font-semibold">{{ summary.company }}</p>
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Company</p>
+              <p class="text-primary font-semibold">{{ summary.company }}</p>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-4 border-t border-green-400/20">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-4 border-t border-primary-faint">
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Started</p>
-              <p class="text-green-400/80 text-sm">{{ formatDate(summary.started_at) }}</p>
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Started</p>
+              <p class="text-primary-subtle text-sm">{{ formatDate(summary.started_at) }}</p>
             </div>
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Duration</p>
-              <p class="text-cyan-400 font-semibold">
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Duration</p>
+              <p class="text-info font-semibold">
                 <span v-if="summary.completion_time_minutes">{{ Math.round(summary.completion_time_minutes) }} min</span>
                 <span v-else-if="!summary.is_completed">{{ getElapsedTime() }}</span>
                 <span v-else>< 1 min</span>
               </p>
             </div>
             <div class="space-y-2">
-              <p class="text-xs text-green-400/50 font-mono uppercase">Progress</p>
-              <p class="text-amber-500 font-semibold">{{ getCompletionStatus() }}</p>
+              <p class="text-xs text-primary-dim font-mono-primary uppercase">Progress</p>
+              <p class="text-accent font-semibold">{{ getCompletionStatus() }}</p>
             </div>
           </div>
         </div>
 
         <!-- Stats Overview -->
         <div class="glass-card">
-          <h2 class="text-lg text-green-400 mb-6" style="font-family: 'Orbitron', monospace;">PERFORMANCE METRICS</h2>
+          <h2 class="text-lg text-primary mb-6 font-heading">PERFORMANCE METRICS</h2>
           
           <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <div class="text-center bg-black/30 border border-green-400/20 p-4 rounded group relative">
-              <p class="text-3xl font-bold text-green-400 mb-1">{{ summary.total_responses }}</p>
+            <div class="metric-card border-primary-faint group">
+              <p class="text-3xl font-bold text-primary mb-1">{{ summary.total_responses }}</p>
               <div class="flex items-center justify-center gap-1">
-                <p class="text-xs text-green-400/50 font-mono uppercase">Total Questions</p>
-                <svg class="w-3 h-3 text-green-400/40 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <p class="text-xs text-primary-dim font-mono-primary uppercase">Total Questions</p>
+                <svg class="w-3 h-3 text-primary-dimmer cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               <!-- Tooltip -->
-              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black border border-green-400/30 text-xs text-green-400 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              <div class="tooltip-base border border-primary-dim text-primary">
                 Number of questions answered in this session
               </div>
             </div>
             
-            <div class="text-center bg-black/30 border border-cyan-400/20 p-4 rounded group relative">
-              <p class="text-3xl font-bold text-cyan-400 mb-1">{{ summary.yes_responses }}</p>
+            <div class="metric-card border-info-faint group">
+              <p class="text-3xl font-bold text-info mb-1">{{ summary.yes_responses }}</p>
               <div class="flex items-center justify-center gap-1">
-                <p class="text-xs text-cyan-400/50 font-mono uppercase">Skills Confirmed</p>
-                <svg class="w-3 h-3 text-cyan-400/40 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <p class="text-xs text-info-dimmer font-mono-primary uppercase">Skills Confirmed</p>
+                <svg class="w-3 h-3 text-info-faint cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               <!-- Tooltip -->
-              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black border border-cyan-400/30 text-xs text-cyan-400 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              <div class="tooltip-base border border-info-dim text-info">
                 Number of "YES" answers - skills the user has
               </div>
             </div>
             
-            <div class="text-center bg-black/30 border border-red-400/20 p-4 rounded group relative">
+            <div class="metric-card border-red-400/20 group">
               <p class="text-3xl font-bold text-red-400 mb-1">{{ summary.no_responses }}</p>
               <div class="flex items-center justify-center gap-1">
-                <p class="text-xs text-red-400/50 font-mono uppercase">Skills Declined</p>
+                <p class="text-xs text-red-400/50 font-mono-primary uppercase">Skills Declined</p>
                 <svg class="w-3 h-3 text-red-400/40 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               <!-- Tooltip -->
-              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black border border-red-400/30 text-xs text-red-400 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              <div class="tooltip-base border border-red-400/30 text-red-400">
                 Number of "NO" answers - areas for potential growth
               </div>
             </div>
             
-            <div class="text-center bg-black/30 border border-amber-500/20 p-4 rounded group relative">
+            <div class="metric-card border-amber-500/20 group">
               <p class="text-3xl font-bold text-amber-500 mb-1">{{ getConfidenceScore() }}%</p>
               <div class="flex items-center justify-center gap-1">
-                <p class="text-xs text-amber-500/50 font-mono uppercase">Confidence Score</p>
+                <p class="text-xs text-amber-500/50 font-mono-primary uppercase">Confidence Score</p>
                 <svg class="w-3 h-3 text-amber-500/40 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               <!-- Tooltip -->
-              <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black border border-amber-500/30 text-xs text-amber-500 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+              <div class="tooltip-base border border-amber-500/30 text-amber-500">
                 Percentage of questions answered "YES" - overall skill confidence level
               </div>
             </div>
@@ -161,17 +161,17 @@
 
         <!-- No Category Data Message -->
         <div v-if="categoryStats.length === 0 && summary" class="glass-card">
-          <h2 class="text-lg text-green-400 mb-4" style="font-family: 'Orbitron', monospace;">SKILL PROFILE</h2>
+          <h2 class="text-lg text-primary mb-4 font-heading">SKILL PROFILE</h2>
           <div class="text-center py-8">
-            <svg class="w-16 h-16 text-amber-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-16 h-16 text-accent mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
             </svg>
-            <p class="text-amber-500/80 mb-2">No category data available</p>
-            <p class="text-xs text-green-400/60 font-mono">
+            <p class="text-accent-dim mb-2">No category data available</p>
+            <p class="text-xs text-primary-dim font-mono-primary">
               This session may not have category-specific questions or the data hasn't been processed yet.
             </p>
-            <div class="mt-4 p-4 bg-amber-500/10 border border-amber-500/20 rounded">
-              <p class="text-sm text-amber-500/80">
+            <div class="mt-4 p-4 bg-accent/10 border border-accent/20 rounded">
+              <p class="text-sm text-accent-dim">
                 {{ summary.total_responses }} total responses recorded
               </p>
             </div>
@@ -179,29 +179,29 @@
         </div>
 
         <!-- Skill Radar Chart -->
-        <div v-else-if="categoryStats.length > 0" class="glass-card">
-          <h2 class="text-lg text-green-400 mb-6" style="font-family: 'Orbitron', monospace;">SKILL PROFILE</h2>
+        <div v-else-if="categoryStats.length > 0" class="glass-card p-4 md:p-6 skill-profile-section">
+          <h2 class="text-lg text-primary mb-3 md:mb-6 font-heading">SKILL PROFILE</h2>
           
-          <div class="flex flex-col lg:flex-row gap-8 items-center">
+          <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start skill-profile-container">
             <!-- Radar Chart -->
-            <div class="flex-shrink-0">
-              <div class="relative w-96 h-96 mx-auto p-4">
-                <svg width="384" height="384" viewBox="0 0 384 384" class="transform">
+            <div class="flex-shrink-0 w-full md:w-auto skill-chart-wrapper" :class="isStiffMode ? 'order-2 md:order-2' : ''">
+              <div class="relative w-[320px] md:w-[380px] h-[320px] md:h-[380px] mx-auto p-1 skill-chart-container">
+                <svg width="100%" height="100%" viewBox="-15 0 395 380" class="transform" preserveAspectRatio="xMidYMid meet">
                   <!-- Background Grid -->
-                  <g class="opacity-20">
+                  <g :class="isStiffMode ? 'opacity-60' : 'opacity-20'">
                     <!-- Concentric circles -->
-                    <circle cx="192" cy="192" r="50" fill="none" stroke="rgba(0, 255, 65, 0.3)" stroke-width="1"/>
-                    <circle cx="192" cy="192" r="100" fill="none" stroke="rgba(0, 255, 65, 0.3)" stroke-width="1"/>
-                    <circle cx="192" cy="192" r="150" fill="none" stroke="rgba(0, 255, 65, 0.3)" stroke-width="1"/>
+                    <circle cx="190" cy="190" r="50" fill="none" :stroke="isStiffMode ? 'rgba(37, 99, 235, 0.5)' : 'rgba(0, 255, 65, 0.3)'" stroke-width="1"/>
+                    <circle cx="190" cy="190" r="100" fill="none" :stroke="isStiffMode ? 'rgba(37, 99, 235, 0.5)' : 'rgba(0, 255, 65, 0.3)'" stroke-width="1"/>
+                    <circle cx="190" cy="190" r="150" fill="none" :stroke="isStiffMode ? 'rgba(37, 99, 235, 0.5)' : 'rgba(0, 255, 65, 0.3)'" stroke-width="1"/>
                     
                     <!-- Radial lines -->
                     <g v-for="(_, index) in categoryStats" :key="`line-${index}`">
                       <line 
-                        x1="192" 
-                        y1="192" 
-                        :x2="192 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 150"
-                        :y2="192 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 150"
-                        stroke="rgba(0, 255, 65, 0.3)" 
+                        x1="190" 
+                        y1="190" 
+                        :x2="190 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 150"
+                        :y2="190 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 150"
+                        :stroke="isStiffMode ? 'rgba(37, 99, 235, 0.5)' : 'rgba(0, 255, 65, 0.3)'" 
                         stroke-width="1"
                       />
                     </g>
@@ -210,16 +210,16 @@
                   <!-- Data Polygon -->
                   <polygon 
                     :points="getRadarPoints()" 
-                    fill="rgba(6, 182, 212, 0.2)" 
-                    stroke="rgba(6, 182, 212, 0.8)" 
+                    :fill="isStiffMode ? 'rgba(37, 99, 235, 0.2)' : 'rgba(6, 182, 212, 0.2)'" 
+                    :stroke="isStiffMode ? 'rgba(37, 99, 235, 0.8)' : 'rgba(6, 182, 212, 0.8)'" 
                     stroke-width="2"
                   />
                   
                   <!-- Data Points -->
                   <g v-for="(cat, index) in categoryStats" :key="`point-${index}`">
                     <circle 
-                      :cx="192 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * (cat.percentage_yes / 100 * 150)"
-                      :cy="192 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * (cat.percentage_yes / 100 * 150)"
+                      :cx="190 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * (cat.percentage_yes / 100 * 150)"
+                      :cy="190 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * (cat.percentage_yes / 100 * 150)"
                       r="5" 
                       :fill="getRadarPointColor(cat.percentage_yes)"
                       stroke="white" 
@@ -229,63 +229,91 @@
                   
                   <!-- Category Labels -->
                   <g v-for="(cat, index) in categoryStats" :key="`label-${index}`">
+                    <!-- Background rect for better readability -->
+                    <rect
+                      :x="190 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170 - 40"
+                      :y="190 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170 - 12"
+                      width="80"
+                      height="24"
+                      :fill="isStiffMode ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.8)'"
+                      rx="2"
+                    />
                     <text 
-                      :x="192 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 175"
-                      :y="192 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 175 - 2"
+                      :x="190 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170"
+                      :y="190 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170 - 2"
                       text-anchor="middle"
                       dominant-baseline="middle"
-                      class="fill-green-400 text-xs font-mono font-semibold"
-                      style="font-size: 10px;"
+                      :class="isStiffMode ? 'fill-gray-800' : 'fill-green-400'"
+                      style="font-size: 11px; font-weight: 600;"
                     >
                       {{ cat.category }}
                     </text>
                     <text 
-                      :x="192 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 175"
-                      :y="192 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 175 + 10"
+                      :x="190 + Math.cos((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170"
+                      :y="190 + Math.sin((index * 2 * Math.PI / categoryStats.length) - Math.PI/2) * 170 + 10"
                       text-anchor="middle"
                       dominant-baseline="middle"
-                      class="fill-cyan-400 text-xs font-mono font-bold"
-                      style="font-size: 9px;"
+                      :class="isStiffMode ? 'fill-gray-600' : 'fill-cyan-400'"
+                      style="font-size: 10px; font-weight: 700;"
                     >
                       {{ Math.round(cat.percentage_yes) }}%
                     </text>
                   </g>
                   
                   <!-- Center Dot -->
-                  <circle cx="192" cy="192" r="3" fill="rgba(0, 255, 65, 0.8)"/>
+                  <circle cx="190" cy="190" r="3" :fill="isStiffMode ? 'rgba(37, 99, 235, 0.8)' : 'rgba(0, 255, 65, 0.8)'"/>
                   
-                  <!-- Percentage Scale Labels -->
-                  <g class="opacity-60">
-                    <text x="197" y="147" class="fill-green-400 text-xs font-mono" style="font-size: 8px;" text-anchor="start">25%</text>
-                    <text x="197" y="97" class="fill-green-400 text-xs font-mono" style="font-size: 8px;" text-anchor="start">50%</text>
-                    <text x="197" y="47" class="fill-green-400 text-xs font-mono" style="font-size: 8px;" text-anchor="start">75%</text>
-                  </g>
+                  <!-- Percentage Scale Labels - Removed -->
+                  <!-- <g class="opacity-60">
+                    <text x="215" y="155" class="fill-primary text-xs font-mono-primary" style="font-size: 8px;" text-anchor="start">25%</text>
+                    <text x="215" y="95" class="fill-primary text-xs font-mono-primary" style="font-size: 8px;" text-anchor="start">50%</text>
+                    <text x="215" y="35" class="fill-primary text-xs font-mono-primary" style="font-size: 8px;" text-anchor="start">75%</text>
+                  </g> -->
                 </svg>
               </div>
             </div>
             
             <!-- Legend & Stats -->
-            <div class="flex-1 space-y-4 min-w-0">
-              <div class="grid grid-cols-1 gap-3">
+            <div class="flex-1 space-y-2 min-w-0 w-full skill-stats-container" :class="isStiffMode ? 'md:max-w-sm order-1 md:order-1' : ''">
+              <div class="grid grid-cols-1" :class="isStiffMode ? 'gap-1' : 'gap-2'">
                 <div 
                   v-for="cat in categoryStats"
                   :key="cat.category"
-                  class="flex items-center justify-between p-3 bg-black/30 border border-green-400/10 rounded"
+                  class="flex items-center justify-between bg-overlay border border-primary-faint rounded"
+                  :class="isStiffMode ? 'px-2 py-1' : 'p-3'"
                 >
-                  <div class="flex items-center gap-3">
+                  <div class="flex items-center" :class="isStiffMode ? 'gap-2' : 'gap-3'">
                     <div 
-                      class="w-3 h-3 rounded-full"
+                      class="rounded-full flex-shrink-0"
+                      :class="isStiffMode ? 'w-2 h-2' : 'w-3 h-3'"
                       :style="{ backgroundColor: getRadarPointColor(cat.percentage_yes) }"
                     ></div>
-                    <div>
-                      <h3 class="text-green-400 font-semibold text-sm">{{ cat.category }}</h3>
-                      <p class="text-xs text-green-400/60 font-mono">
-                        {{ cat.yes_count }}/{{ cat.total_questions }}
-                      </p>
+                    <div class="min-w-0 flex-1">
+                      <div v-if="isStiffMode" class="flex items-baseline gap-2">
+                        <h3 class="text-primary font-semibold text-sm truncate">{{ cat.category }}</h3>
+                        <p class="text-xs text-primary-dim font-mono-primary">
+                          {{ cat.yes_count }}/{{ cat.total_questions }}
+                        </p>
+                      </div>
+                      <div v-else class="text-right">
+                        <h3 class="text-primary font-semibold text-sm">{{ cat.category }}</h3>
+                        <p class="text-xs text-primary-dim font-mono-primary">
+                          {{ cat.yes_count }}/{{ cat.total_questions }}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  <div class="text-right">
-                    <p class="text-lg font-bold text-cyan-400">{{ Math.round(cat.percentage_yes) }}%</p>
+                  <div v-if="isStiffMode" class="flex items-center gap-2 flex-shrink-0">
+                    <p class="text-sm font-bold text-info">{{ Math.round(cat.percentage_yes) }}%</p>
+                    <p 
+                      class="text-xs font-mono font-semibold"
+                      :class="getSkillLevelClass(cat.percentage_yes)"
+                    >
+                      {{ getSkillLevel(cat.percentage_yes) }}
+                    </p>
+                  </div>
+                  <div v-else class="text-right flex-shrink-0">
+                    <p class="text-lg font-bold text-info">{{ Math.round(cat.percentage_yes) }}%</p>
                     <p 
                       class="text-xs font-mono font-semibold"
                       :class="getSkillLevelClass(cat.percentage_yes)"
@@ -301,35 +329,35 @@
 
         <!-- Skill Summary -->
         <div v-if="categoryStats.length > 0" class="glass-card">
-          <h2 class="text-lg text-green-400 mb-4" style="font-family: 'Orbitron', monospace;">SKILL ASSESSMENT</h2>
+          <h2 class="text-lg text-primary mb-4 font-heading">SKILL ASSESSMENT</h2>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Strongest Skills -->
             <div>
-              <h3 class="text-sm text-cyan-400/80 font-mono uppercase mb-3">Strongest Areas</h3>
+              <h3 class="text-sm text-info-dim font-mono-primary uppercase mb-3">Strongest Areas</h3>
               <div class="space-y-2">
                 <div 
                   v-for="skill in getTopSkills()"
                   :key="skill.category"
-                  class="flex items-center justify-between p-2 bg-green-400/5 rounded"
+                  class="flex items-center justify-between p-2 bg-primary/5 rounded"
                 >
-                  <span class="text-green-400 text-sm">{{ skill.category }}</span>
-                  <span class="text-cyan-400 font-semibold text-sm">{{ Math.round(skill.percentage_yes) }}%</span>
+                  <span class="text-primary text-sm">{{ skill.category }}</span>
+                  <span class="text-info font-semibold text-sm">{{ Math.round(skill.percentage_yes) }}%</span>
                 </div>
               </div>
             </div>
             
             <!-- Growth Areas -->
             <div>
-              <h3 class="text-sm text-amber-500/80 font-mono uppercase mb-3">Growth Opportunities</h3>
+              <h3 class="text-sm text-accent-dim font-mono-primary uppercase mb-3">Growth Opportunities</h3>
               <div class="space-y-2">
                 <div 
                   v-for="skill in getGrowthAreas()"
                   :key="skill.category"
-                  class="flex items-center justify-between p-2 bg-amber-500/5 rounded"
+                  class="flex items-center justify-between p-2 bg-accent/5 rounded"
                 >
-                  <span class="text-green-400 text-sm">{{ skill.category }}</span>
-                  <span class="text-amber-500 font-semibold text-sm">{{ Math.round(skill.percentage_yes) }}%</span>
+                  <span class="text-primary text-sm">{{ skill.category }}</span>
+                  <span class="text-accent font-semibold text-sm">{{ Math.round(skill.percentage_yes) }}%</span>
                 </div>
               </div>
             </div>
@@ -341,8 +369,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { sessionsApi, responsesApi, questionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { SessionSummary, CategoryStatistics } from '@/types';
@@ -354,6 +382,10 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const route = useRoute();
+
+// Check if stiff mode is active
+const isStiffMode = computed(() => route.query.mode === 'stiff');
 
 // Admin authentication
 const { requireAuth } = useAdminAuth();
@@ -507,11 +539,11 @@ const getSkillLevel = (percentage: number): string => {
 };
 
 const getSkillLevelClass = (percentage: number): string => {
-  if (percentage >= 80) return 'text-green-400';
-  if (percentage >= 60) return 'text-cyan-400';
-  if (percentage >= 40) return 'text-amber-400';
-  if (percentage >= 20) return 'text-orange-400';
-  return 'text-red-400';
+  if (percentage >= 80) return 'text-primary';
+  if (percentage >= 60) return 'text-info';
+  if (percentage >= 40) return 'text-accent';
+  if (percentage >= 20) return 'text-accent';
+  return 'text-danger';
 };
 
 const getTopSkills = () => {
@@ -535,8 +567,8 @@ const getRadarPoints = (): string => {
   const points = categoryStats.value.map((cat, index) => {
     const angle = (index * 2 * Math.PI / categoryStats.value.length) - Math.PI/2;
     const radius = (cat.percentage_yes / 100) * 150;
-    const x = 192 + Math.cos(angle) * radius;
-    const y = 192 + Math.sin(angle) * radius;
+    const x = 190 + Math.cos(angle) * radius;
+    const y = 190 + Math.sin(angle) * radius;
     return `${x},${y}`;
   });
   
@@ -544,28 +576,77 @@ const getRadarPoints = (): string => {
 };
 
 const getRadarPointColor = (percentage: number): string => {
-  if (percentage >= 80) return '#10b981'; // green-500
-  if (percentage >= 60) return '#06b6d4'; // cyan-500  
-  if (percentage >= 40) return '#f59e0b'; // amber-500
-  if (percentage >= 20) return '#f97316'; // orange-500
-  return '#ef4444'; // red-500
+  if (isStiffMode.value) {
+    // Apple-style colors
+    if (percentage >= 80) return '#2563eb'; // blue-600
+    if (percentage >= 60) return '#3b82f6'; // blue-500
+    if (percentage >= 40) return '#60a5fa'; // blue-400
+    if (percentage >= 20) return '#93bbfc'; // blue-300
+    return '#dbeafe'; // blue-100
+  } else {
+    // Terminal-style colors
+    if (percentage >= 80) return '#10b981'; // green-500
+    if (percentage >= 60) return '#06b6d4'; // cyan-500  
+    if (percentage >= 40) return '#f59e0b'; // amber-500
+    if (percentage >= 20) return '#f97316'; // orange-500
+    return '#ef4444'; // red-500
+  }
 };
 
 const goBack = () => {
-  router.push({ name: 'Admin' });
+  router.push({ 
+    name: 'Admin',
+    query: isStiffMode.value ? { mode: 'stiff', tab: 'sessions' } : { tab: 'sessions' }
+  });
+};
+
+// Handle print shortcut
+const handlePrintShortcut = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+    console.log('Ctrl+P pressed');
+    
+    // If not already in stiff mode, refresh with stiff mode
+    if (!isStiffMode.value) {
+      event.preventDefault(); // Prevent print dialog
+      
+      // Refresh the page with stiff mode
+      router.push({
+        name: 'SessionStats',
+        params: { sessionId: props.sessionId },
+        query: { mode: 'stiff' }
+      });
+      
+      // After navigation completes, trigger print
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+    // If already in stiff mode, let normal print behavior continue
+  }
 };
 
 // Lifecycle
 onMounted(async () => {
+  // Add print shortcut listener
+  window.addEventListener('keydown', handlePrintShortcut);
+  
   // Check authentication first
   const isAuthenticated = await requireAuth();
   if (!isAuthenticated) {
     // Redirect to admin login
-    router.push('/admin');
+    router.push({
+      path: '/admin',
+      query: isStiffMode.value ? { mode: 'stiff' } : {}
+    });
     return;
   }
   
   // Load data if authenticated
   loadSessionData();
+});
+
+// Cleanup
+onUnmounted(() => {
+  window.removeEventListener('keydown', handlePrintShortcut);
 });
 </script>
