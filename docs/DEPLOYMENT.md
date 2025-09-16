@@ -1,496 +1,199 @@
-# Deployment Guide
+# Deployment Pipeline
 
-## Prerequisites
+## 🔄 Pipeline Overview
 
-### Server Requirements
-- Amazon Linux 2 or Ubuntu 20.04+
-- Docker 20.10+
-- Docker Compose 2.0+
-- Git
-- 2GB RAM minimum
-- 10GB disk space
-
-### Domain Setup
-- DNS A record pointing to server IP
-- Ports 80, 443, 8000, 8080 available
-
-## Server Setup
-
-### 1. Install Dependencies (Amazon Linux 2)
-
-```bash
-# Update packages
-sudo yum update -y
-
-# Install Docker
-sudo yum install docker -y
-sudo service docker start
-sudo systemctl enable docker
-sudo usermod -aG docker ec2-user
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-
-# Install Git
-sudo yum install git -y
-
-# Verify installations
-docker --version
-docker-compose --version
-git --version
-
-# Log out and back in for docker permissions
-exit
+```
+Feature Branch          Develop               Main
+     |                     |                    |
+     ├──PR + Review───────>├──PR + Approval────>|
+     |                     |                    |
+     |                Auto Deploy           Manual Deploy
+     |                     ↓                    ↓
+                   TEST Environment      PRODUCTION Environment
+              test-skills-survey.heal.   skills-survey.heal.
+                   engineering              engineering
 ```
 
-### 1. Install Dependencies (Ubuntu)
+## 🌍 Environments
 
-```bash
-# Update packages
-sudo apt update && sudo apt upgrade -y
-
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Install Git
-sudo apt install git -y
-
-# Verify installations
-docker --version
-docker-compose --version
-git --version
-
-# Log out and back in for docker permissions
-exit
-```
-
-### 2. Clone Repository
-
-```bash
-cd /opt
-sudo git clone https://github.com/HEAL-Engineering/skill-tree-survey.git
-sudo chown -R ec2-user:ec2-user skill-tree-survey  # For Amazon Linux
-# sudo chown -R $USER:$USER skill-tree-survey       # For Ubuntu
-cd skill-tree-survey
-```
-
-## Environment Deployment
-
-### Development Environment
-
-```bash
-# Copy environment template
-cp environments/.env.development.example .env
-
-# Start services
-docker-compose up -d --build
-
-# Verify
-curl http://localhost:8000/health
-# Access frontend at http://localhost:5173
-```
+### Local Development
+- **URL**: http://localhost:5173 (frontend), http://localhost:8000 (backend)
+- **Purpose**: Individual developer testing
+- **Database**: Local SQLite
+- **Deployment**: `docker-compose up`
 
 ### Test Environment
-
-```bash
-# Copy environment template
-cp environments/.env.test.example .env
-
-# Edit environment variables
-nano .env
-# Update:
-# - ADMIN_PASSWORD=your-secure-password
-# - VITE_API_URL=https://test-skills-survey.heal.engineering
-
-# Build and start
-docker-compose -f docker-compose.test.yml up -d --build
-
-# Verify services
-docker-compose -f docker-compose.test.yml ps
-docker-compose -f docker-compose.test.yml logs -f --tail=50
-
-# Check health
-curl http://localhost:8000/health
-```
+- **URL**: https://test-skills-survey.heal.engineering
+- **Purpose**: Integration testing, QA
+- **Deployment**: **Automatic** on merge to `develop`
+- **Database**: Test SQLite database
+- **Container Names**: `test-skill-survey-backend`, `test-skill-survey-frontend`
 
 ### Production Environment
+- **URL**: https://skills-survey.heal.engineering
+- **Purpose**: Live application
+- **Deployment**: **Manual** trigger after merge to `main`
+- **Database**: Production SQLite database
+- **Container Names**: `skill-survey-backend`, `skill-survey-frontend`
 
+## 📦 Deployment Process
+
+### To Test (Automatic)
+
+1. **Create PR** from feature branch to `develop`
+2. **PR Validation** workflow automatically runs:
+   - Builds Docker images
+   - Runs health checks
+   - Posts results to PR
+3. **After approval and merge**:
+   - Test deployment automatically triggered
+   - Docker images built and deployed
+   - Available at test URL within ~5 minutes
+4. **Monitor** in GitHub Actions tab
+
+### To Production (Manual)
+
+1. **Create PR** from `develop` to `main`
+2. **Requires** senior team member approval
+3. **After merge**:
+   ```
+   Go to GitHub → Actions tab → Deploy to Production
+   Click "Run workflow" → Add deployment message → Run
+   ```
+4. **Deployment steps**:
+   - Builds production Docker images
+   - Transfers to EC2
+   - Deploys with docker-compose.prod.yml
+   - Runs health checks
+5. **Verify** at production URL
+
+## 🔧 GitHub Actions Workflows
+
+### PR Validation (`pr-validation.yml`)
+- **Triggers**: PR to `main` or `develop`
+- **Actions**: Build, test, health check
+- **Duration**: ~3-5 minutes
+
+### Test Deployment (`deploy-test.yml`)
+- **Triggers**: Push to `develop` or manual
+- **Actions**: Build, deploy to test environment
+- **Duration**: ~5-7 minutes
+
+### Production Deployment (`deploy-production.yml`)
+- **Triggers**: Manual only
+- **Actions**: Build, deploy to production
+- **Duration**: ~5-7 minutes
+
+## 🔄 Rollback Procedures
+
+### Test Environment Rollback
 ```bash
-# Create production env file
-cat > .env << EOF
-ADMIN_PASSWORD=your-secure-admin-password
-CORS_ORIGINS=["https://skills-survey.heal.engineering"]
-VITE_API_URL=https://skills-survey.heal.engineering
-ENVIRONMENT=production
-SEED_ON_STARTUP=true
-DEBUG=false
-EOF
+# SSH to test server
+ssh ec2-user@test-skills-survey.heal.engineering
 
-# Build and start
-docker-compose -f docker-compose.prod.yml up -d --build
-
-# Verify
-docker-compose -f docker-compose.prod.yml ps
-curl http://localhost:8000/health
-```
-
-## Nginx Reverse Proxy Setup
-
-### 1. Install Nginx (Amazon Linux 2)
-
-```bash
-# Install nginx
-sudo amazon-linux-extras install nginx1 -y
-sudo systemctl stop nginx
-```
-
-### 1. Install Nginx (Ubuntu)
-
-```bash
-sudo apt install nginx -y
-sudo systemctl stop nginx
-```
-
-### 2. Configure Nginx
-
-#### For Test Environment
-```bash
-sudo cp infrastructure/nginx/test.conf /etc/nginx/conf.d/skill-survey.conf
-# Remove default configs
-sudo rm -f /etc/nginx/conf.d/default.conf
-sudo rm -f /etc/nginx/sites-enabled/default
-```
-
-#### For Production Environment
-```bash
-sudo cp infrastructure/nginx/production.conf /etc/nginx/conf.d/skill-survey.conf
-# Remove default configs
-sudo rm -f /etc/nginx/conf.d/default.conf
-sudo rm -f /etc/nginx/sites-enabled/default
-```
-
-### 3. SSL Certificate Setup (Amazon Linux 2)
-
-```bash
-# Install certbot via EPEL
-sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo yum install certbot python-certbot-nginx -y
-
-# Stop nginx temporarily
-sudo systemctl stop nginx
-
-# Get certificate (replace domain and email)
-sudo certbot certonly --standalone \
-  -d skills-survey.heal.engineering \
-  --non-interactive \
-  --agree-tos \
-  --email admin@heal.engineering
-
-# Test nginx configuration
-sudo nginx -t
-
-# Start nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-
-# Setup auto-renewal
-sudo crontab -e
-# Add line: 0 2 * * * certbot renew --quiet --nginx
-```
-
-### 3. SSL Certificate Setup (Ubuntu)
-
-```bash
-# Install certbot
-sudo apt install certbot python3-certbot-nginx -y
-
-# Stop nginx temporarily
-sudo systemctl stop nginx
-
-# Get certificate (replace domain and email)
-sudo certbot certonly --standalone \
-  -d skills-survey.heal.engineering \
-  --non-interactive \
-  --agree-tos \
-  --email admin@heal.engineering
-
-# Test nginx configuration
-sudo nginx -t
-
-# Start nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
-
-# Setup auto-renewal
-sudo crontab -e
-# Add line: 0 2 * * * certbot renew --quiet --nginx
-```
-
-## AWS EC2 Security Group Configuration
-
-Configure your EC2 security group with these inbound rules:
-
-| Type | Protocol | Port | Source |
-|------|----------|------|--------|
-| SSH | TCP | 22 | Your IP |
-| HTTP | TCP | 80 | 0.0.0.0/0 |
-| HTTPS | TCP | 443 | 0.0.0.0/0 |
-
-## Deployment Commands
-
-### Deploy New Version
-
-```bash
+# Navigate to project
 cd /opt/skill-tree-survey
 
-# Pull latest code
-git pull origin main
-
-# For test environment
+# Stop current deployment
 docker-compose -f docker-compose.test.yml down
-docker-compose -f docker-compose.test.yml up -d --build
 
-# For production
-docker-compose -f docker-compose.prod.yml down
-docker-compose -f docker-compose.prod.yml up -d --build
+# Restore previous .env
+ls -la .env.backup.*
+cp .env.backup.YYYYMMDD_HHMMSS .env
 
-# Verify deployment
-docker-compose -f docker-compose.[env].yml ps
-docker-compose -f docker-compose.[env].yml logs --tail=50
+# Redeploy
+docker-compose -f docker-compose.test.yml up -d
 ```
 
-### Container Management
+### Production Rollback
+Same as test but use `docker-compose.prod.yml` and production server.
 
+### Emergency Hotfix
 ```bash
-# View running containers
-docker ps
+# Create hotfix from main
+git checkout main
+git pull origin main
+git checkout -b <username>/HOTFIX/<description>
 
-# View logs
+# Make fix and push
+git push -u origin <username>/HOTFIX/<description>
+
+# PR directly to main
+# After deploy, cherry-pick to develop
+```
+
+## 📊 Monitoring
+
+### Health Check Endpoints
+- Backend: `/health`
+- Full URL Test: `https://test-skills-survey.heal.engineering/health`
+- Full URL Prod: `https://skills-survey.heal.engineering/health`
+
+### Viewing Logs
+```bash
+# On server
 docker-compose -f docker-compose.[env].yml logs -f backend
 docker-compose -f docker-compose.[env].yml logs -f frontend
 
-# Restart services
-docker-compose -f docker-compose.[env].yml restart
-
-# Stop services
-docker-compose -f docker-compose.[env].yml down
-
-# Remove volumes (WARNING: deletes data)
-docker-compose -f docker-compose.[env].yml down -v
+# View all logs
+docker-compose -f docker-compose.[env].yml logs --tail=100
 ```
 
-## Verification
+### GitHub Actions
+- Go to repository → Actions tab
+- View workflow runs
+- Click on run for detailed logs
+- Check deployment summaries
 
-### Health Checks
+## 🔑 Environment Variables
 
+### Test Environment
+Configured via GitHub Secrets (TEST_ prefix):
+- `TEST_EC2_HOST`
+- `TEST_EC2_USERNAME`
+- `TEST_EC2_SSH_KEY`
+- `TEST_ADMIN_PASSWORD`
+- `TEST_VITE_API_URL`
+- `TEST_CORS_ORIGINS`
+
+### Production Environment
+Configured via GitHub Secrets:
+- `EC2_HOST`
+- `EC2_USERNAME`
+- `EC2_SSH_KEY`
+- `ADMIN_PASSWORD`
+- `VITE_API_URL`
+- `CORS_ORIGINS`
+
+## 🚨 Troubleshooting
+
+### Deployment Failed
+1. Check GitHub Actions logs
+2. SSH to server and check Docker logs
+3. Verify environment variables
+4. Check disk space: `df -h`
+5. Check Docker status: `docker ps`
+
+### Health Checks Failing
 ```bash
-# Backend health
+# Check if containers are running
+docker ps
+
+# Check container logs
+docker logs skill-survey-backend
+docker logs skill-survey-frontend
+
+# Test endpoints directly
 curl http://localhost:8000/health
-
-# Via nginx (after SSL setup)
-curl https://skills-survey.heal.engineering/health
-
-# API endpoints
-curl https://skills-survey.heal.engineering/api/questions/base
+curl http://localhost:8080
 ```
 
-### Database Verification
+### Common Issues
+- **Port conflicts**: Check with `sudo lsof -i :8000`
+- **Docker space**: Run `docker system prune -a`
+- **Environment variables**: Verify `.env` file exists and is correct
 
-```bash
-# Access backend container
-docker exec -it skill-survey-backend bash
-
-# Check database
-ls -la /app/data/
-sqlite3 /app/data/skill_survey.db "SELECT COUNT(*) FROM questions;"
-```
-
-## Troubleshooting
-
-### Container Issues
-
-```bash
-# Check container status
-docker-compose -f docker-compose.[env].yml ps
-
-# View detailed logs
-docker-compose -f docker-compose.[env].yml logs --tail=100 backend
-docker-compose -f docker-compose.[env].yml logs --tail=100 frontend
-
-# Restart containers
-docker-compose -f docker-compose.[env].yml restart
-
-# Rebuild without cache
-docker-compose -f docker-compose.[env].yml build --no-cache
-docker-compose -f docker-compose.[env].yml up -d
-```
-
-### Port Conflicts
-
-```bash
-# Check port usage
-sudo lsof -i :8000
-sudo lsof -i :8080
-sudo lsof -i :80
-sudo lsof -i :443
-
-# Kill process using port
-sudo kill -9 $(sudo lsof -t -i:8000)
-```
-
-### Database Issues
-
-```bash
-# Reset database (WARNING: data loss)
-docker-compose -f docker-compose.[env].yml down -v
-docker-compose -f docker-compose.[env].yml up -d
-
-# Backup database
-docker exec skill-survey-backend cp /app/data/skill_survey.db /app/data/backup_$(date +%Y%m%d).db
-
-# Restore database
-docker exec skill-survey-backend cp /app/data/backup_20240101.db /app/data/skill_survey.db
-```
-
-### Nginx Issues
-
-```bash
-# Test configuration
-sudo nginx -t
-
-# View error logs
-sudo tail -f /var/log/nginx/error.log
-
-# Reload configuration
-sudo systemctl reload nginx
-
-# Full restart
-sudo systemctl restart nginx
-```
-
-### SSL Certificate Issues
-
-```bash
-# Test renewal
-sudo certbot renew --dry-run
-
-# Force renewal
-sudo certbot renew --force-renewal
-
-# Check certificate
-sudo certbot certificates
-```
-
-### Amazon Linux 2 Specific Issues
-
-```bash
-# If docker won't start
-sudo yum reinstall docker
-sudo service docker restart
-
-# If nginx isn't available
-sudo amazon-linux-extras list | grep nginx
-sudo amazon-linux-extras enable nginx1
-
-# SELinux issues (if enabled)
-sudo setsebool -P httpd_can_network_connect 1
-```
-
-## Monitoring
-
-### System Resources
-
-```bash
-# Container stats
-docker stats
-
-# Disk usage
-df -h
-docker system df
-
-# Clean up unused resources
-docker system prune -a --volumes
-```
-
-### Application Logs
-
-```bash
-# Follow all logs
-docker-compose -f docker-compose.[env].yml logs -f
-
-# Export logs
-docker-compose -f docker-compose.[env].yml logs > deployment_$(date +%Y%m%d).log
-```
-
-### AWS CloudWatch Integration (Optional)
-
-```bash
-# Install CloudWatch agent
-wget https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
-sudo rpm -U ./amazon-cloudwatch-agent.rpm
-```
-
-## Backup & Recovery
-
-### Backup
-
-```bash
-# Create backup directory
-mkdir -p /opt/backups
-
-# Backup database
-docker exec skill-survey-backend tar czf /tmp/backup.tar.gz /app/data/
-docker cp skill-survey-backend:/tmp/backup.tar.gz /opt/backups/backup_$(date +%Y%m%d_%H%M%S).tar.gz
-
-# Backup environment
-cp .env /opt/backups/.env.backup_$(date +%Y%m%d)
-
-# Sync to S3 (if using AWS)
-aws s3 sync /opt/backups s3://your-backup-bucket/skill-survey-backups/
-```
-
-### Restore
-
-```bash
-# Stop services
-docker-compose -f docker-compose.[env].yml down
-
-# Restore database
-docker-compose -f docker-compose.[env].yml up -d backend
-docker cp /opt/backups/backup_20240101_120000.tar.gz skill-survey-backend:/tmp/
-docker exec skill-survey-backend tar xzf /tmp/backup.tar.gz -C /
-
-# Restart all services
-docker-compose -f docker-compose.[env].yml up -d
-```
-
-## Security Notes
-
-1. **Change default passwords** in production
-2. **Restrict ports** - only expose 80/443 through security groups
-3. **Regular updates** - keep Docker, OS packages updated
-4. **Backup regularly** - automate daily backups to S3
-5. **Monitor logs** - use CloudWatch for centralized logging
-6. **Use secrets management** - AWS Secrets Manager for sensitive data
-7. **Enable MFA** for AWS console access
-8. **Use IAM roles** for EC2 instances instead of access keys
-
-## Environment Variables Reference
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| ADMIN_PASSWORD | Admin panel password | secure-password-123 |
-| CORS_ORIGINS | Allowed frontend origins | ["https://domain.com"] |
-| VITE_API_URL | Frontend API URL | https://domain.com |
-| DATABASE_URL | Database connection | sqlite:////app/data/db.db |
-| SEED_ON_STARTUP | Auto-seed database | true |
-| ENVIRONMENT | Environment name | production |
-| DEBUG | Debug mode | false |
+## 📚 Related Documentation
+- [Contributing Guidelines](../CONTRIBUTING.md)
+- [Workflow Examples](./WORKFLOW_EXAMPLES.md)
+- [AWS Infrastructure Setup](./AWS_SETUP.md)
