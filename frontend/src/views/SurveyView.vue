@@ -56,7 +56,7 @@
             >
               <span class="btn-yes-text">YES</span>
               <div class="flex gap-1 text-xs opacity-70">
-                <kbd class="kbd-key kbd-yes">SPACE</kbd>
+                <kbd class="kbd-key kbd-yes">Y</kbd>
                 <span class="text-primary-dim">/</span>
                 <kbd class="kbd-key kbd-yes">↵</kbd>
               </div>
@@ -76,11 +76,11 @@
           <button
             v-if="answerHistory.length > 0 && canUndo"
             @click="undoAnswer"
-            class="mt-6 text-xs flex-col items-center text-cyan-400/60 hover:text-cyan-400 transition-colors"
+            class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative"
           >
-            <span class="text-cyan-400/60 text-[14px] font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;"> ← Undo <br></span>
-            <kbd class="px-2 py-0.5 bg-red-500/10 border border-cyan-400/60 text-cyan-400/60 text-[10px] rounded">BACKSPACE</kbd>
-            <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+            <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
+            <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
+            <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded"></div>
           </button>
         </div>
       </div>
@@ -427,7 +427,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   if (animating.value || !currentQuestion.value) return;
 
   switch (event.key.toLowerCase()) {
-    case ' ':
+    case 'y':
     case 'enter':
       event.preventDefault();
       handleAnswer(true);

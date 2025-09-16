@@ -790,6 +790,11 @@ onMounted(async () => {
   // Check if already authenticated
   const isAuthenticated = await requireAuth();
   if (isAuthenticated) {
+    // Check if tab query parameter is set
+    const tabParam = route.query.tab as string;
+    if (tabParam && ['questions', 'sessions', 'analytics'].includes(tabParam)) {
+      activeTab.value = tabParam as 'questions' | 'sessions' | 'analytics';
+    }
     await loadData();
   }
 });

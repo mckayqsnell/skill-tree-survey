@@ -94,6 +94,26 @@
     @apply text-red-500;
   }
   
+  .text-info {
+    @apply text-cyan-400;
+  }
+  
+  .text-info-dim {
+    @apply text-cyan-400/80;
+  }
+  
+  .text-info-dimmer {
+    @apply text-cyan-400/50;
+  }
+  
+  .text-info-faint {
+    @apply text-cyan-400/40;
+  }
+  
+  .fill-info {
+    @apply fill-cyan-400;
+  }
+  
   /* Font styles */
   .font-heading {
     font-family: 'Orbitron', monospace;
@@ -124,6 +144,14 @@
     @apply border-red-500/50;
   }
   
+  .border-info-faint {
+    @apply border-cyan-400/20;
+  }
+  
+  .border-info-dim {
+    @apply border-cyan-400/30;
+  }
+  
   /* Background styles */
   .bg-overlay {
     @apply bg-black/30;
@@ -131,6 +159,10 @@
   
   .bg-danger-overlay {
     @apply bg-red-500/10;
+  }
+  
+  .metric-card {
+    @apply text-center bg-black/30 border p-4 rounded relative;
   }
 
   /* Status text */
@@ -162,6 +194,14 @@
   
   .bg-primary\/50 {
     background-color: rgb(74 222 128 / 0.5);
+  }
+  
+  .bg-accent\/10 {
+    background-color: rgb(245 158 11 / 0.1);
+  }
+  
+  .bg-accent\/5 {
+    background-color: rgb(245 158 11 / 0.05);
   }
   
   /* Survey buttons */
@@ -245,9 +285,22 @@
     background-color: rgb(74 222 128 / 0.05);
   }
   
+  .bg-accent\/20 {
+    background-color: rgb(245 158 11 / 0.2);
+  }
+  
+  .border-accent\/20 {
+    border-color: rgb(245 158 11 / 0.2);
+  }
+  
   /* View stats button */
   .btn-view-stats {
     @apply text-xs px-2 py-1 border border-cyan-400/30 text-cyan-400/80 hover:bg-cyan-400/10 hover:border-cyan-400 transition-all rounded;
+  }
+  
+  /* Tooltip styles */
+  .tooltip-base {
+    @apply absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10;
   }
 
   /* Stiff mode - Apple-like design */
@@ -310,6 +363,27 @@
     @apply text-red-600 !important;
   }
   
+  /* Info colors - changed to dark gray in stiff mode */
+  .stiff-mode .text-info {
+    @apply text-gray-700 !important;
+  }
+  
+  .stiff-mode .text-info-dim {
+    @apply text-gray-600 !important;
+  }
+  
+  .stiff-mode .text-info-dimmer {
+    @apply text-gray-500 !important;
+  }
+  
+  .stiff-mode .text-info-faint {
+    @apply text-gray-400 !important;
+  }
+  
+  .stiff-mode .fill-info {
+    @apply fill-gray-700 !important;
+  }
+  
   /* Borders - subtle and clean */
   .stiff-mode .border-primary {
     @apply border-gray-300 !important;
@@ -329,6 +403,35 @@
   
   .stiff-mode .border-danger-dim {
     @apply border-red-200 !important;
+  }
+  
+  .stiff-mode .border-info-faint {
+    @apply border-gray-200 !important;
+  }
+  
+  .stiff-mode .border-info-dim {
+    @apply border-gray-300 !important;
+  }
+  
+  /* Tooltip styles in stiff mode */
+  .stiff-mode .tooltip-base {
+    @apply bg-gray-800 border-gray-600 !important;
+  }
+  
+  .stiff-mode .tooltip-base.text-primary {
+    @apply text-white !important;
+  }
+  
+  .stiff-mode .tooltip-base.text-info {
+    @apply text-white !important;
+  }
+  
+  .stiff-mode .tooltip-base .text-primary {
+    @apply text-white !important;
+  }
+  
+  .stiff-mode .tooltip-base .text-info {
+    @apply text-white !important;
   }
   
   /* Remove text shadows */
@@ -392,6 +495,16 @@
   .stiff-mode .bg-overlay {
     @apply bg-blue-50 !important;
     border-radius: 8px !important;
+  }
+  
+  /* Metric cards in stiff mode */
+  .stiff-mode .metric-card {
+    @apply bg-gray-50 !important;
+    border-radius: 12px !important;
+  }
+  
+  .stiff-mode .metric-card:hover {
+    @apply bg-gray-100 !important;
   }
   
   .stiff-mode .status-ready {
@@ -590,6 +703,32 @@
   .stiff-mode .text-amber-500\/50 {
     color: rgb(245 158 11) !important; /* amber-500 */
   }
+  
+  /* Accent backgrounds in stiff mode */
+  .stiff-mode .bg-accent\/10 {
+    background-color: rgb(37 99 235 / 0.1) !important; /* blue-600/10 */
+  }
+  
+  .stiff-mode .bg-accent\/5 {
+    background-color: rgb(37 99 235 / 0.05) !important; /* blue-600/5 */
+  }
+  
+  .stiff-mode .border-accent-dim {
+    @apply border-blue-500 !important;
+  }
+  
+  /* Hide keyboard hint for undo in stiff mode */
+  .stiff-mode button kbd {
+    display: none !important;
+  }
+  
+  .stiff-mode .bg-accent\/20 {
+    background-color: rgb(37 99 235 / 0.2) !important; /* blue-600/20 */
+  }
+  
+  .stiff-mode .border-accent\/20 {
+    border-color: rgb(37 99 235 / 0.2) !important; /* blue-600/20 */
+  }
   /* Terminal window - cleaner */
   .terminal-window {
     @apply bg-black border border-green-400/30;
@@ -741,6 +880,58 @@
 @keyframes stars {
   from { transform: translateY(0); }
   to { transform: translateY(-500px); }
+}
+
+/* Print styles */
+@media print {
+  /* Force side-by-side layout in print for stiff mode */
+  .stiff-mode .skill-profile-container {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 1.5rem !important;
+  }
+  
+  /* Ensure proper sizing for print */
+  .stiff-mode .skill-chart-wrapper {
+    width: auto !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Hide non-essential elements */
+  .stiff-mode button,
+  .stiff-mode .btn-primary,
+  .stiff-mode .btn-secondary {
+    display: none !important;
+  }
+  
+  /* Adjust padding for print */
+  .stiff-mode .glass-card {
+    padding: 1rem !important;
+  }
+  
+  /* Ensure chart stays at reasonable size */
+  .stiff-mode .skill-chart-container {
+    width: 320px !important;
+    height: 320px !important;
+  }
+  
+  /* Ensure stats stay side by side */
+  .stiff-mode .skill-stats-container {
+    max-width: 24rem !important;
+    flex: 1 !important;
+  }
+  
+  /* Prevent page break inside skill profile section */
+  .stiff-mode .skill-profile-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  /* Ensure the entire glass card stays together */
+  .stiff-mode .glass-card {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
 
 /* Custom scrollbar - terminal style */
