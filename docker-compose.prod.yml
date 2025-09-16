@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   backend:
+    image: skill-survey-backend:latest
     build:
       context: ./backend
       dockerfile: Dockerfile.prod
@@ -40,6 +41,7 @@ services:
       start_period: 40s
 
   frontend:
+    image: skill-survey-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod

@@ -130,14 +130,42 @@ jobs:
         script: |
           set -e
 
-          echo "📦 Loading Docker images for test environment..."
+          echo "📦 Preparing for test deployment..."
           cd /tmp
+
+          # Backup current running images for rollback
+          echo "🔄 Backing up current test images for potential rollback..."
+
+          # Get the image IDs of currently running containers
+          CURRENT_BACKEND_IMAGE=$(docker inspect test-skill-survey-backend --format='{{.Image}}' 2>/dev/null || echo "none")
+          CURRENT_FRONTEND_IMAGE=$(docker inspect test-skill-survey-frontend --format='{{.Image}}' 2>/dev/null || echo "none")
+
+          if [ "$CURRENT_BACKEND_IMAGE" != "none" ]; then
+            # Tag current images as rollback
+            docker tag test-skill-survey-backend:latest test-skill-survey-backend:rollback 2>/dev/null || true
+            docker tag test-skill-survey-frontend:latest test-skill-survey-frontend:rollback 2>/dev/null || true
+            echo "✅ Current test images backed up with :rollback tag"
+          else
+            echo "ℹ️ No existing test deployment found, skipping backup"
+          fi
+
+          # Load new images
+          echo "📦 Loading new Docker images for test environment..."
           gunzip -f backend-test-images.tar.gz frontend-test-images.tar.gz
+
+          # Remove current :latest tags to ensure clean replacement
+          echo "Preparing to replace current test images..."
+          docker rmi test-skill-survey-backend:latest test-skill-survey-frontend:latest 2>/dev/null || true
+          docker rmi skill-survey-backend:test-latest skill-survey-frontend:test-latest 2>/dev/null || true
+
+          # Load new images
           docker load -i backend-test-images.tar
           docker load -i frontend-test-images.tar
 
           # Clean up tar files
           rm -f backend-test-images.tar frontend-test-images.tar
+
+          echo "✅ New test images loaded and ready for deployment"
 
           echo "📝 Creating test environment file..."
           cd ~/skill-tree-survey || cd /home/${{ secrets.TEST_EC2_USERNAME }}/skill-tree-survey || cd /opt/skill-tree-survey
@@ -176,9 +204,9 @@ jobs:
           docker-compose -f docker-compose.test.yml down
 
           # Start new containers with the pre-built images
-          echo "Starting new test containers with pre-built images..."
-          # Use --no-build to prevent docker-compose from building new images
-          docker-compose -f docker-compose.test.yml up -d --no-build
+          echo "Starting new test containers..."
+          # Docker-compose will now use the images specified in the yml file
+          docker-compose -f docker-compose.test.yml up -d
 
           # Wait for services to be ready
           echo "⏳ Waiting for test services to start..."
@@ -237,12 +265,12 @@ jobs:
             echo "⚠️  Health checks skipped by user request"
           fi
 
-          # Clean up old Docker images to save space
+          # Clean up old Docker images to save space (but keep rollback images)
           echo "🧹 Cleaning up old Docker images..."
 
-          # Remove old tagged images (keep only latest)
-          echo "Removing old test image versions..."
-          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "skill-survey-(backend|frontend):test-" | grep -v ":test-latest" | xargs -r docker rmi 2>/dev/null || true
+          # Remove old tagged images (keep only latest and rollback)
+          echo "Removing old test image versions (keeping :latest and :rollback)..."
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "(test-skill-survey|skill-survey)-(backend|frontend):" | grep -v -E ":(latest|rollback|test-latest)" | xargs -r docker rmi 2>/dev/null || true
 
           # Remove dangling images
           docker image prune -f
@@ -257,7 +285,13 @@ jobs:
           echo "📊 Test deployment complete! Current status:"
           docker-compose -f docker-compose.test.yml ps
 
+          echo ""
+          echo "🔄 Rollback images available:"
+          docker images | grep -E "test-skill-survey-(backend|frontend):rollback" || echo "No rollback images found"
+
+          echo ""
           echo "✅ Test environment deployment successful!"
+          echo "ℹ️ To rollback: docker-compose down && docker tag test-skill-survey-backend:rollback test-skill-survey-backend:latest && docker tag test-skill-survey-frontend:rollback test-skill-survey-frontend:latest && docker-compose up -d"
 
     - name: Verify test deployment
       if: github.event.inputs.skip_health_check != 'true'

@@ -120,14 +120,41 @@ jobs:
         script: |
           set -e
           
-          echo "📦 Loading Docker images..."
+          echo "📦 Preparing for deployment..."
           cd /tmp
+
+          # Backup current running images for rollback
+          echo "🔄 Backing up current images for potential rollback..."
+
+          # Get the image IDs of currently running containers
+          CURRENT_BACKEND_IMAGE=$(docker inspect skill-survey-backend --format='{{.Image}}' 2>/dev/null || echo "none")
+          CURRENT_FRONTEND_IMAGE=$(docker inspect skill-survey-frontend --format='{{.Image}}' 2>/dev/null || echo "none")
+
+          if [ "$CURRENT_BACKEND_IMAGE" != "none" ]; then
+            # Tag current images as rollback
+            docker tag skill-survey-backend:latest skill-survey-backend:rollback 2>/dev/null || true
+            docker tag skill-survey-frontend:latest skill-survey-frontend:rollback 2>/dev/null || true
+            echo "✅ Current images backed up with :rollback tag"
+          else
+            echo "ℹ️ No existing deployment found, skipping backup"
+          fi
+
+          # Load new images
+          echo "📦 Loading new Docker images..."
           gunzip -f backend-images.tar.gz frontend-images.tar.gz
+
+          # Remove current :latest tags to ensure clean replacement
+          echo "Preparing to replace current images..."
+          docker rmi skill-survey-backend:latest skill-survey-frontend:latest 2>/dev/null || true
+
+          # Load new images (they will be tagged as :latest)
           docker load -i backend-images.tar
           docker load -i frontend-images.tar
-          
+
           # Clean up tar files
           rm -f backend-images.tar frontend-images.tar
+
+          echo "✅ New images loaded and ready for deployment"
           
           echo "📝 Creating production environment file..."
           cd ~/skill-tree-survey || cd /home/${{ secrets.EC2_USERNAME }}/skill-tree-survey || cd /opt/skill-tree-survey
@@ -149,12 +176,10 @@ jobs:
           VITE_API_URL=${{ secrets.VITE_API_URL }}
           EOF
           
-          echo "🏷️ Tagging images for docker-compose..."
-          # Tag the loaded images to match what docker-compose expects
-          docker tag skill-survey-backend:latest skill-tree-survey-backend:latest
-          docker tag skill-survey-frontend:latest skill-tree-survey-frontend:latest
-
           echo "🔄 Updating docker-compose services..."
+
+          # Images are already tagged as skill-survey-backend:latest and skill-survey-frontend:latest
+          # which matches what's in docker-compose.prod.yml
 
           # Check current running services
           docker-compose -f docker-compose.prod.yml ps
@@ -164,9 +189,9 @@ jobs:
           docker-compose -f docker-compose.prod.yml down
 
           # Start new containers with the pre-built images
-          echo "Starting new containers with pre-built images..."
-          # Use --no-build to prevent docker-compose from building new images
-          docker-compose -f docker-compose.prod.yml up -d --no-build
+          echo "Starting new containers..."
+          # Docker-compose will now use the images specified in the yml file
+          docker-compose -f docker-compose.prod.yml up -d
           
           # Wait for services to be ready
           echo "⏳ Waiting for services to start..."
@@ -225,12 +250,12 @@ jobs:
             echo "⚠️  Health checks skipped by user request"
           fi
           
-          # Clean up old Docker images to save space
+          # Clean up old Docker images to save space (but keep rollback images)
           echo "🧹 Cleaning up old Docker images..."
 
-          # Remove old tagged images (keep only latest)
-          echo "Removing old image versions..."
-          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "skill-survey-(backend|frontend):" | grep -v ":latest" | xargs -r docker rmi 2>/dev/null || true
+          # Remove old tagged images (keep only latest and rollback)
+          echo "Removing old image versions (keeping :latest and :rollback)..."
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "skill-survey-(backend|frontend):" | grep -v -E ":(latest|rollback)" | xargs -r docker rmi 2>/dev/null || true
 
           # Remove dangling images
           docker image prune -f
@@ -244,8 +269,14 @@ jobs:
           # Show final status
           echo "📊 Deployment complete! Current status:"
           docker-compose -f docker-compose.prod.yml ps
-          
+
+          echo ""
+          echo "🔄 Rollback images available:"
+          docker images | grep -E "skill-survey-(backend|frontend):rollback" || echo "No rollback images found"
+
+          echo ""
           echo "✅ Deployment successful!"
+          echo "ℹ️ To rollback: docker-compose down && docker tag skill-survey-backend:rollback skill-survey-backend:latest && docker tag skill-survey-frontend:rollback skill-survey-frontend:latest && docker-compose up -d"
 
     - name: Verify deployment
       if: github.event.inputs.skip_health_check != 'true'

@@ -42,7 +42,9 @@ jobs:
         context: ./backend
         file: ./backend/Dockerfile.prod
         push: false
-        tags: skill-survey-backend:pr-${{ github.event.pull_request.number }}
+        tags: |
+          test-skill-survey-backend:latest
+          test-skill-survey-backend:pr-${{ github.event.pull_request.number }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
         build-args: |
@@ -54,7 +56,9 @@ jobs:
         context: ./frontend
         file: ./frontend/Dockerfile.prod
         push: false
-        tags: skill-survey-frontend:pr-${{ github.event.pull_request.number }}
+        tags: |
+          test-skill-survey-frontend:latest
+          test-skill-survey-frontend:pr-${{ github.event.pull_request.number }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
         build-args: |

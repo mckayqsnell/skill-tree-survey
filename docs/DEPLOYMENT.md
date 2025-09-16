@@ -86,7 +86,10 @@ Feature Branch          Develop               Main
 
 ## 🔄 Rollback Procedures
 
-### Test Environment Rollback
+### Automatic Rollback (Recommended)
+The deployment process automatically backs up the current running images before deploying new ones.
+
+#### Test Environment Rollback
 ```bash
 # SSH to test server
 ssh ec2-user@test-skills-survey.heal.engineering
@@ -97,16 +100,52 @@ cd /opt/skill-tree-survey
 # Stop current deployment
 docker-compose -f docker-compose.test.yml down
 
-# Restore previous .env
+# Restore previous images
+docker tag test-skill-survey-backend:rollback test-skill-survey-backend:latest
+docker tag test-skill-survey-frontend:rollback test-skill-survey-frontend:latest
+
+# Redeploy with previous images
+docker-compose -f docker-compose.test.yml up -d
+
+# Verify rollback
+docker-compose -f docker-compose.test.yml ps
+```
+
+#### Production Rollback
+```bash
+# SSH to production server
+ssh ec2-user@skills-survey.heal.engineering
+
+# Navigate to project
+cd /opt/skill-tree-survey
+
+# Stop current deployment
+docker-compose -f docker-compose.prod.yml down
+
+# Restore previous images
+docker tag skill-survey-backend:rollback skill-survey-backend:latest
+docker tag skill-survey-frontend:rollback skill-survey-frontend:latest
+
+# Redeploy with previous images
+docker-compose -f docker-compose.prod.yml up -d
+
+# Verify rollback
+docker-compose -f docker-compose.prod.yml ps
+```
+
+### Manual Rollback with Environment Files
+If you also need to restore environment variables:
+
+```bash
+# List available backups
 ls -la .env.backup.*
+
+# Restore specific backup
 cp .env.backup.YYYYMMDD_HHMMSS .env
 
 # Redeploy
-docker-compose -f docker-compose.test.yml up -d
+docker-compose -f docker-compose.[env].yml up -d
 ```
-
-### Production Rollback
-Same as test but use `docker-compose.prod.yml` and production server.
 
 ### Emergency Hotfix
 ```bash
