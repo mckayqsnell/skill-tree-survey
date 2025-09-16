@@ -66,26 +66,30 @@ jobs:
           echo "registry=docker.io" >> $GITHUB_OUTPUT
         fi
 
-    - name: Build and tag Docker images locally
+    - name: Build and tag Docker images for ARM64
       run: |
-        echo "🔨 Building test environment Docker images..."
+        echo "🔨 Building test environment Docker images for ARM64 platform..."
 
-        # Build backend
-        docker build \
+        # Build backend for ARM64
+        docker buildx build \
+          --platform linux/arm64 \
           -f backend/Dockerfile.prod \
           -t test-skill-survey-backend:latest \
           -t test-skill-survey-backend:test-${{ github.sha }} \
+          --load \
           ./backend
 
-        # Build frontend with test API URL
-        docker build \
+        # Build frontend with test API URL for ARM64
+        docker buildx build \
+          --platform linux/arm64 \
           -f frontend/Dockerfile.prod \
           -t test-skill-survey-frontend:latest \
           -t test-skill-survey-frontend:test-${{ github.sha }} \
           --build-arg VITE_API_URL="${{ secrets.TEST_VITE_API_URL }}" \
+          --load \
           ./frontend
 
-        echo "✅ Docker images built successfully"
+        echo "✅ Docker images built successfully for ARM64"
 
     - name: Save Docker images as tar files
       run: |
