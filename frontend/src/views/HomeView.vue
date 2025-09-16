@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4">
+  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4" :class="{ 'stiff-mode': isStiffMode }">
     <div class="max-w-xl w-full">
       <!-- Main Card -->
       <div class="glass-card">
         <!-- Header -->
         <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-green-400 mb-2" style="font-family: 'Orbitron', monospace;">
+          <h1 class="text-3xl font-bold text-primary mb-2 font-heading">
             SKILL TREE ASSESSMENT
           </h1>
-          <p class="text-sm text-green-400/60 font-mono">Technical Competency Mapping System</p>
+          <p class="text-sm text-primary-dim font-mono-primary">Technical Competency Mapping System</p>
         </div>
 
-        <div class="mb-6 p-3 border-l-2 border-green-400/50 bg-black/30">
-          <p class="text-xs text-amber-500 font-mono mb-1">SYSTEM STATUS: READY</p>
-          <p class="text-xs text-green-400/60 font-mono">
+        <div class="mb-6 p-3 border-l-2 border-primary-dim bg-overlay">
+          <p class="status-ready">SYSTEM STATUS: READY</p>
+          <p class="status-info">
             Assessment duration: 5-10 minutes
           </p>
         </div>
@@ -22,8 +22,8 @@
         <form @submit.prevent="startSurvey" class="space-y-4">
           <!-- First Name -->
           <div>
-            <label for="firstName" class="block text-xs text-green-400/70 mb-1 font-mono uppercase">
-              First Name <span class="text-amber-500">*</span>
+            <label for="firstName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+              First Name <span class="text-accent">*</span>
             </label>
             <input
               id="firstName"
@@ -32,15 +32,15 @@
               required
               class="input-field"
               placeholder="John"
-              :class="{ 'border-red-500': errors.firstName }"
+              :class="{ 'border-danger': errors.firstName }"
             />
-            <p v-if="errors.firstName" class="text-red-500 text-xs mt-1">{{ errors.firstName }}</p>
+            <p v-if="errors.firstName" class="text-danger text-xs mt-1">{{ errors.firstName }}</p>
           </div>
 
           <!-- Last Name -->
           <div>
-            <label for="lastName" class="block text-xs text-green-400/70 mb-1 font-mono uppercase">
-              Last Name <span class="text-amber-500">*</span>
+            <label for="lastName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+              Last Name <span class="text-accent">*</span>
             </label>
             <input
               id="lastName"
@@ -49,15 +49,15 @@
               required
               class="input-field"
               placeholder="Doe"
-              :class="{ 'border-red-500': errors.lastName }"
+              :class="{ 'border-danger': errors.lastName }"
             />
-            <p v-if="errors.lastName" class="text-red-500 text-xs mt-1">{{ errors.lastName }}</p>
+            <p v-if="errors.lastName" class="text-danger text-xs mt-1">{{ errors.lastName }}</p>
           </div>
 
           <!-- Email -->
           <div>
-            <label for="email" class="block text-xs text-green-400/70 mb-1 font-mono uppercase">
-              Email <span class="text-amber-500">*</span>
+            <label for="email" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+              Email <span class="text-accent">*</span>
             </label>
             <input
               id="email"
@@ -66,15 +66,15 @@
               required
               class="input-field"
               placeholder="john@example.com"
-              :class="{ 'border-red-500': errors.email }"
+              :class="{ 'border-danger': errors.email }"
             />
-            <p v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</p>
+            <p v-if="errors.email" class="text-danger text-xs mt-1">{{ errors.email }}</p>
           </div>
 
           <!-- Company -->
           <div>
-            <label for="company" class="block text-xs text-green-400/70 mb-1 font-mono uppercase">
-              Company <span class="text-amber-500">*</span>
+            <label for="company" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+              Company <span class="text-accent">*</span>
             </label>
             <input
               id="company"
@@ -83,9 +83,9 @@
               required
               class="input-field"
               placeholder="Acme Corp"
-              :class="{ 'border-red-500': errors.company }"
+              :class="{ 'border-danger': errors.company }"
             />
-            <p v-if="errors.company" class="text-red-500 text-xs mt-1">{{ errors.company }}</p>
+            <p v-if="errors.company" class="text-danger text-xs mt-1">{{ errors.company }}</p>
           </div>
 
           <!-- Submit Button -->
@@ -101,16 +101,16 @@
           </div>
 
           <!-- Error Display -->
-          <div v-if="errorMessage" class="mt-4 p-3 border border-red-500/50 bg-red-500/10">
-            <p class="text-red-500 text-sm font-mono">{{ errorMessage }}</p>
+          <div v-if="errorMessage" class="mt-4 p-3 border border-danger-dim bg-danger-overlay">
+            <p class="text-danger text-sm font-mono-primary">{{ errorMessage }}</p>
           </div>
         </form>
 
         <!-- Footer Links -->
-        <div class="mt-6 pt-6 border-t border-green-400/20 text-center">
+        <div class="mt-6 pt-6 border-t border-primary-faint text-center">
           <router-link 
-            to="/admin" 
-            class="text-xs text-amber-500/60 hover:text-amber-500 font-mono transition-colors"
+            :to="{ path: '/admin', query: isStiffMode ? { mode: 'stiff' } : {} }" 
+            class="admin-link"
           >
             Admin Access
           </router-link>
@@ -119,7 +119,7 @@
 
       <!-- Keyboard Hint -->
       <div class="mt-4 text-center">
-        <p class="text-xs text-green-400/40 font-mono">
+        <p class="text-xs text-primary-dimmer font-mono-primary">
           Keyboard: [SPACE/ENTER] = Yes | [N] = No
         </p>
       </div>
@@ -128,12 +128,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 
 const router = useRouter();
+const route = useRoute();
+
+// Check if stiff mode is active
+const isStiffMode = computed(() => route.query.mode === 'stiff');
 
 // Form data
 const formData = reactive({
@@ -236,10 +240,11 @@ const startSurvey = async () => {
       logger.info('Session created successfully', { sessionId: session.id });
     }
     
-    // Navigate to survey
+    // Navigate to survey, preserving mode if present
     await router.push({
       name: 'Survey',
-      params: { sessionId: session.id }
+      params: { sessionId: session.id },
+      query: isStiffMode.value ? { mode: 'stiff' } : {}
     });
   } catch (error: any) {
     logger.error('Failed to start survey', error);

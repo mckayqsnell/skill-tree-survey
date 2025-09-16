@@ -1,17 +1,17 @@
 <template>
-  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4">
+  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4" :class="{ 'stiff-mode': isStiffMode }">
     <div class="max-w-2xl w-full">
       <!-- Success Message -->
       <div class="text-center mb-8">
         <div class="inline-block mb-4">
-          <svg class="w-16 h-16 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-16 h-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-green-400 mb-2" style="font-family: 'Orbitron', monospace;">
+        <h1 class="text-3xl font-bold text-primary mb-2 font-heading">
           ASSESSMENT COMPLETE
         </h1>
-        <p class="text-sm text-green-400/60 font-mono">Your skill profile has been recorded</p>
+        <p class="text-sm text-primary-dim font-mono-primary">Your skill profile has been recorded</p>
       </div>
 
       <!-- Stats Display -->
@@ -19,41 +19,41 @@
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div class="text-center">
-            <p class="text-2xl font-bold text-green-400">{{ summary.total_responses }}</p>
-            <p class="text-xs text-green-400/50 font-mono">Questions</p>
+            <p class="text-2xl font-bold text-primary">{{ summary.total_responses }}</p>
+            <p class="text-xs text-primary-dim font-mono-primary">Questions</p>
           </div>
           <div class="text-center">
             <p class="text-2xl font-bold text-cyan-400">{{ summary.yes_responses }}</p>
-            <p class="text-xs text-cyan-400/50 font-mono">Skills</p>
+            <p class="text-xs text-cyan-400/50 font-mono-primary">Skills</p>
           </div>
           <div class="text-center">
-            <p class="text-2xl font-bold text-amber-500">{{ summary.is_completed ? 100 : 0 }}%</p>
-            <p class="text-xs text-amber-500/50 font-mono">Complete</p>
+            <p class="text-2xl font-bold text-accent">{{ summary.is_completed ? 100 : 0 }}%</p>
+            <p class="text-xs text-accent-dim font-mono-primary">Complete</p>
           </div>
           <div class="text-center">
-            <p class="text-2xl font-bold text-green-400">{{ Math.round(summary.completion_time_minutes || 0) || '< 1' }}</p>
-            <p class="text-xs text-green-400/50 font-mono">Minutes</p>
+            <p class="text-2xl font-bold text-primary">{{ Math.round(summary.completion_time_minutes || 0) || '< 1' }}</p>
+            <p class="text-xs text-primary-dim font-mono-primary">Minutes</p>
           </div>
         </div>
 
         <!-- Category Breakdown -->
         <div v-if="categoryStats.length > 0">
-          <h3 class="text-sm font-mono text-green-400/60 mb-3">Skills by Category</h3>
+          <h3 class="text-sm font-mono-primary text-primary-dim mb-3">Skills by Category</h3>
           <div class="space-y-2">
             <div 
               v-for="cat in categoryStats"
               :key="cat.category"
               class="flex items-center justify-between"
             >
-              <span class="text-sm text-green-400/80">{{ cat.category }}</span>
+              <span class="text-sm text-primary-subtle">{{ cat.category }}</span>
               <div class="flex items-center gap-2">
-                <div class="w-24 h-2 bg-green-400/10 overflow-hidden">
+                <div class="w-24 h-2 bg-primary/10 overflow-hidden">
                   <div 
-                    class="h-full bg-green-400/50 transition-all duration-1000"
+                    class="h-full bg-primary/50 transition-all duration-1000"
                     :style="{ width: `${isNaN(cat.percentage_yes) ? 0 : cat.percentage_yes}%` }"
                   ></div>
                 </div>
-                <span class="text-xs text-green-400/60 w-10 text-right">{{ isNaN(cat.percentage_yes) ? 0 : Math.round(cat.percentage_yes) }}%</span>
+                <span class="text-xs text-primary-dim w-10 text-right">{{ isNaN(cat.percentage_yes) ? 0 : Math.round(cat.percentage_yes) }}%</span>
               </div>
             </div>
           </div>
@@ -62,18 +62,18 @@
 
       <!-- Loading State -->
       <div v-else-if="loading" class="glass-card text-center">
-        <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-4"></div>
-        <p class="text-green-400/60 font-mono text-sm">Loading results...</p>
+        <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-4"></div>
+        <p class="text-primary-dim font-mono-primary text-sm">Loading results...</p>
       </div>
 
       <!-- Error State -->
       <div v-else-if="error" class="glass-card">
-        <p class="text-red-500 font-mono text-sm">{{ error }}</p>
+        <p class="text-danger font-mono-primary text-sm">{{ error }}</p>
       </div>
 
       <!-- Thank You -->
       <div class="text-center mb-6">
-        <p class="text-green-400/80">Thank you for completing the skill assessment</p>
+        <p class="text-primary-subtle">Thank you for completing the skill assessment</p>
       </div>
 
       <!-- Actions -->
@@ -95,7 +95,7 @@
       </div>
 
       <!-- Session Info -->
-      <div class="mt-8 text-center text-xs text-green-400/30 font-mono">
+      <div class="mt-8 text-center text-xs text-primary-faint font-mono-primary">
         <p>Session: {{ sessionId }}</p>
         <p v-if="summary?.completed_at">{{ formatDate(summary.completed_at) }}</p>
       </div>
@@ -104,8 +104,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { sessionsApi, responsesApi } from '@/api';
 import { logger } from '@/api/client';
 import type { SessionSummary, CategoryStatistics } from '@/types';
@@ -116,6 +116,10 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const route = useRoute();
+
+// Check if stiff mode is active
+const isStiffMode = computed(() => route.query.mode === 'stiff');
 
 // State
 const loading = ref(true);
@@ -181,7 +185,10 @@ const startNewSurvey = () => {
   if (import.meta.env.DEV) {
     logger.info('Starting new survey from complete page');
   }
-  router.push('/');
+  router.push({
+    path: '/',
+    query: isStiffMode.value ? { mode: 'stiff' } : {}
+  });
 };
 
 // Go to admin panel
@@ -191,7 +198,10 @@ const goToAdmin = () => {
   }
   // Clear any existing admin session to force re-authentication
   sessionStorage.removeItem('adminPassword');
-  router.push('/admin');
+  router.push({
+    path: '/admin',
+    query: isStiffMode.value ? { mode: 'stiff' } : {}
+  });
 };
 
 // Lifecycle

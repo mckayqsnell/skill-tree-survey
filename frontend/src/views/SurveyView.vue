@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen bg-black star-field flex flex-col">
+  <div class="min-h-screen bg-black star-field flex flex-col" :class="{ 'stiff-mode': isStiffMode }">
     <!-- Progress Bar -->
     <div class="w-full px-4 pt-4">
       <div class="max-w-3xl mx-auto">
-        <div class="h-2 bg-green-400/10 rounded-full overflow-hidden">
-          <div
-            class="h-full bg-gradient-to-r from-green-400 to-cyan-400 transition-all duration-500 rounded-full"
+        <div class="h-2 bg-primary/10 rounded-full overflow-hidden">
+          <div 
+            class="h-full bg-gradient-to-r from-primary to-cyan-400 transition-all duration-500 rounded-full"
             :style="{ width: `${progressPercentage}%` }"
           />
         </div>
-        <p class="text-xs text-green-400/50 font-mono mt-2 text-center">
+        <p class="text-xs text-primary-dim font-mono-primary mt-2 text-center">
           Progress: {{ Math.round(progressPercentage) }}%
         </p>
       </div>
@@ -18,13 +18,13 @@
     <!-- Main Content -->
     <div class="flex-1 flex items-center justify-center px-4">
       <div v-if="loading" class="text-center">
-        <div class="inline-block w-8 h-8 border-2 border-green-400/30 border-t-green-400 rounded-full animate-spin mb-4"></div>
-        <p class="text-green-400/60 font-mono text-sm">Loading questions...</p>
+        <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-4"></div>
+        <p class="text-primary-dim font-mono-primary text-sm">Loading questions...</p>
       </div>
 
       <div v-else-if="error" class="text-center max-w-md">
         <div class="glass-card">
-          <p class="text-red-500 mb-4 font-mono text-sm">{{ error }}</p>
+          <p class="text-danger mb-4 font-mono-primary text-sm">{{ error }}</p>
           <button @click="retryLoad" class="btn-secondary">Retry</button>
         </div>
       </div>
@@ -32,7 +32,7 @@
       <div v-else-if="currentQuestion" class="w-full max-w-3xl">
         <!-- Category Display -->
         <div class="text-center mb-6">
-          <p v-if="currentQuestion.category" class="text-sm text-green-400/60 font-mono">
+          <p v-if="currentQuestion.category" class="text-sm text-primary-dim font-mono-primary">
             {{ currentQuestion.category }}
           </p>
         </div>
@@ -43,7 +43,7 @@
           :key="currentQuestion.id"
           :class="{ 'scale-95': animating }"
         >
-          <h2 class="text-2xl md:text-3xl font-semibold mb-8 text-green-400">
+          <h2 class="text-2xl md:text-3xl font-semibold mb-8 text-primary">
             {{ currentQuestion.text }}
           </h2>
 
@@ -51,56 +51,56 @@
           <div class="flex justify-center gap-6">
             <button
               @click="handleAnswer(true)"
-              class="group relative flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-green-400/50 hover:bg-green-400/10 hover:border-green-400 transition-all duration-200 transform hover:scale-105"
-              :class="{ 'scale-110 bg-green-400/20 border-green-400': lastKey === 'yes' }"
+              class="btn-yes group relative"
+              :class="{ 'btn-yes-active': lastKey === 'yes' }"
             >
-              <span class="text-green-400 text-2xl font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;">YES</span>
+              <span class="btn-yes-text">YES</span>
               <div class="flex gap-1 text-xs opacity-70">
-                <kbd class="px-1.5 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/80 rounded text-xs">SPACE</kbd>
-                <span class="text-green-400/50">/</span>
-                <kbd class="px-1.5 py-0.5 bg-green-400/10 border border-green-400/30 text-green-400/80 rounded text-xs">↵</kbd>
+                <kbd class="kbd-key kbd-yes">Y</kbd>
+                <span class="text-primary-dim">/</span>
+                <kbd class="kbd-key kbd-yes">↵</kbd>
               </div>
-              <div class="absolute inset-0 bg-green-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
 
             <button
               @click="handleAnswer(false)"
-              class="group relative flex flex-col items-center justify-center w-32 h-24 bg-black/50 border-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all duration-200 transform hover:scale-105"
-              :class="{ 'scale-110 bg-red-500/20 border-red-500': lastKey === 'no' }"
+              class="btn-no group relative"
+              :class="{ 'btn-no-active': lastKey === 'no' }"
             >
-              <span class="text-red-500 text-2xl font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;">NO</span>
-              <kbd class="px-2 py-0.5 bg-red-500/10 border border-red-500/30 text-red-500/80 text-xs rounded">N</kbd>
-              <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              <span class="btn-no-text">NO</span>
+              <kbd class="kbd-key kbd-no px-2">N</kbd>
+              <div class="absolute inset-0 bg-danger/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
             </button>
           </div>
           <button
             v-if="answerHistory.length > 0 && canUndo"
             @click="undoAnswer"
-            class="mt-6 text-xs flex-col items-center text-cyan-400/60 hover:text-cyan-400 transition-colors"
+            class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative"
           >
-            <span class="text-cyan-400/60 text-[14px] font-bold mb-1 tracking-wider" style="font-family: 'Orbitron', monospace;"> ← Undo <br></span>
-            <kbd class="px-2 py-0.5 bg-red-500/10 border border-cyan-400/60 text-cyan-400/60 text-[10px] rounded">BACKSPACE</kbd>
-            <div class="absolute inset-0 bg-red-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+            <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
+            <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
+            <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded"></div>
           </button>
         </div>
       </div>
 
       <div v-else class="text-center">
-        <p class="text-green-400/60 font-mono text-sm">Completing survey...</p>
+        <p class="text-primary-dim font-mono-primary text-sm">Completing survey...</p>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="p-4 text-center">
       <div class="flex justify-center items-center gap-4 text-xs font-mono">
-        <span class="text-green-400/60">
+        <span class="text-primary-dim">
           Question {{ baseQuestionIndex + 1 }} of {{ baseQuestions.length }}
         </span>
-        <span class="text-green-400/30">•</span>
+        <span class="text-primary-faint">•</span>
         <span class="text-cyan-400/60" v-if="questionPath.length > 0">
           Depth {{ questionPath.length + 1 }}
         </span>
-        <span class="text-amber-400/60" v-else>
+        <span class="text-accent-dim" v-else>
           Base Level
         </span>
       </div>
@@ -110,7 +110,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { questionsApi, responsesApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { Question, ResponseCreate } from '@/types';
@@ -121,6 +121,10 @@ const props = defineProps<{
 }>();
 
 const router = useRouter();
+const route = useRoute();
+
+// Check if stiff mode is active
+const isStiffMode = computed(() => route.query.mode === 'stiff');
 
 // State
 const loading = ref(true);
@@ -405,11 +409,12 @@ const completeSurvey = async () => {
 
     // Mark session as complete
     await sessionsApi.completeSession(Number(props.sessionId));
-
+    
     // Navigate to completion page
     await router.push({
       name: 'Complete',
-      params: { sessionId: props.sessionId }
+      params: { sessionId: props.sessionId },
+      query: isStiffMode.value ? { mode: 'stiff' } : {}
     });
   } catch (err: any) {
     logger.error('Failed to complete survey', err);
@@ -422,7 +427,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
   if (animating.value || !currentQuestion.value) return;
 
   switch (event.key.toLowerCase()) {
-    case ' ':
+    case 'y':
     case 'enter':
       event.preventDefault();
       handleAnswer(true);
