@@ -23,7 +23,7 @@ env:
 jobs:
   deploy:
     name: Deploy to Test Environment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-arm64  # Use ARM64 runner to match EC2 architecture
     environment:
       name: test
       url: https://test-skills-survey.heal.engineering
@@ -41,8 +41,7 @@ jobs:
         echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
         echo "Branch: ${{ github.ref_name }}"
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+    # No need for buildx on ARM64 runners - use native docker build
 
     - name: Configure AWS credentials
       if: vars.USE_AWS_ECR == 'true'
@@ -66,30 +65,26 @@ jobs:
           echo "registry=docker.io" >> $GITHUB_OUTPUT
         fi
 
-    - name: Build and tag Docker images for ARM64
+    - name: Build and tag Docker images
       run: |
-        echo "🔨 Building test environment Docker images for ARM64 platform..."
+        echo "🔨 Building test environment Docker images..."
 
-        # Build backend for ARM64
-        docker buildx build \
-          --platform linux/arm64 \
+        # Native ARM64 build - no cross-platform needed
+        docker build \
           -f backend/Dockerfile.prod \
           -t test-skill-survey-backend:latest \
           -t test-skill-survey-backend:test-${{ github.sha }} \
-          --load \
           ./backend
 
-        # Build frontend with test API URL for ARM64
-        docker buildx build \
-          --platform linux/arm64 \
+        # Build frontend with test API URL
+        docker build \
           -f frontend/Dockerfile.prod \
           -t test-skill-survey-frontend:latest \
           -t test-skill-survey-frontend:test-${{ github.sha }} \
           --build-arg VITE_API_URL="${{ secrets.TEST_VITE_API_URL }}" \
-          --load \
           ./frontend
 
-        echo "✅ Docker images built successfully for ARM64"
+        echo "✅ Docker images built successfully"
 
     - name: Save Docker images as tar files
       run: |
@@ -205,19 +200,16 @@ jobs:
 
           echo "🔄 Updating docker-compose test services..."
 
-          # Check current running services
-          docker-compose -f docker-compose.test.yml ps 2>/dev/null || true
-
           # Stop and remove old containers (including volumes for fresh state)
           echo "Stopping old test containers..."
-          docker-compose -f docker-compose.test.yml down --volumes --remove-orphans
+          docker-compose -f docker-compose.test.yml down --volumes --remove-orphans 2>&1 | grep -v "level=warning" || true
 
           # Pull images (will use local ones we just loaded)
           echo "Using freshly built images..."
 
           # Start new containers with the pre-built images
           echo "Starting new test containers..."
-          docker-compose -f docker-compose.test.yml up -d --force-recreate
+          docker-compose -f docker-compose.test.yml up -d --force-recreate 2>&1 | grep -v "level=warning" || true
 
           # Wait for services to be ready
           echo "⏳ Waiting for test services to start..."
@@ -228,40 +220,44 @@ jobs:
             echo "🏥 Running test environment health checks..."
 
             # Health check for backend
+            echo -n "Checking backend health"
             max_attempts=15
             attempt=1
             while [ $attempt -le $max_attempts ]; do
-              if curl -f http://localhost:8000/health; then
-                echo "✅ Test backend is healthy"
+              if curl -sf http://localhost:8000/health >/dev/null 2>&1; then
+                echo " ✅"
                 break
               fi
 
               if [ $attempt -eq $max_attempts ]; then
-                echo "❌ Test backend health check failed"
-                docker-compose -f docker-compose.test.yml logs --tail=50 backend
+                echo " ❌"
+                echo "Backend health check failed after $max_attempts attempts"
+                docker-compose -f docker-compose.test.yml logs --tail=20 backend 2>&1 | grep -v "level=warning"
                 exit 1
               fi
 
-              echo "Waiting for test backend... (attempt $attempt/$max_attempts)"
+              echo -n "."
               sleep 5
               attempt=$((attempt + 1))
             done
 
             # Health check for frontend
+            echo -n "Checking frontend health"
             attempt=1
             while [ $attempt -le $max_attempts ]; do
-              if curl -f http://localhost:8080; then
-                echo "✅ Test frontend is accessible"
+              if curl -sf http://localhost:8080 >/dev/null 2>&1; then
+                echo " ✅"
                 break
               fi
 
               if [ $attempt -eq $max_attempts ]; then
-                echo "❌ Test frontend health check failed"
-                docker-compose -f docker-compose.test.yml logs --tail=50 frontend
+                echo " ❌"
+                echo "Frontend health check failed after $max_attempts attempts"
+                docker-compose -f docker-compose.test.yml logs --tail=20 frontend 2>&1 | grep -v "level=warning"
                 exit 1
               fi
 
-              echo "Waiting for test frontend... (attempt $attempt/$max_attempts)"
+              echo -n "."
               sleep 5
               attempt=$((attempt + 1))
             done
@@ -294,7 +290,7 @@ jobs:
 
           # Show final status
           echo "📊 Test deployment complete! Current status:"
-          docker-compose -f docker-compose.test.yml ps
+          docker-compose -f docker-compose.test.yml ps 2>&1 | grep -v "level=warning"
 
           echo ""
           echo "🔄 Rollback images available:"
