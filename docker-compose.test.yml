@@ -3,7 +3,6 @@ version: '3.8'
 services:
   backend:
     image: test-skill-survey-backend:latest
-    pull_policy: always
     container_name: test-skill-survey-backend
     ports:
       - "8000:8000"
@@ -31,7 +30,6 @@ services:
 
   frontend:
     image: test-skill-survey-frontend:latest
-    pull_policy: always
     container_name: test-skill-survey-frontend
     ports:
       - "8080:80"
