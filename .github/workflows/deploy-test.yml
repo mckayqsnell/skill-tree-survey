@@ -50,14 +50,16 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           
+          # Write the SSH private key to a file
+          echo "${{ secrets.TEST_EC2_SSH_KEY }}" > ~/.ssh/test_key
+          chmod 600 ~/.ssh/test_key
+          
           # Add test instance to known_hosts to avoid verification prompt
           ssh-keyscan -H ${{ secrets.TEST_EC2_HOST }} >> ~/.ssh/known_hosts
-          
-          # Set proper permissions
           chmod 644 ~/.ssh/known_hosts
           
-          # Test the connection (optional but helpful for debugging)
-          ssh -o ConnectTimeout=10 ec2-user@${{ secrets.TEST_EC2_HOST }} 'echo "✅ SSH connection successful"'
+          # Test the connection with the private key
+          ssh -i ~/.ssh/test_key -o ConnectTimeout=10 ec2-user@${{ secrets.TEST_EC2_HOST }} 'echo "✅ SSH connection successful"'
 
       - name: Backup current deployment
         run: |
