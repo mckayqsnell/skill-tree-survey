@@ -35,6 +35,9 @@ jobs:
           echo "🚀 Starting test deployment..."
           cd ~/skill-tree-survey || cd /home/${{ secrets.TEST_EC2_USERNAME }}/skill-tree-survey
 
+          # Configure git to use HTTPS with token
+          git remote set-url origin https://${{ secrets.GH_DEPLOY_TOKEN }}@github.com/HEAL-Engineering/skill-tree-survey.git
+
           # Pull latest code
           echo "📥 Pulling latest code from develop..."
           git fetch origin develop
