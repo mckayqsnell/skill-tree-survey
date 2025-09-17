@@ -93,5 +93,19 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
+          # Stop services
           docker-compose -f docker-compose.test.yml down -v
-          docker image prune -f
+          
+          # Remove test images
+          docker rmi skill-survey-backend:${{ needs.build-and-test.outputs.image-tag }} 2>/dev/null || true
+          docker rmi skill-survey-frontend:${{ needs.build-and-test.outputs.image-tag }} 2>/dev/null || true
+          
+          # Remove downloaded artifacts
+          rm -f backend-${{ needs.build-and-test.outputs.image-tag }}.tar.gz 2>/dev/null || true
+          rm -f frontend-${{ needs.build-and-test.outputs.image-tag }}.tar.gz 2>/dev/null || true
+          
+          # Comprehensive cleanup
+          docker system prune -f
+          docker images -f "dangling=true" -q | xargs -r docker rmi 2>/dev/null || true
+          
+          echo "🧹 PR validation cleanup completed"
