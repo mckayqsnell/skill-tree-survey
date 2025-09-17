@@ -41,6 +41,23 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: docker-images-${{ needs.build.outputs.image-tag }}
+      
+      - name: Setup SSH for deployment
+        run: |
+          echo "🔐 Setting up SSH connection to test instance"
+          
+          # Create .ssh directory if it doesn't exist
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Add test instance to known_hosts to avoid verification prompt
+          ssh-keyscan -H ${{ secrets.TEST_EC2_HOST }} >> ~/.ssh/known_hosts
+          
+          # Set proper permissions
+          chmod 644 ~/.ssh/known_hosts
+          
+          # Test the connection (optional but helpful for debugging)
+          ssh -o ConnectTimeout=10 ec2-user@${{ secrets.TEST_EC2_HOST }} 'echo "✅ SSH connection successful"'
 
       - name: Backup current deployment
         run: |
