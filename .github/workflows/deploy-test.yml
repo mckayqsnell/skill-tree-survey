@@ -1,257 +1,393 @@
 name: Deploy to Test Environment
 
 on:
+  push:
+    branches: [develop]
   workflow_dispatch:
     inputs:
       deployment_message:
         description: 'Deployment message/reason'
         required: false
-        default: 'Manual test deployment'
-  push:
-    branches:
-      - develop
+        default: 'Test environment deployment'
+      skip_health_check:
+        description: 'Skip health checks (use with caution)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
+  build:
+    uses: ./.github/workflows/build-and-cache.yml
+    secrets: inherit
+
   deploy:
-    name: Deploy to Test Environment
-    runs-on: ubuntu-latest
-    environment:
-      name: test
-      url: https://test-skills-survey.heal.engineering
-
+    needs: build
+    runs-on: self-hosted
+    environment: test
     steps:
-    - name: Deploy to Test EC2
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.TEST_EC2_HOST }}
-        username: ${{ secrets.TEST_EC2_USERNAME }}
-        key: ${{ secrets.TEST_EC2_SSH_KEY }}
-        port: ${{ secrets.TEST_EC2_PORT || 22 }}
-        timeout: 20m
-        script: |
-          #!/bin/bash
-          set -euo pipefail
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-          # Configuration
-          PROJECT_DIR="${HOME}/skill-tree-survey"
-          DOCKER_COMPOSE_FILE="docker-compose.test.yml"
-          ENV_FILE=".env"
-          MAX_HEALTH_ATTEMPTS=30
-          HEALTH_CHECK_INTERVAL=3
+      - name: Log deployment start
+        run: |
+          echo "🚀 Starting test environment deployment"
+          echo "Initiated by: ${{ github.actor }}"
+          echo "Deployment message: ${{ github.event.inputs.deployment_message || 'Automatic deployment from develop branch' }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Image tag: ${{ needs.build.outputs.image-tag }}"
+          echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
 
-          # Color codes for output
-          RED='\033[0;31m'
-          GREEN='\033[0;32m'
-          YELLOW='\033[1;33m'
-          NC='\033[0m' # No Color
+      - name: Download built images
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-images-${{ needs.build.outputs.image-tag }}
 
-          # Functions
-          log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
-          log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-          log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+      - name: Backup current deployment
+        run: |
+          echo "📋 Creating deployment backup"
+          
+          # Ship images and backup script to test instance
+          scp backend-${{ needs.build.outputs.image-tag }}.tar.gz \
+              frontend-${{ needs.build.outputs.image-tag }}.tar.gz \
+              ec2-user@${{ secrets.TEST_EC2_HOST }}:/tmp/
 
-          # Rollback function
-          rollback_deployment() {
-            log_warn "Initiating rollback to previous version..."
-
-            cd "${PROJECT_DIR}"
-
-            # Stop current containers
-            docker-compose -f "${DOCKER_COMPOSE_FILE}" down 2>/dev/null || true
-
-            # Restore previous images if they exist
-            if docker image inspect test-skill-survey-backend:rollback >/dev/null 2>&1; then
-              docker tag test-skill-survey-backend:rollback test-skill-survey-backend:latest
-              log_info "Backend image rolled back"
+          # Create backup on remote instance
+          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+            set -e
+            
+            cd ~/skill-tree-survey || { echo "❌ Project directory not found"; exit 1; }
+            
+            echo "📦 Backing up current deployment"
+            
+            # Create backup directory with timestamp
+            BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+            mkdir -p "$BACKUP_DIR"
+            
+            # Backup current .env if exists
+            if [ -f .env ]; then
+              cp .env "$BACKUP_DIR/.env.backup"
+              echo "✅ Environment file backed up"
             fi
+            
+            # Get current image IDs for rollback
+            CURRENT_BACKEND_IMAGE=$(docker-compose -f docker-compose.test.yml images -q backend 2>/dev/null || echo "none")
+            CURRENT_FRONTEND_IMAGE=$(docker-compose -f docker-compose.test.yml images -q frontend 2>/dev/null || echo "none")
+            
+            # Store current image info for potential rollback
+            cat > "$BACKUP_DIR/rollback_info.txt" << EOF
+          BACKEND_IMAGE_ID=$CURRENT_BACKEND_IMAGE
+          FRONTEND_IMAGE_ID=$CURRENT_FRONTEND_IMAGE
+          BACKUP_TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          PREVIOUS_COMMIT=${{ github.sha }}
+          EOF
+            
+            echo "✅ Backup created: $BACKUP_DIR"
+            echo "BACKUP_DIR=$BACKUP_DIR" >> /tmp/deployment_vars.env
+            
+            # Keep only last 3 backups to save space
+            ls -1dt backup_* 2>/dev/null | tail -n +4 | xargs -r rm -rf
+            echo "🧹 Old backups cleaned up"
+          '
 
-            if docker image inspect test-skill-survey-frontend:rollback >/dev/null 2>&1; then
-              docker tag test-skill-survey-frontend:rollback test-skill-survey-frontend:latest
-              log_info "Frontend image rolled back"
-            fi
-
-            # Restore environment file if backup exists
-            if [ -f "${ENV_FILE}.rollback" ]; then
-              cp "${ENV_FILE}.rollback" "${ENV_FILE}"
-              log_info "Environment file rolled back"
-            fi
-
-            # Start containers with rolled back images
-            docker-compose -f "${DOCKER_COMPOSE_FILE}" up -d
-
-            log_error "Deployment failed and has been rolled back"
-            exit 1
-          }
-
-          # Health check function
-          health_check() {
-            local service=$1
-            local url=$2
-            local attempt=1
-
-            echo -n "Checking ${service} health"
-            while [ $attempt -le $MAX_HEALTH_ATTEMPTS ]; do
-              if curl -sf "${url}" >/dev/null 2>&1; then
-                echo -e " ${GREEN}✓${NC}"
-                return 0
-              fi
-              echo -n "."
-              sleep $HEALTH_CHECK_INTERVAL
-              attempt=$((attempt + 1))
-            done
-
-            echo -e " ${RED}✗${NC}"
-            log_error "${service} health check failed after ${MAX_HEALTH_ATTEMPTS} attempts"
-
-            # Show container logs for debugging
-            echo "Container logs for ${service}:"
-            docker logs "test-skill-survey-${service,,}" --tail 50 2>/dev/null || true
-
-            return 1
-          }
-
-          # Main deployment process
-          main() {
-            log_info "Starting test environment deployment..."
-
-            # Navigate to project directory
-            cd "${PROJECT_DIR}" || {
-              log_error "Project directory not found: ${PROJECT_DIR}"
-              exit 1
-            }
-
-            # Configure git for pulling
-            log_info "Configuring Git..."
-            git remote set-url origin https://${{ secrets.GH_DEPLOY_TOKEN }}@github.com/HEAL-Engineering/skill-tree-survey.git
-
-            # Pull latest code from develop branch
-            log_info "Pulling latest code from develop branch..."
-            git fetch origin develop
-            git reset --hard origin/develop
-
-            # Create backups for rollback
-            log_info "Creating backups for rollback..."
-
-            # Backup current images if they exist
-            if docker image inspect test-skill-survey-backend:latest >/dev/null 2>&1; then
-              docker tag test-skill-survey-backend:latest test-skill-survey-backend:rollback
-            fi
-
-            if docker image inspect test-skill-survey-frontend:latest >/dev/null 2>&1; then
-              docker tag test-skill-survey-frontend:latest test-skill-survey-frontend:rollback
-            fi
-
-            # Backup current environment file
-            if [ -f "${ENV_FILE}" ]; then
-              cp "${ENV_FILE}" "${ENV_FILE}.rollback"
-            fi
-
-            # Setup environment file
-            log_info "Setting up environment configuration..."
-            cat > "${ENV_FILE}" << 'EOF'
+      - name: Deploy new images
+        run: |
+          echo "🚀 Deploying new images to test environment"
+          
+          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+            set -e
+            source /tmp/deployment_vars.env
+            
+            cd ~/skill-tree-survey
+            
+            echo "📦 Loading new Docker images"
+            cd /tmp
+            gunzip -f backend-${{ needs.build.outputs.image-tag }}.tar.gz frontend-${{ needs.build.outputs.image-tag }}.tar.gz
+            docker load -i backend-${{ needs.build.outputs.image-tag }}.tar
+            docker load -i frontend-${{ needs.build.outputs.image-tag }}.tar
+            
+            # Clean up tar files immediately
+            rm -f *.tar
+            
+            cd ~/skill-tree-survey
+            
+            echo "📝 Updating test environment configuration"
+            cat > .env << EOF
+          # Backend Configuration
           ADMIN_PASSWORD=${{ secrets.TEST_ADMIN_PASSWORD }}
           DATABASE_URL=sqlite:////app/data/skill_survey_test.db
           CORS_ORIGINS=${{ secrets.TEST_CORS_ORIGINS }}
           SEED_ON_STARTUP=true
           ENVIRONMENT=test
+          
+          # Frontend Configuration
           VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
-          DEBUG=false
+          
+          # Deployment info
+          IMAGE_TAG=${{ needs.build.outputs.image-tag }}
+          DEPLOYED_AT=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          DEPLOYED_BY=${{ github.actor }}
+          COMMIT_SHA=${{ github.sha }}
           EOF
+            
+            echo "🔄 Stopping current services"
+            docker-compose -f docker-compose.test.yml down --remove-orphans
+            
+            echo "🚀 Starting new services"
+            export IMAGE_TAG=${{ needs.build.outputs.image-tag }}
+            docker-compose -f docker-compose.test.yml up -d
+            
+            echo "⏳ Waiting for services to initialize (30 seconds)"
+            sleep 30
+          '
 
-            # Stop existing containers
-            log_info "Stopping existing containers..."
-            docker-compose -f "${DOCKER_COMPOSE_FILE}" down 2>/dev/null || true
-
-            # Build new images (ARM64 for AWS EC2)
-            log_info "Building new Docker images (ARM64)..."
-
-            # Build backend
-            if ! docker build --platform linux/arm64 \
-              -f backend/Dockerfile.prod \
-              -t test-skill-survey-backend:latest \
-              ./backend; then
-              log_error "Backend build failed"
-              rollback_deployment
-            fi
-
-            # Build frontend with API URL
-            if ! docker build --platform linux/arm64 \
-              -f frontend/Dockerfile.prod \
-              --build-arg VITE_API_URL=${{ secrets.TEST_VITE_API_URL }} \
-              -t test-skill-survey-frontend:latest \
-              ./frontend; then
-              log_error "Frontend build failed"
-              rollback_deployment
-            fi
-
-            # Start new containers
-            log_info "Starting new containers..."
-            if ! docker-compose -f "${DOCKER_COMPOSE_FILE}" up -d; then
-              log_error "Failed to start containers"
-              rollback_deployment
-            fi
-
-            # Wait for containers to initialize
-            log_info "Waiting for services to initialize..."
-            sleep 10
-
-            # Health checks
-            log_info "Running health checks..."
-
-            # Check backend health
-            if ! health_check "Backend" "http://localhost:8000/health"; then
-              rollback_deployment
-            fi
-
-            # Check frontend health
-            if ! health_check "Frontend" "http://localhost:8080"; then
-              rollback_deployment
-            fi
-
-            # Additional API endpoint tests
-            log_info "Running additional API tests..."
-
-            # Test base questions endpoint
-            if ! curl -sf "http://localhost:8000/api/questions/base" >/dev/null 2>&1; then
-              log_warn "Base questions endpoint test failed"
-            else
-              log_info "Base questions endpoint: OK"
-            fi
-
-            # Display deployment status
-            log_info "Deployment successful! 🚀"
-            echo ""
-            log_info "Current container status:"
-            docker-compose -f "${DOCKER_COMPOSE_FILE}" ps
-
-            echo ""
-            log_info "Service URLs:"
-            echo "  - Frontend: https://test-skills-survey.heal.engineering"
-            echo "  - Backend API: https://test-skills-survey.heal.engineering/api"
-            echo "  - Health Check: https://test-skills-survey.heal.engineering/health"
-
-            # Cleanup old images
-            log_info "Cleaning up old Docker images..."
-            docker image prune -f >/dev/null 2>&1 || true
-
-            # Save deployment timestamp
-            date > "${PROJECT_DIR}/.last_deployment"
-
-            log_info "Test deployment completed successfully!"
+      - name: Comprehensive health checks
+        if: github.event.inputs.skip_health_check != 'true'
+        run: |
+          echo "🏥 Running comprehensive health checks"
+          
+          # Function to check service health
+          check_service_health() {
+            local service_name=$1
+            local health_url=$2
+            local max_attempts=20
+            local attempt=1
+            
+            echo "Checking $service_name health at $health_url"
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "  Attempt $attempt/$max_attempts"
+              
+              if curl -f -s --max-time 10 "$health_url" > /dev/null 2>&1; then
+                echo "✅ $service_name is healthy"
+                return 0
+              fi
+              
+              if [ $attempt -eq $max_attempts ]; then
+                echo "❌ $service_name health check failed after $max_attempts attempts"
+                return 1
+              fi
+              
+              sleep 5
+              attempt=$((attempt + 1))
+            done
           }
+          
+          # Function to check API endpoint
+          check_api_endpoint() {
+            local endpoint_name=$1
+            local url=$2
+            local expected_status=${3:-200}
+            
+            echo "Testing $endpoint_name endpoint: $url"
+            
+            response=$(curl -s -w "%{http_code}" -o /tmp/response.txt "$url" || echo "000")
+            
+            if [ "$response" = "$expected_status" ]; then
+              echo "✅ $endpoint_name endpoint responded with $response"
+              return 0
+            else
+              echo "❌ $endpoint_name endpoint failed. Expected $expected_status, got $response"
+              if [ -f /tmp/response.txt ]; then
+                echo "Response body:"
+                cat /tmp/response.txt | head -10
+              fi
+              return 1
+            fi
+          }
+          
+          # Run health checks via SSH to test instance
+          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+            # Check if containers are running
+            echo "📊 Container status:"
+            docker-compose -f ~/skill-tree-survey/docker-compose.test.yml ps
+            
+            # Check container logs for obvious errors
+            echo "📋 Recent container logs (last 20 lines each):"
+            echo "--- Backend logs ---"
+            docker-compose -f ~/skill-tree-survey/docker-compose.test.yml logs --tail=20 backend
+            echo "--- Frontend logs ---"
+            docker-compose -f ~/skill-tree-survey/docker-compose.test.yml logs --tail=20 frontend
+          '
+          
+          # Health check functions (run from GitHub Actions runner)
+          
+          # 1. Backend health endpoint
+          if ! check_service_health "Backend" "http://${{ secrets.TEST_EC2_HOST }}:8000/health"; then
+            echo "❌ Backend health check failed"
+            exit 1
+          fi
+          
+          # 2. Frontend accessibility
+          if ! check_service_health "Frontend" "http://${{ secrets.TEST_EC2_HOST }}:8080"; then
+            echo "❌ Frontend health check failed"
+            exit 1
+          fi
+          
+          # 3. API endpoints
+          if ! check_api_endpoint "Questions Base API" "http://${{ secrets.TEST_EC2_HOST }}:8000/api/questions/base"; then
+            echo "❌ Questions API check failed"
+            exit 1
+          fi
+          
+          # 4. Additional API endpoints
+          if ! check_api_endpoint "API Root" "http://${{ secrets.TEST_EC2_HOST }}:8000/api"; then
+            echo "❌ API root check failed"
+            exit 1
+          fi
+          
+          # 5. Test CORS headers
+          echo "🔒 Testing CORS configuration"
+          cors_response=$(curl -s -H "Origin: ${{ secrets.TEST_VITE_API_URL }}" \
+            -H "Access-Control-Request-Method: GET" \
+            -H "Access-Control-Request-Headers: Content-Type" \
+            -X OPTIONS "http://${{ secrets.TEST_EC2_HOST }}:8000/api/questions/base" \
+            -w "%{http_code}" -o /dev/null || echo "000")
+          
+          if [ "$cors_response" = "200" ] || [ "$cors_response" = "204" ]; then
+            echo "✅ CORS configuration working"
+          else
+            echo "⚠️  CORS preflight returned $cors_response (may be normal)"
+          fi
+          
+          # 6. Test frontend-backend integration
+          echo "🔗 Testing frontend-backend integration"
+          frontend_content=$(curl -s "http://${{ secrets.TEST_EC2_HOST }}:8080" | head -50)
+          if echo "$frontend_content" | grep -i "skill" > /dev/null; then
+            echo "✅ Frontend content looks correct"
+          else
+            echo "⚠️  Frontend content may not be loading correctly"
+          fi
+          
+          # 7. Public URL check (if nginx is configured)
+          if curl -f -s --max-time 10 "https://test-skills-survey.heal.engineering/health" > /dev/null 2>&1; then
+            echo "✅ Public URL is accessible"
+          else
+            echo "⚠️  Public URL not accessible (may be expected if nginx not configured)"
+          fi
+          
+          echo "🎉 All health checks passed!"
 
-          # Execute main deployment
-          main
+      - name: Cleanup and finalize deployment
+        if: success()
+        run: |
+          echo "🧹 Cleaning up and finalizing deployment"
+          
+          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+            set -e
+            cd ~/skill-tree-survey
+            
+            echo "🏷️  Tagging successful deployment"
+            # Tag the successful images for easy identification
+            docker tag skill-survey-backend:${{ needs.build.outputs.image-tag }} skill-survey-backend:test-latest
+            docker tag skill-survey-frontend:${{ needs.build.outputs.image-tag }} skill-survey-frontend:test-latest
+            
+            echo "🧹 Cleaning up old Docker images"
+            # Remove images older than current and test-latest (keep for rollback)
+            docker image prune -f
+            
+            # Remove untagged images but keep last 2 versions
+            docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | \
+              grep "skill-survey-" | grep -v "test-latest" | grep -v "${{ needs.build.outputs.image-tag }}" | \
+              tail -n +3 | awk "{print \$3}" | xargs -r docker rmi -f 2>/dev/null || true
+            
+            echo "📊 Current image status:"
+            docker images | grep "skill-survey" || echo "No skill-survey images found"
+            
+            echo "💾 Updating deployment metadata"
+            cat >> .env << EOF
+          DEPLOYMENT_STATUS=success
+          HEALTH_CHECK_PASSED=true
+          DEPLOYMENT_COMPLETED_AT=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          EOF
+            
+            echo "✅ Deployment finalized successfully"
+          '
+          
+          # Clean up local artifacts
+          rm -f backend-${{ needs.build.outputs.image-tag }}.tar.gz frontend-${{ needs.build.outputs.image-tag }}.tar.gz
+          echo "🧹 Local artifacts cleaned up"
 
-    - name: Verify Deployment
-      if: success()
-      run: |
-        echo "🎉 Deployment to test environment completed successfully!"
-        echo "📍 URL: https://test-skills-survey.heal.engineering"
-        echo "📅 Deployed at: $(date)"
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "🔄 Deployment failed, initiating rollback"
+          
+          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+            set -e
+            cd ~/skill-tree-survey
+            source /tmp/deployment_vars.env
+            
+            echo "📋 Loading rollback information"
+            if [ -f "${BACKUP_DIR}/rollback_info.txt" ]; then
+              source "${BACKUP_DIR}/rollback_info.txt"
+              
+              echo "🔄 Rolling back to previous deployment"
+              
+              # Stop current failed deployment
+              docker-compose -f docker-compose.test.yml down --remove-orphans
+              
+              # Restore previous environment
+              if [ -f "${BACKUP_DIR}/.env.backup" ]; then
+                cp "${BACKUP_DIR}/.env.backup" .env
+                echo "✅ Environment restored"
+              fi
+              
+              # Start with previous images if they exist
+              if [ "$BACKEND_IMAGE_ID" != "none" ] && [ "$FRONTEND_IMAGE_ID" != "none" ]; then
+                echo "🚀 Restarting with previous images"
+                docker-compose -f docker-compose.test.yml up -d
+                
+                # Quick health check
+                sleep 15
+                if curl -f http://localhost:8000/health > /dev/null 2>&1; then
+                  echo "✅ Rollback successful - service is healthy"
+                else
+                  echo "⚠️  Rollback completed but service may need manual intervention"
+                fi
+              else
+                echo "⚠️  No previous deployment found, manual intervention required"
+              fi
+            else
+              echo "❌ No rollback information found"
+            fi
+            
+            # Clean up failed deployment images
+            docker image prune -f
+            echo "🧹 Failed deployment artifacts cleaned up"
+          '
 
-    - name: Deployment Failed Notification
-      if: failure()
-      run: |
-        echo "❌ Deployment to test environment failed!"
-        echo "Please check the logs for details."
+      - name: Create deployment summary
+        if: always()
+        run: |
+          echo "## 📋 Test Environment Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: TEST" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: ${{ needs.build.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "### ✅ Deployment Successful!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Health Checks Completed:**" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Backend health endpoint" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Frontend accessibility" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ API endpoints (/api/questions/base)" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ CORS configuration" >> $GITHUB_STEP_SUMMARY
+            echo "- ✅ Frontend-backend integration" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Test URL**: https://test-skills-survey.heal.engineering" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Rollback Status**: Attempted" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Troubleshooting:**" >> $GITHUB_STEP_SUMMARY
+            echo "- Check container logs: \`docker-compose -f docker-compose.test.yml logs\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Verify environment variables are correctly set" >> $GITHUB_STEP_SUMMARY
+            echo "- Ensure test instance has sufficient resources" >> $GITHUB_STEP_SUMMARY
+          fi

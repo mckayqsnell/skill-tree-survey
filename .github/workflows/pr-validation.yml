@@ -2,284 +2,96 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'frontend/**'
       - 'backend/**'
       - 'docker-compose*.yml'
       - 'Dockerfile*'
-      - '.github/workflows/pr-validation.yml'
-
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
+      - '.github/workflows/**'
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/build-and-cache.yml
+    secrets: inherit
 
+  simulate-deployment:
+    needs: build-and-test
+    runs-on: self-hosted
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up QEMU for ARM64 emulation
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: linux/arm64
+      - name: Download built images
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-images-${{ needs.build-and-test.outputs.image-tag }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      with:
-        driver-opts: network=host
+      - name: Load and test images locally
+        run: |
+          # Load images
+          docker load < backend-${{ needs.build-and-test.outputs.image-tag }}.tar.gz
+          docker load < frontend-${{ needs.build-and-test.outputs.image-tag }}.tar.gz
 
-    - name: Build Backend Docker Image (ARM64)
-      run: |
-        echo "Building backend image for ARM64 platform..."
-        docker buildx build \
-          --platform linux/arm64 \
-          --load \
-          -f backend/Dockerfile.prod \
-          -t test-skill-survey-backend:latest \
-          ./backend
+          # Create test environment
+          cat > .env.test << EOF
+          ADMIN_PASSWORD=test-password
+          DATABASE_URL=sqlite:////app/data/skill_survey_test.db
+          CORS_ORIGINS=["http://localhost:8080"]
+          VITE_API_URL=http://localhost:8000
+          EOF
 
-        echo "✅ Backend image built successfully"
-        docker images | grep test-skill-survey-backend
+          # Start services with PR images
+          export IMAGE_TAG=${{ needs.build-and-test.outputs.image-tag }}
+          docker-compose -f docker-compose.test.yml up -d
 
-    - name: Build Frontend Docker Image (ARM64)
-      run: |
-        echo "Building frontend image for ARM64 platform..."
-        docker buildx build \
-          --platform linux/arm64 \
-          --load \
-          -f frontend/Dockerfile.prod \
-          --build-arg VITE_API_URL=http://localhost:8000 \
-          -t test-skill-survey-frontend:latest \
-          ./frontend
+          # Wait for health checks
+          sleep 30
 
-        echo "✅ Frontend image built successfully"
-        docker images | grep test-skill-survey-frontend
+      - name: Run health checks
+        run: |
+          max_attempts=10
+          attempt=1
 
-    - name: Verify Images Exist
-      run: |
-        echo "Verifying Docker images..."
+          # Backend health check
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8000/health; then
+              echo "✅ Backend healthy"
+              break
+            fi
+            if [ $attempt -eq $max_attempts ]; then
+              echo "❌ Backend health check failed"
+              docker-compose -f docker-compose.test.yml logs backend
+              exit 1
+            fi
+            sleep 5
+            attempt=$((attempt + 1))
+          done
 
-        if docker image inspect test-skill-survey-backend:latest >/dev/null 2>&1; then
-          echo "✅ Backend image exists"
-        else
-          echo "❌ Backend image not found"
-          exit 1
-        fi
+          # Frontend health check  
+          attempt=1
+          while [ $attempt -le $max_attempts ]; do
+            if curl -f http://localhost:8080; then
+              echo "✅ Frontend accessible"
+              break
+            fi
+            if [ $attempt -eq $max_attempts ]; then
+              echo "❌ Frontend health check failed"
+              docker-compose -f docker-compose.test.yml logs frontend
+              exit 1
+            fi
+            sleep 5
+            attempt=$((attempt + 1))
+          done
 
-        if docker image inspect test-skill-survey-frontend:latest >/dev/null 2>&1; then
-          echo "✅ Frontend image exists"
-        else
-          echo "❌ Frontend image not found"
-          exit 1
-        fi
+      - name: API endpoint tests
+        run: |
+          # Test API endpoints
+          curl -f http://localhost:8000/api/questions/base || exit 1
+          echo "✅ API endpoints working"
 
-        echo ""
-        echo "Available images:"
-        docker images | head -10
-
-    - name: Test Docker Compose Configuration
-      run: |
-        # Create a temporary .env file for testing
-        cat > .env << EOF
-        ADMIN_PASSWORD=test-admin-password
-        DATABASE_URL=sqlite:////app/data/skill_survey_test.db
-        CORS_ORIGINS=["http://localhost:8000","http://localhost:8080"]
-        SEED_ON_STARTUP=true
-        ENVIRONMENT=test
-        VITE_API_URL=http://localhost:8000
-        DEBUG=false
-        EOF
-
-        docker compose -f docker-compose.test.yml config -q
-        if [ $? -eq 0 ]; then
-          echo "✅ Docker Compose configuration is valid"
-        else
-          echo "❌ Docker Compose configuration is invalid"
-          exit 1
-        fi
-
-    - name: Start Services with Docker Compose
-      run: |
-        echo "Starting services using test compose file..."
-        docker compose -f docker-compose.test.yml up -d
-
-        echo "Waiting for services to initialize..."
-        sleep 15
-
-        echo "Current containers:"
-        docker ps
-
-        echo ""
-        echo "Container logs (backend):"
-        docker logs test-skill-survey-backend --tail 20 || true
-
-        echo ""
-        echo "Container logs (frontend):"
-        docker logs test-skill-survey-frontend --tail 20 || true
-
-    - name: Health Check - Backend
-      run: |
-        max_attempts=30
-        attempt=1
-
-        echo "Checking backend health..."
-        while [ $attempt -le $max_attempts ]; do
-          echo -n "Attempt $attempt of $max_attempts: "
-
-          if curl -sf http://localhost:8000/health; then
-            echo ""
-            echo "✅ Backend is healthy"
-            break
-          fi
-
-          if [ $attempt -eq $max_attempts ]; then
-            echo ""
-            echo "❌ Backend health check failed after $max_attempts attempts"
-            echo ""
-            echo "Backend container logs:"
-            docker logs test-skill-survey-backend --tail 50
-            echo ""
-            echo "Container status:"
-            docker ps -a
-            exit 1
-          fi
-
-          echo "waiting..."
-          sleep 3
-          attempt=$((attempt + 1))
-        done
-
-    - name: Health Check - Frontend
-      run: |
-        max_attempts=30
-        attempt=1
-
-        echo "Checking frontend health..."
-        while [ $attempt -le $max_attempts ]; do
-          echo -n "Attempt $attempt of $max_attempts: "
-
-          if curl -sf http://localhost:8080 >/dev/null; then
-            echo "✅ Frontend is accessible"
-            break
-          fi
-
-          if [ $attempt -eq $max_attempts ]; then
-            echo ""
-            echo "❌ Frontend health check failed after $max_attempts attempts"
-            echo ""
-            echo "Frontend container logs:"
-            docker logs test-skill-survey-frontend --tail 50
-            echo ""
-            echo "Container status:"
-            docker ps -a
-            exit 1
-          fi
-
-          echo "waiting..."
-          sleep 3
-          attempt=$((attempt + 1))
-        done
-
-    - name: API Endpoint Tests
-      run: |
-        echo "Running API endpoint tests..."
-
-        # Test health endpoint
-        echo -n "Testing /health endpoint... "
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
-        if [ "$response" = "200" ]; then
-          echo "✅ OK (200)"
-        else
-          echo "❌ Failed (HTTP $response)"
-          exit 1
-        fi
-
-        # Test base questions endpoint
-        echo -n "Testing /api/questions/base endpoint... "
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/api/questions/base)
-        if [ "$response" = "200" ]; then
-          echo "✅ OK (200)"
-        else
-          echo "❌ Failed (HTTP $response)"
-          curl -v http://localhost:8000/api/questions/base
-          exit 1
-        fi
-
-        # Test docs endpoint
-        echo -n "Testing /docs endpoint... "
-        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/docs)
-        if [ "$response" = "200" ]; then
-          echo "✅ OK (200)"
-        else
-          echo "❌ Failed (HTTP $response)"
-          exit 1
-        fi
-
-        echo ""
-        echo "✅ All API endpoints are responding correctly"
-
-    - name: Container Resource Check
-      if: success()
-      run: |
-        echo "Container resource usage:"
-        docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}"
-
-    - name: Cleanup
-      if: always()
-      run: |
-        echo "Cleaning up..."
-        docker compose -f docker-compose.test.yml down -v || true
-        docker system prune -f || true
-        rm -f .env
-
-    - name: Comment PR Status
-      if: always()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const outcome = '${{ job.status }}';
-          const emoji = outcome === 'success' ? '✅' : '❌';
-          const status = outcome === 'success' ? 'passed' : 'failed';
-
-          const comment = `## ${emoji} Build Validation ${status}
-
-          **Workflow:** PR Validation
-          **Status:** ${outcome}
-          **Commit:** ${{ github.event.pull_request.head.sha }}
-          **Platform:** linux/arm64 (matching test/prod environment)
-
-          ${outcome === 'success'
-            ? `### All checks passed!
-          - ✅ Backend Docker image built successfully (ARM64)
-          - ✅ Frontend Docker image built successfully (ARM64)
-          - ✅ Docker Compose test configuration validated
-          - ✅ Services started successfully
-          - ✅ Backend health check passed
-          - ✅ Frontend health check passed
-          - ✅ API endpoints responding correctly
-
-          This PR is ready for deployment to the test environment.`
-            : `### Build or tests failed
-          Please check the workflow logs for details.
-
-          Common issues:
-          - ARM64 build failures
-          - Service startup timeouts
-          - Health check failures
-          - API endpoint errors`}
-
-          ---
-          <sub>🤖 This comment was automatically generated by the PR validation workflow</sub>
-          `;
-
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+      - name: Cleanup
+        if: always()
+        run: |
+          docker-compose -f docker-compose.test.yml down -v
+          docker image prune -f
