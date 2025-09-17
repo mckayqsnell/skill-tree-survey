@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   backend:
-    image: skill-survey-backend:latest
+    image: skill-survey-backend:${IMAGE_TAG:-latest}
     container_name: skill-survey-backend
     ports:
       - "8000:8000"
@@ -16,8 +16,8 @@ services:
       # CORS - Update with your actual frontend URL
       - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost","http://localhost:80"]}
       
-      # Auto-seed on first run
-      - SEED_ON_STARTUP=true
+      # Auto-seed on first run (configurable via deployment)
+      - SEED_ON_STARTUP=${SEED_ON_STARTUP:-false}
       
       # API configuration
       - API_PREFIX=/api
@@ -38,7 +38,7 @@ services:
       start_period: 40s
 
   frontend:
-    image: skill-survey-frontend:latest
+    image: skill-survey-frontend:${IMAGE_TAG:-latest}
     container_name: skill-survey-frontend
     ports:
       - "8080:80"
@@ -47,6 +47,12 @@ services:
     depends_on:
       - backend
     restart: always
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
   # Optional: Add nginx as reverse proxy for both services
   # nginx:
