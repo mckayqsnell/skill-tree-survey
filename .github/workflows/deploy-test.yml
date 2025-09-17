@@ -66,12 +66,12 @@ jobs:
           echo "📋 Creating deployment backup"
           
           # Ship images and backup script to test instance
-          scp backend-${{ needs.build.outputs.image-tag }}.tar.gz \
+          scp -i ~/.ssh/test_key backend-${{ needs.build.outputs.image-tag }}.tar.gz \
               frontend-${{ needs.build.outputs.image-tag }}.tar.gz \
               ec2-user@${{ secrets.TEST_EC2_HOST }}:/tmp/
 
           # Create backup on remote instance
-          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+          ssh -i ~/.ssh/test_key ec2-user@${{ secrets.TEST_EC2_HOST }} '
             set -e
             
             cd ~/skill-tree-survey || { echo "❌ Project directory not found"; exit 1; }
@@ -112,7 +112,7 @@ jobs:
         run: |
           echo "🚀 Deploying new images to test environment"
           
-          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+          ssh -i ~/.ssh/test_key ec2-user@${{ secrets.TEST_EC2_HOST }} '
             set -e
             source /tmp/deployment_vars.env
             
@@ -215,7 +215,7 @@ jobs:
           }
           
           # Run health checks via SSH to test instance
-          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+          ssh -i ~/.ssh/test_key ec2-user@${{ secrets.TEST_EC2_HOST }} '
             # Check if containers are running
             echo "📊 Container status:"
             docker-compose -f ~/skill-tree-survey/docker-compose.test.yml ps
@@ -291,7 +291,7 @@ jobs:
         run: |
           echo "🧹 Cleaning up and finalizing deployment"
           
-          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+          ssh -i ~/.ssh/test_key ec2-user@${{ secrets.TEST_EC2_HOST }} '
             set -e
             cd ~/skill-tree-survey
             
@@ -331,7 +331,7 @@ jobs:
         run: |
           echo "🔄 Deployment failed, initiating rollback"
           
-          ssh ec2-user@${{ secrets.TEST_EC2_HOST }} '
+          ssh -i ~/.ssh/test_key ec2-user@${{ secrets.TEST_EC2_HOST }} '
             set -e
             cd ~/skill-tree-survey
             source /tmp/deployment_vars.env
