@@ -16,12 +16,12 @@ on:
         default: false
 
 jobs:
-  build:
+  build-images:
     uses: ./.github/workflows/build-and-cache.yml
     secrets: inherit
 
   deploy:
-    needs: build
+    needs: build-images
     runs-on: self-hosted
     environment: test
     steps:
@@ -34,13 +34,13 @@ jobs:
           echo "Initiated by: ${{ github.actor }}"
           echo "Deployment message: ${{ github.event.inputs.deployment_message || 'Automatic deployment from develop branch' }}"
           echo "Commit: ${{ github.sha }}"
-          echo "Image tag: ${{ needs.build.outputs.image-tag }}"
+          echo "Image tag: ${{ needs.build-images.outputs.image-tag }}"
           echo "Timestamp: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
 
       - name: Download built images
         uses: actions/download-artifact@v4
         with:
-          name: docker-images-${{ needs.build.outputs.image-tag }}
+          name: docker-images-${{ needs.build-images.outputs.image-tag }}
       
       - name: Setup SSH for deployment
         run: |
@@ -66,8 +66,8 @@ jobs:
           echo "📋 Creating deployment backup"
           
           # Ship images and backup script to test instance
-          scp -i ~/.ssh/test_key backend-${{ needs.build.outputs.image-tag }}.tar.gz \
-              frontend-${{ needs.build.outputs.image-tag }}.tar.gz \
+          scp -i ~/.ssh/test_key backend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
+              frontend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
               ec2-user@${{ secrets.TEST_EC2_HOST }}:/tmp/
 
           # Create backup on remote instance
@@ -120,9 +120,9 @@ jobs:
             
             echo "📦 Loading new Docker images"
             cd /tmp
-            gunzip -f backend-${{ needs.build.outputs.image-tag }}.tar.gz frontend-${{ needs.build.outputs.image-tag }}.tar.gz
-            docker load -i backend-${{ needs.build.outputs.image-tag }}.tar
-            docker load -i frontend-${{ needs.build.outputs.image-tag }}.tar
+            gunzip -f backend-${{ needs.build-images.outputs.image-tag }}.tar.gz frontend-${{ needs.build-images.outputs.image-tag }}.tar.gz
+            docker load -i backend-${{ needs.build-images.outputs.image-tag }}.tar
+            docker load -i frontend-${{ needs.build-images.outputs.image-tag }}.tar
             
             # Clean up tar files immediately
             rm -f *.tar
@@ -142,7 +142,7 @@ jobs:
           VITE_API_URL=${{ secrets.TEST_VITE_API_URL }}
           
           # Deployment info
-          IMAGE_TAG=${{ needs.build.outputs.image-tag }}
+          IMAGE_TAG=${{ needs.build-images.outputs.image-tag }}
           DEPLOYED_AT=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
           DEPLOYED_BY=${{ github.actor }}
           COMMIT_SHA=${{ github.sha }}
@@ -152,7 +152,7 @@ jobs:
             docker-compose -f docker-compose.test.yml down --remove-orphans
             
             echo "🚀 Starting new services"
-            export IMAGE_TAG=${{ needs.build.outputs.image-tag }}
+            export IMAGE_TAG=${{ needs.build-images.outputs.image-tag }}
             docker-compose -f docker-compose.test.yml up -d
             
             echo "⏳ Waiting for services to initialize (30 seconds)"
@@ -236,10 +236,13 @@ jobs:
             exit 1
           fi
           
-          # 2. Frontend accessibility
-          if ! check_service_health "Frontend" "http://${{ secrets.TEST_EC2_HOST }}:8080"; then
-            echo "❌ Frontend health check failed"
-            exit 1
+          # 2. Frontend accessibility (test through nginx proxy)
+          if ! check_service_health "Frontend" "https://${{ secrets.TEST_EC2_HOST }}"; then
+            echo "⚠️  HTTPS frontend check failed, trying HTTP..."
+            if ! check_service_health "Frontend" "http://${{ secrets.TEST_EC2_HOST }}"; then
+              echo "❌ Frontend health check failed (both HTTPS and HTTP)"
+              exit 1
+            fi
           fi
           
           # 3. API endpoints
@@ -268,9 +271,9 @@ jobs:
             echo "⚠️  CORS preflight returned $cors_response (may be normal)"
           fi
           
-          # 6. Test frontend-backend integration
+          # 6. Test frontend-backend integration (test through nginx proxy)
           echo "🔗 Testing frontend-backend integration"
-          frontend_content=$(curl -s "http://${{ secrets.TEST_EC2_HOST }}:8080" | head -50)
+          frontend_content=$(curl -s "https://${{ secrets.TEST_EC2_HOST }}" 2>/dev/null || curl -s "http://${{ secrets.TEST_EC2_HOST }}")
           if echo "$frontend_content" | grep -i "skill" > /dev/null; then
             echo "✅ Frontend content looks correct"
           else
@@ -297,8 +300,8 @@ jobs:
             
             echo "🏷️  Tagging successful deployment"
             # Tag the successful images for easy identification
-            docker tag skill-survey-backend:${{ needs.build.outputs.image-tag }} skill-survey-backend:test-latest
-            docker tag skill-survey-frontend:${{ needs.build.outputs.image-tag }} skill-survey-frontend:test-latest
+            docker tag skill-survey-backend:${{ needs.build-images.outputs.image-tag }} skill-survey-backend:test-latest
+            docker tag skill-survey-frontend:${{ needs.build-images.outputs.image-tag }} skill-survey-frontend:test-latest
             
             echo "🧹 Cleaning up old Docker images"
             # Remove images older than current and test-latest (keep for rollback)
@@ -306,7 +309,7 @@ jobs:
             
             # Remove untagged images but keep last 2 versions
             docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}" | \
-              grep "skill-survey-" | grep -v "test-latest" | grep -v "${{ needs.build.outputs.image-tag }}" | \
+              grep "skill-survey-" | grep -v "test-latest" | grep -v "${{ needs.build-images.outputs.image-tag }}" | \
               tail -n +3 | awk "{print \$3}" | xargs -r docker rmi -f 2>/dev/null || true
             
             echo "📊 Current image status:"
@@ -323,7 +326,7 @@ jobs:
           '
           
           # Clean up local artifacts
-          rm -f backend-${{ needs.build.outputs.image-tag }}.tar.gz frontend-${{ needs.build.outputs.image-tag }}.tar.gz
+          rm -f backend-${{ needs.build-images.outputs.image-tag }}.tar.gz frontend-${{ needs.build-images.outputs.image-tag }}.tar.gz
           echo "🧹 Local artifacts cleaned up"
 
       - name: Rollback on failure
@@ -382,7 +385,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Environment**: TEST" >> $GITHUB_STEP_SUMMARY
-          echo "- **Image Tag**: ${{ needs.build.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image Tag**: ${{ needs.build-images.outputs.image-tag }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployed by**: @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
