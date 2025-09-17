@@ -1,23 +1,23 @@
 <template>
-  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4" :class="{ 'stiff-mode': isStiffMode }">
+  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4 py-8 md:py-0" :class="{ 'stiff-mode': isStiffMode }">
     <div class="max-w-2xl w-full">
       <!-- Success Message -->
-      <div class="text-center mb-8">
+      <div class="text-center mb-6 md:mb-8">
         <div class="inline-block mb-4">
-          <svg class="w-16 h-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-12 md:w-16 h-12 md:h-16 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
-        <h1 class="text-3xl font-bold text-primary mb-2 font-heading">
+        <h1 class="text-2xl md:text-3xl font-bold text-primary mb-2 font-heading">
           ASSESSMENT COMPLETE
         </h1>
-        <p class="text-sm text-primary-dim font-mono-primary">Your skill profile has been recorded</p>
+        <p class="text-xs md:text-sm text-primary-dim font-mono-primary">Your skill profile has been recorded</p>
       </div>
 
       <!-- Stats Display -->
-      <div v-if="!loading && summary" class="glass-card mb-6">
-        
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div v-if="!loading && summary" class="glass-card p-4 md:p-6 mb-6">
+
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 mb-6">
           <div class="text-center">
             <p class="text-2xl font-bold text-primary">{{ summary.total_responses }}</p>
             <p class="text-xs text-primary-dim font-mono-primary">Questions</p>
@@ -77,17 +77,17 @@
       </div>
 
       <!-- Actions -->
-      <div class="flex gap-4 justify-center">
-        <button 
+      <div class="flex flex-col md:flex-row gap-3 md:gap-4 justify-center">
+        <button
           @click="startNewSurvey"
-          class="btn-primary" 
+          class="btn-primary w-full md:w-auto"
           type="button"
         >
           New Survey
         </button>
-        <button 
+        <button
           @click="goToAdmin"
-          class="btn-secondary" 
+          class="btn-secondary w-full md:w-auto"
           type="button"
         >
           Admin Panel

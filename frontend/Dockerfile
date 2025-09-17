@@ -2,17 +2,17 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files for dependency installation
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci || npm install
+# Install all dependencies
+RUN npm install
 
-# Copy the rest of the application
+# Copy the application files
 COPY . .
 
 # Expose the port
 EXPOSE 5173
 
-# Start the development server
+# Start the development server with host binding
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
