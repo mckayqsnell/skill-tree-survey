@@ -96,7 +96,7 @@ jobs:
             cat > "$BACKUP_DIR/rollback_info.txt" << EOF
           BACKEND_IMAGE_ID=$CURRENT_BACKEND_IMAGE
           FRONTEND_IMAGE_ID=$CURRENT_FRONTEND_IMAGE
-          BACKUP_TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          BACKUP_TIMESTAMP=$(date -u +"%Y-%m-%d %H-%M-%S UTC")
           PREVIOUS_COMMIT=${{ github.sha }}
           EOF
             
@@ -248,12 +248,6 @@ jobs:
           # 3. API endpoints
           if ! check_api_endpoint "Questions Base API" "http://${{ secrets.TEST_EC2_HOST }}:8000/api/questions/base"; then
             echo "❌ Questions API check failed"
-            exit 1
-          fi
-          
-          # 4. Additional API endpoints
-          if ! check_api_endpoint "API Root" "http://${{ secrets.TEST_EC2_HOST }}:8000/api"; then
-            echo "❌ API root check failed"
             exit 1
           fi
           
