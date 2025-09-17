@@ -69,10 +69,11 @@ jobs:
       - name: Backup current deployment
         run: |
           echo "📋 Creating deployment backup"
-          
-          # Ship images and backup script to test instance
+
+          # Ship images and docker-compose file to test instance
           scp -i ~/.ssh/test_key backend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
               frontend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
+              docker-compose.test.yml \
               ec2-user@${{ secrets.TEST_EC2_HOST }}:/tmp/
 
           # Create backup on remote instance
@@ -91,6 +92,12 @@ jobs:
             if [ -f .env ]; then
               cp .env "$BACKUP_DIR/.env.backup"
               echo "✅ Environment file backed up"
+            fi
+
+            # Backup current docker-compose.test.yml if exists
+            if [ -f docker-compose.test.yml ]; then
+              cp docker-compose.test.yml "$BACKUP_DIR/docker-compose.test.yml.backup"
+              echo "✅ Docker compose file backed up"
             fi
             
             # Get current image IDs for rollback
@@ -133,7 +140,12 @@ jobs:
             rm -f *.tar
             
             cd ~/skill-tree-survey
-            
+
+            echo "📝 Updating docker-compose.test.yml file"
+            # Copy the new docker-compose file from /tmp to project directory
+            cp /tmp/docker-compose.test.yml docker-compose.test.yml
+            echo "✅ Docker compose file updated with latest version"
+
             echo "📝 Updating test environment configuration"
             cat > .env << EOF
           # Backend Configuration
@@ -351,6 +363,12 @@ jobs:
               if [ -f "${BACKUP_DIR}/.env.backup" ]; then
                 cp "${BACKUP_DIR}/.env.backup" .env
                 echo "✅ Environment restored"
+              fi
+
+              # Restore previous docker-compose file
+              if [ -f "${BACKUP_DIR}/docker-compose.test.yml.backup" ]; then
+                cp "${BACKUP_DIR}/docker-compose.test.yml.backup" docker-compose.test.yml
+                echo "✅ Docker compose file restored"
               fi
               
               # Start with previous images if they exist

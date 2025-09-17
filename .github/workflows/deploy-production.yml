@@ -70,9 +70,10 @@ jobs:
         run: |
           echo "📋 Creating deployment backup"
 
-          # Ship images and backup script to production instance
+          # Ship images and docker-compose file to production instance
           scp -i ~/.ssh/prod_key backend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
               frontend-${{ needs.build-images.outputs.image-tag }}.tar.gz \
+              docker-compose.prod.yml \
               ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/tmp/
 
           # Create backup on remote instance
@@ -91,6 +92,12 @@ jobs:
             if [ -f .env ]; then
               cp .env "$BACKUP_DIR/.env.backup"
               echo "✅ Environment file backed up"
+            fi
+
+            # Backup current docker-compose.prod.yml if exists
+            if [ -f docker-compose.prod.yml ]; then
+              cp docker-compose.prod.yml "$BACKUP_DIR/docker-compose.prod.yml.backup"
+              echo "✅ Docker compose file backed up"
             fi
 
             # Get current image IDs for rollback
@@ -133,6 +140,11 @@ jobs:
             rm -f *.tar
 
             cd ~/skill-tree-survey
+
+            echo "📝 Updating docker-compose.prod.yml file"
+            # Copy the new docker-compose file from /tmp to project directory
+            cp /tmp/docker-compose.prod.yml docker-compose.prod.yml
+            echo "✅ Docker compose file updated with latest version"
 
             echo "📝 Updating production environment configuration"
             cat > .env << EOF
@@ -351,6 +363,12 @@ jobs:
               if [ -f "${BACKUP_DIR}/.env.backup" ]; then
                 cp "${BACKUP_DIR}/.env.backup" .env
                 echo "✅ Environment restored"
+              fi
+
+              # Restore previous docker-compose file
+              if [ -f "${BACKUP_DIR}/docker-compose.prod.yml.backup" ]; then
+                cp "${BACKUP_DIR}/docker-compose.prod.yml.backup" docker-compose.prod.yml
+                echo "✅ Docker compose file restored"
               fi
 
               # Start with previous images if they exist
