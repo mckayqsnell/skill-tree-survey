@@ -159,10 +159,10 @@ jobs:
 
             # Store current image info for potential rollback
             cat > "$BACKUP_DIR/rollback_info.txt" << EOF
-          BACKEND_IMAGE_ID=$CURRENT_BACKEND_IMAGE
-          FRONTEND_IMAGE_ID=$CURRENT_FRONTEND_IMAGE
-          BACKUP_TIMESTAMP=$(date -u +"%Y-%m-%d %H-%M-%S UTC")
-          PREVIOUS_COMMIT=${{ github.sha }}
+          BACKEND_IMAGE_ID="$CURRENT_BACKEND_IMAGE"
+          FRONTEND_IMAGE_ID="$CURRENT_FRONTEND_IMAGE"
+          BACKUP_TIMESTAMP="$(date -u +'%Y-%m-%d %H-%M-%S UTC')"
+          PREVIOUS_COMMIT="${{ github.sha }}"
           EOF
 
             echo "✅ Backup created: $BACKUP_DIR"
