@@ -127,6 +127,8 @@ export interface SessionAnalytics {
   total_sessions: number;
   completed_sessions: number;
   completion_rate: number;
+  average_completion_time_minutes: number | null;
+  unique_users: number;
   total_users: number;
   top_skills: Array<{
     skill: string;

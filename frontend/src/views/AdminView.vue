@@ -723,7 +723,7 @@ const getAvgSessionsPerUser = (): string => {
 };
 
 const getEstimatedAvgDuration = (): string => {
-  if (!analytics.value || typeof analytics.value.average_completion_time_minutes !== 'number' || analytics.value.completed_sessions === 0) {
+  if (!analytics.value || analytics.value.average_completion_time_minutes === null || analytics.value.completed_sessions === 0) {
     return 'No data';
   }
 
