@@ -317,7 +317,7 @@ jobs:
           fi
 
           # 2. Frontend accessibility (through nginx reverse proxy)
-          if ! check_service_health "Frontend" "https://${{ secrets.EC2_HOST }}"; then
+          if ! check_service_health "Frontend" "https://skills-survey.heal.engineering"; then
             echo "⚠️  HTTPS frontend check failed, trying direct container access..."
             if ! check_service_health "Frontend" "http://${{ secrets.EC2_HOST }}:8080"; then
               echo "❌ Frontend health check failed (both HTTPS proxy and direct container)"
@@ -327,18 +327,18 @@ jobs:
             echo "⚠️  Frontend is accessible directly on port 8080, but nginx proxy not configured"
           fi
 
-          # 3. API endpoints
-          if ! check_api_endpoint "Questions Base API" "http://${{ secrets.EC2_HOST }}:8000/api/questions/base"; then
+          # 3. API endpoints (through nginx proxy)
+          if ! check_api_endpoint "Questions Base API" "https://skills-survey.heal.engineering/api/questions/base"; then
             echo "❌ Questions API check failed"
             exit 1
           fi
 
           # 5. Test CORS headers
           echo "🔒 Testing CORS configuration"
-          cors_response=$(curl -s -H "Origin: ${{ secrets.VITE_API_URL }}" \
+          cors_response=$(curl -s -H "Origin: https://skills-survey.heal.engineering" \
             -H "Access-Control-Request-Method: GET" \
             -H "Access-Control-Request-Headers: Content-Type" \
-            -X OPTIONS "http://${{ secrets.EC2_HOST }}:8000/api/questions/base" \
+            -X OPTIONS "https://skills-survey.heal.engineering/api/questions/base" \
             -w "%{http_code}" -o /dev/null || echo "000")
 
           if [ "$cors_response" = "200" ] || [ "$cors_response" = "204" ]; then
@@ -349,8 +349,7 @@ jobs:
 
           # 6. Test frontend-backend integration
           echo "🔗 Testing frontend-backend integration"
-          # Try HTTPS first (nginx proxy), fallback to direct container
-          frontend_content=$(curl -s "https://${{ secrets.EC2_HOST }}" 2>/dev/null || curl -s "http://${{ secrets.EC2_HOST }}:8080")
+          frontend_content=$(curl -s "https://skills-survey.heal.engineering" 2>/dev/null)
           if echo "$frontend_content" | grep -i "skill" > /dev/null; then
             echo "✅ Frontend content looks correct"
           else
