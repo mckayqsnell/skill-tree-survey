@@ -10,7 +10,7 @@ services:
       - DATABASE_URL=sqlite:////app/data/skill_survey_test.db
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-test-admin-password}
       - CORS_ORIGINS=${CORS_ORIGINS:-["https://test-skills-survey.heal.engineering","http://test-skills-survey.heal.engineering","http://localhost:8080"]}
-      - SEED_ON_STARTUP=${SEED_ON_STARTUP:-true}
+      - RESET_DATABASE=${RESET_DATABASE:-false}
       - ENVIRONMENT=test
       - API_PREFIX=/api
       - APP_NAME=Skill Tree Survey - Test

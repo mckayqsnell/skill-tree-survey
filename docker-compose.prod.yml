@@ -16,8 +16,8 @@ services:
       # CORS - Update with your actual frontend URL
       - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost","http://localhost:80"]}
       
-      # Auto-seed on first run (configurable via deployment)
-      - SEED_ON_STARTUP=${SEED_ON_STARTUP:-false}
+      # Database reset (configurable via deployment - USE WITH CAUTION!)
+      - RESET_DATABASE=${RESET_DATABASE:-false}
       
       # API configuration
       - API_PREFIX=/api

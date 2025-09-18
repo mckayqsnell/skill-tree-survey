@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config.settings import get_settings
-from app.database.connection import init_db
+from app.database.connection import init_db, reset_db
 from app.seeders.seeder import Seeder, get_db
 from app.routes import questions, sessions, responses, admin
 
@@ -23,16 +23,32 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     print("Starting up...")
-    
-    # Initialize database
-    init_db()
-    
-    # Run seeder if enabled
-    if settings.SEED_ON_STARTUP:
+
+    # Check if database reset is requested
+    if settings.RESET_DATABASE:
+        print("RESET_DATABASE is enabled - resetting database and reseeding...")
+        # Reset database (drop all tables and recreate)
+        reset_db()
+
+        # Run seeder to populate with initial data
         db = next(get_db())
         try:
             seeder = Seeder(db)
-            seeder.seed_database()
+            count = seeder.seed_database()
+            print(f"Database reset complete. Seeded {count} base questions.")
+        finally:
+            db.close()
+    else:
+        # Normal startup - just ensure tables exist
+        init_db()
+
+        # Try to seed if database is empty (backward compatibility)
+        db = next(get_db())
+        try:
+            seeder = Seeder(db)
+            if seeder.is_database_empty():
+                print("Database is empty, seeding with initial data...")
+                seeder.seed_database()
         finally:
             db.close()
     

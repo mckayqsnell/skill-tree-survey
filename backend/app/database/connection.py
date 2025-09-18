@@ -43,3 +43,16 @@ def init_db() -> None:
     """
     from app.models import question, session, response  # Import models to register them
     Base.metadata.create_all(bind=engine)
+
+
+def reset_db() -> None:
+    """
+    Reset database by dropping all tables and recreating them.
+    WARNING: This will delete all data!
+    """
+    from app.models import question, session, response  # Import models to register them
+    print("WARNING: Resetting database - all data will be lost!")
+    Base.metadata.drop_all(bind=engine)
+    print("All tables dropped.")
+    Base.metadata.create_all(bind=engine)
+    print("All tables recreated.")

@@ -14,19 +14,53 @@ on:
         required: false
         type: boolean
         default: false
-      seed_on_startup:
-        description: 'Seed database on startup'
+      reset_database:
+        description: 'DANGER: Reset database (all data will be lost!) - Type "RESET-TEST-DATABASE" to confirm'
         required: false
-        type: boolean
-        default: true
+        type: string
+        default: ''
+      reset_database_confirm_2:
+        description: 'Type "RESET-TEST-DATABASE" again to confirm (2/3)'
+        required: false
+        type: string
+        default: ''
+      reset_database_confirm_3:
+        description: 'Type "RESET-TEST-DATABASE" one more time to confirm (3/3)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build-images:
     uses: ./.github/workflows/build-and-cache.yml
     secrets: inherit
 
+  validate-reset:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.reset_database != ''
+    runs-on: self-hosted
+    steps:
+      - name: Validate reset database confirmation
+        run: |
+          echo "🔒 Validating database reset confirmation..."
+
+          EXPECTED="RESET-TEST-DATABASE"
+          CONFIRM_1="${{ github.event.inputs.reset_database }}"
+          CONFIRM_2="${{ github.event.inputs.reset_database_confirm_2 }}"
+          CONFIRM_3="${{ github.event.inputs.reset_database_confirm_3 }}"
+
+          if [ "$CONFIRM_1" != "$EXPECTED" ] || [ "$CONFIRM_2" != "$EXPECTED" ] || [ "$CONFIRM_3" != "$EXPECTED" ]; then
+            echo "❌ Database reset confirmation failed!"
+            echo "To reset the database, you must type '$EXPECTED' in all three confirmation fields."
+            echo "Received: '$CONFIRM_1', '$CONFIRM_2', '$CONFIRM_3'"
+            exit 1
+          fi
+
+          echo "✅ Database reset confirmed by ${{ github.actor }}"
+          echo "⚠️  WARNING: All test database data will be permanently deleted!"
+
   deploy:
-    needs: build-images
+    needs: [build-images, validate-reset]
+    if: always() && needs.build-images.result == 'success' && (needs.validate-reset.result == 'success' || needs.validate-reset.result == 'skipped')
     runs-on: self-hosted
     environment: test
     steps:
@@ -152,7 +186,7 @@ jobs:
           ADMIN_PASSWORD=${{ secrets.TEST_ADMIN_PASSWORD }}
           DATABASE_URL=sqlite:////app/data/skill_survey_test.db
           CORS_ORIGINS=${{ secrets.TEST_CORS_ORIGINS }}
-          SEED_ON_STARTUP=${{ github.event.inputs.seed_on_startup || 'true' }}
+          RESET_DATABASE=${{ (github.event.inputs.reset_database == 'RESET-TEST-DATABASE' && github.event.inputs.reset_database_confirm_2 == 'RESET-TEST-DATABASE' && github.event.inputs.reset_database_confirm_3 == 'RESET-TEST-DATABASE') && 'true' || 'false' }}
           ENVIRONMENT=test
           
           # Frontend Configuration
@@ -165,8 +199,17 @@ jobs:
           COMMIT_SHA=${{ github.sha }}
           EOF
             
-            echo "🔄 Stopping current services"
-            docker-compose -f docker-compose.test.yml down --remove-orphans
+            # Check if database reset is requested
+            RESET_DB=${{ (github.event.inputs.reset_database == 'RESET-TEST-DATABASE' && github.event.inputs.reset_database_confirm_2 == 'RESET-TEST-DATABASE' && github.event.inputs.reset_database_confirm_3 == 'RESET-TEST-DATABASE') && 'true' || 'false' }}
+
+            if [ "$RESET_DB" = "true" ]; then
+              echo "🗑️  RESETTING DATABASE - Removing volume..."
+              docker-compose -f docker-compose.test.yml down -v --remove-orphans
+              echo "✅ Database volume removed. Will be recreated with fresh data."
+            else
+              echo "🔄 Stopping current services (preserving data)"
+              docker-compose -f docker-compose.test.yml down --remove-orphans
+            fi
             
             echo "🚀 Starting new services"
             export IMAGE_TAG=${{ needs.build-images.outputs.image-tag }}

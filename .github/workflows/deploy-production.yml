@@ -14,19 +14,72 @@ on:
         required: false
         type: boolean
         default: false
-      seed_on_startup:
-        description: 'Seed database on startup (use for fresh deployments)'
+      reset_database:
+        description: '🚨 EXTREME DANGER: Reset PRODUCTION database - Type "RESET-PRODUCTION-DATABASE"'
         required: false
-        type: boolean
-        default: false
+        type: string
+        default: ''
+      reset_database_confirm_2:
+        description: '⚠️  Type "RESET-PRODUCTION-DATABASE" again (2/5)'
+        required: false
+        type: string
+        default: ''
+      reset_database_confirm_3:
+        description: '⚠️  Type "RESET-PRODUCTION-DATABASE" again (3/5)'
+        required: false
+        type: string
+        default: ''
+      reset_database_confirm_4:
+        description: '⚠️  Type "RESET-PRODUCTION-DATABASE" again (4/5)'
+        required: false
+        type: string
+        default: ''
+      reset_database_confirm_5:
+        description: '🛑 FINAL: Type "RESET-PRODUCTION-DATABASE" one last time (5/5)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build-images:
     uses: ./.github/workflows/build-and-cache.yml
     secrets: inherit
 
+  validate-reset:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.reset_database != ''
+    runs-on: self-hosted
+    steps:
+      - name: Validate production database reset confirmation
+        run: |
+          echo "🔒 Validating PRODUCTION database reset confirmation..."
+          echo "🚨 THIS WILL DELETE ALL PRODUCTION DATA!"
+
+          EXPECTED="RESET-PRODUCTION-DATABASE"
+          CONFIRM_1="${{ github.event.inputs.reset_database }}"
+          CONFIRM_2="${{ github.event.inputs.reset_database_confirm_2 }}"
+          CONFIRM_3="${{ github.event.inputs.reset_database_confirm_3 }}"
+          CONFIRM_4="${{ github.event.inputs.reset_database_confirm_4 }}"
+          CONFIRM_5="${{ github.event.inputs.reset_database_confirm_5 }}"
+
+          if [ "$CONFIRM_1" != "$EXPECTED" ] || [ "$CONFIRM_2" != "$EXPECTED" ] || [ "$CONFIRM_3" != "$EXPECTED" ] || [ "$CONFIRM_4" != "$EXPECTED" ] || [ "$CONFIRM_5" != "$EXPECTED" ]; then
+            echo "❌ Production database reset confirmation FAILED!"
+            echo "To reset the PRODUCTION database, you must type '$EXPECTED' in ALL FIVE confirmation fields."
+            echo "Confirmations received:"
+            echo "  1: '$CONFIRM_1'"
+            echo "  2: '$CONFIRM_2'"
+            echo "  3: '$CONFIRM_3'"
+            echo "  4: '$CONFIRM_4'"
+            echo "  5: '$CONFIRM_5'"
+            exit 1
+          fi
+
+          echo "🚨🚨🚨 PRODUCTION DATABASE RESET CONFIRMED BY ${{ github.actor }} 🚨🚨🚨"
+          echo "⚠️  ALL PRODUCTION DATA WILL BE PERMANENTLY DELETED!"
+          echo "🕒 Reset initiated at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
   deploy:
-    needs: build-images
+    needs: [build-images, validate-reset]
+    if: always() && needs.build-images.result == 'success' && (needs.validate-reset.result == 'success' || needs.validate-reset.result == 'skipped')
     runs-on: self-hosted
     environment: production
     steps:
@@ -152,7 +205,7 @@ jobs:
           ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
           DATABASE_URL=sqlite:////app/data/skill_survey.db
           CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
-          SEED_ON_STARTUP=${{ github.event.inputs.seed_on_startup || 'false' }}
+          RESET_DATABASE=${{ (github.event.inputs.reset_database == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_2 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_3 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_4 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_5 == 'RESET-PRODUCTION-DATABASE') && 'true' || 'false' }}
           ENVIRONMENT=production
 
           # Frontend Configuration
@@ -165,8 +218,18 @@ jobs:
           COMMIT_SHA=${{ github.sha }}
           EOF
 
-            echo "🔄 Stopping current services"
-            docker-compose -f docker-compose.prod.yml down --remove-orphans
+            # Check if database reset is requested
+            RESET_DB=${{ (github.event.inputs.reset_database == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_2 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_3 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_4 == 'RESET-PRODUCTION-DATABASE' && github.event.inputs.reset_database_confirm_5 == 'RESET-PRODUCTION-DATABASE') && 'true' || 'false' }}
+
+            if [ "$RESET_DB" = "true" ]; then
+              echo "🚨🚨🚨 RESETTING PRODUCTION DATABASE - Removing volume... 🚨🚨🚨"
+              docker-compose -f docker-compose.prod.yml down -v --remove-orphans
+              echo "✅ Production database volume removed. Will be recreated with fresh data."
+              echo "Reset performed by: ${{ github.actor }} at $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            else
+              echo "🔄 Stopping current services (preserving production data)"
+              docker-compose -f docker-compose.prod.yml down --remove-orphans
+            fi
 
             echo "🚀 Starting new services"
             export IMAGE_TAG=${{ needs.build-images.outputs.image-tag }}

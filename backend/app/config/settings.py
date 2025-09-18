@@ -32,8 +32,8 @@ class Settings(BaseSettings):
                 return [origin.strip() for origin in v.split(',')]
         return v
     
-    # Seeding
-    SEED_ON_STARTUP: bool = True
+    # Database Management
+    RESET_DATABASE: bool = False
     
     # API
     API_PREFIX: str = "/api"

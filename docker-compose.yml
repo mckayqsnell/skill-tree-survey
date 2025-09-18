@@ -10,7 +10,7 @@ services:
       - DATABASE_URL=sqlite:////app/data/skill_survey.db
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
       - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
-      - SEED_ON_STARTUP=true
+      - RESET_DATABASE=${RESET_DATABASE:-false}
       - API_PREFIX=/api
       - APP_NAME=Skill Tree Survey
       - APP_VERSION=1.0.0
