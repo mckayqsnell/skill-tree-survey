@@ -96,11 +96,27 @@
           </div>
         </div>
 
+        <!-- Pokemon Warning Alert -->
+        <div v-if="(pokemonStats?.yes_count || 0) > 0" class="glass-card border-2 border-red-600 bg-red-900/20 mb-6">
+          <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div>
+              <h3 class="text-red-600 font-bold text-lg">PRODUCTIVITY ALERT</h3>
+              <p class="text-red-400 text-sm mt-1">
+                This developer has demonstrated knowledge of {{ pokemonStats.yes_count }} Pokémon. 
+                Studies show inverse correlation between Pokémon knowledge and code quality.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- Stats Overview -->
         <div class="glass-card">
           <h2 class="text-lg text-primary mb-6 font-heading">PERFORMANCE METRICS</h2>
           
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
             <div class="metric-card border-primary-faint group">
               <p class="text-3xl font-bold text-primary mb-1">{{ summary.total_responses }}</p>
               <div class="flex items-center justify-center gap-1">
@@ -154,6 +170,34 @@
               <!-- Tooltip -->
               <div class="tooltip-base border border-amber-500/30 text-amber-500">
                 Percentage of questions answered "YES" - overall skill confidence level
+              </div>
+            </div>
+            
+            <div class="metric-card border-red-600/30 group">
+              <div class="flex items-center gap-2 justify-center">
+                <p class="text-3xl font-bold mb-1" :class="(pokemonStats?.yes_count || 0) > 0 ? 'text-red-600' : 'text-gray-500'">
+                  {{ pokemonStats?.yes_count || 0 }}/{{ pokemonStats?.total_questions || 0 }}
+                </p>
+                <svg v-if="(pokemonStats?.yes_count || 0) > 0" class="w-6 h-6 text-red-600 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div class="flex items-center justify-center gap-1">
+                <p class="text-xs font-mono-primary uppercase" :class="(pokemonStats?.yes_count || 0) > 0 ? 'text-red-600 font-bold' : 'text-gray-500'">
+                  Pokémon Alert
+                </p>
+                <svg class="w-3 h-3 cursor-help" :class="(pokemonStats?.yes_count || 0) > 0 ? 'text-red-600' : 'text-gray-400'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <!-- Tooltip -->
+              <div class="tooltip-base border text-white" :class="(pokemonStats?.yes_count || 0) > 0 ? 'border-red-600 bg-red-700' : 'border-gray-500 bg-gray-700'">
+                <span v-if="(pokemonStats?.yes_count || 0) > 0">
+                  ⚠️ WARNING: Strong correlation detected between Pokémon knowledge and code quality issues. Recommend immediate code review.
+                </span>
+                <span v-else>
+                  No Pokémon knowledge detected. Focus on programming maintained successfully.
+                </span>
               </div>
             </div>
           </div>
@@ -395,6 +439,7 @@ const loading = ref(true);
 const error = ref('');
 const summary = ref<SessionSummary | null>(null);
 const categoryStats = ref<CategoryStatistics[]>([]);
+const pokemonStats = ref<CategoryStatistics | null>(null);
 
 // Load session data
 const loadSessionData = async () => {
@@ -463,7 +508,15 @@ const loadSessionData = async () => {
         };
       });
       
+      // Separate Pokemon category from other skills
+      const pokemonCat = allCategoryStats.find(cat => cat.category.toLowerCase() === 'pokemon');
+      if (pokemonCat) {
+        pokemonStats.value = pokemonCat;
+      }
+      
+      // Filter out Pokemon from skill profile
       categoryStats.value = allCategoryStats
+        .filter(cat => cat.category.toLowerCase() !== 'pokemon')
         .sort((a, b) => b.percentage_yes - a.percentage_yes);
       
       if (import.meta.env.DEV) {
@@ -548,14 +601,14 @@ const getSkillLevelClass = (percentage: number): string => {
 
 const getTopSkills = () => {
   return categoryStats.value
-    .filter(s => s.percentage_yes >= 50)
+    .filter(s => s.percentage_yes >= 50 && s.category.toLowerCase() !== 'pokemon')
     .sort((a, b) => b.percentage_yes - a.percentage_yes)
     .slice(0, 3);
 };
 
 const getGrowthAreas = () => {
   return categoryStats.value
-    .filter(s => s.percentage_yes < 50 && s.percentage_yes > 0)
+    .filter(s => s.percentage_yes < 50 && s.percentage_yes > 0 && s.category.toLowerCase() !== 'pokemon')
     .sort((a, b) => a.percentage_yes - b.percentage_yes)
     .slice(0, 3);
 };

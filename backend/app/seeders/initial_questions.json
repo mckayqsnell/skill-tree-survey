@@ -1,7 +1,7 @@
 {
   "categories": [
     "Backend",
-    "Frontend", 
+    "Frontend",
     "DevOps",
     "Cloud",
     "Data",
@@ -10,7 +10,11 @@
     "Security",
     "Architecture",
     "Testing",
-    "Leadership"
+    "Leadership",
+    "Data Science",
+    "AI/ML Engineering",
+    "UI/UX Design",
+    "Pokemon"
   ],
   "questions": [
     {
@@ -25,24 +29,84 @@
               "text": "Have you implemented authentication and authorization?",
               "children": [
                 {
-                  "text": "Have you worked with OAuth 2.0 or JWT?",
-                  "children": [
-                    {
-                      "text": "Have you built multi-tenant systems?"
-                    }
-                  ]
+                  "text": "Have you worked with OAuth 2.0?",
+                  "children": []
+                },
+                {
+                  "text": "Have you worked with JWT?",
+                  "children": []
+                },
+                {
+                  "text": "Have you implemented role-based access control (RBAC)?",
+                  "children": []
+                },
+                {
+                  "text": "Have you worked with OpenID Connect?",
+                  "children": []
                 }
               ]
             },
             {
-              "text": "Have you worked with GraphQL or gRPC?",
+              "text": "Have you built multi-tenant systems?"
+            },
+            {
+              "text": "Have you optimized API performance at scale?",
               "children": [
                 {
-                  "text": "Have you optimized API performance at scale?"
+                  "text": "Have you implemented caching strategies?",
+                  "children": [
+                    {
+                      "text": "Have you used Redis?",
+                      "children": []
+                    },
+                    {
+                      "text": "Have you used Memcached?",
+                      "children": []
+                    },
+                    {
+                      "text": "Have you used Dedenne?",
+                      "category": "Pokemon",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you used a CDN for API endpoints?",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you worked with GraphQL?",
+              "children": [
+                {
+                  "text": "Have you implemented GraphQL subscriptions or federated schemas?",
+                  "children": []
+                },
+                {
+                  "text": "Have you used Pinsir?",
+                  "category": "Pokemon",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with gRPC?",
+              "children": [
+                {
+                  "text": "Have you defined Protobuf schemas?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you documented APIs using OpenAPI/Swagger?",
+              "children": []
             }
           ]
+        },
+        {
+          "text": "Have you worked on an application that uses WebSockets?"
         },
         {
           "text": "Have you worked with databases?",
@@ -51,12 +115,20 @@
               "text": "Have you designed database schemas?",
               "children": [
                 {
-                  "text": "Have you optimized queries and indexes?",
-                  "children": [
-                    {
-                      "text": "Have you implemented database sharding?"
-                    }
-                  ]
+                  "text": "Have you performed database normalization?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you optimized queries and indexes?",
+              "children": [
+                {
+                  "text": "Have you implemented database sharding?"
+                },
+                {
+                  "text": "Have you used a query planner or profiler?",
+                  "children": []
                 }
               ]
             },
@@ -65,21 +137,174 @@
               "children": [
                 {
                   "text": "Have you implemented eventual consistency patterns?"
+                },
+                {
+                  "text": "Have you worked with document databases?",
+                  "children": [
+                    {
+                      "text": "Did you use MongoDB?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Couchbase?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you worked with key-value stores?",
+                  "children": [
+                    {
+                      "text": "Did you use Redis?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use DynamoDB?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you worked with graph databases?",
+                  "children": [
+                    {
+                      "text": "Did you use Neo4j?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "text": "Have you managed database migrations?",
+              "children": [
+                {
+                  "text": "Did you use Alembic?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Flyway?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with database replication and failover?",
+              "children": []
             }
           ]
         },
         {
-          "text": "Have you worked with message queues (RabbitMQ, Kafka)?",
+          "text": "Have you worked with message queues?",
           "children": [
             {
               "text": "Have you built event-driven architectures?",
               "children": [
                 {
-                  "text": "Have you implemented CQRS or Event Sourcing?"
+                  "text": "Have you worked with RabbitMQ?",
+                  "children": []
+                },
+                {
+                  "text": "Have you worked with Kafka?",
+                  "children": [
+                    {
+                      "text": "Have you worked with Kafka Streams or KSQL?",
+                      "children": []
+                    },
+                    {
+                      "text": "Have you used Xatu?",
+                      "category": "Pokemon",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you worked with cloud-native message services?",
+                  "children": [
+                    {
+                      "text": "Did you use AWS SQS/SNS?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Google Pub/Sub?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Azure Service Bus?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "text": "Have you implemented CQRS?",
+              "children": []
+            },
+            {
+              "text": "Have you implemented Event Sourcing?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with server-side languages or frameworks?",
+          "children": [
+            {
+              "text": "Have you worked with Python?",
+              "children": [
+                {
+                  "text": "Did you use Django?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Flask?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use FastAPI?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Node.js?",
+              "children": [
+                {
+                  "text": "Did you use Express?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use NestJS?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Go?",
+              "children": [
+                {
+                  "text": "Did you use Gin?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Echo?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Java?",
+              "children": [
+                {
+                  "text": "Did you use Spring Boot?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Rust?",
+              "children": []
             }
           ]
         }
@@ -94,23 +319,115 @@
           "text": "Have you built single-page applications (SPAs)?",
           "children": [
             {
-              "text": "Have you worked with React, Vue, or Angular?",
+              "text": "Have you worked with React?",
               "children": [
                 {
-                  "text": "Have you managed complex state (Redux, Vuex)?",
+                  "text": "Have you managed complex state?",
                   "children": [
                     {
-                      "text": "Have you implemented micro-frontends?"
+                      "text": "Did you use Redux?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use MobX?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Zustand?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you worked with a React meta-framework?",
+                  "children": [
+                    {
+                      "text": "Did you use Next.js?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Remix?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you used Archen?",
+                  "category": "Pokemon",
+                  "children": []
+                },
+                {
+                  "text": "Have you used React Hooks (e.g., useEffect, useContext)?",
+                  "children": []
+                },
+                {
+                  "text": "Have you implemented micro-frontends?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Vue?",
+              "children": [
+                {
+                  "text": "Have you managed complex state?",
+                  "children": [
+                    {
+                      "text": "Did you use Vuex?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Pinia?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you worked with Nuxt.js?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Angular?",
+              "children": [
+                {
+                  "text": "Have you worked with a state management library?",
+                  "children": [
+                    {
+                      "text": "Did you use NgRx?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Ngxs?",
+                      "children": []
                     }
                   ]
                 }
               ]
             },
             {
+              "text": "Have you worked with Svelte?",
+              "children": []
+            },
+            {
               "text": "Have you implemented server-side rendering (SSR)?",
               "children": [
                 {
                   "text": "Have you optimized Core Web Vitals?"
+                },
+                {
+                  "text": "Have you used static site generators?",
+                  "children": [
+                    {
+                      "text": "Did you use Gatsby?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Astro?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
             }
@@ -124,6 +441,40 @@
               "children": [
                 {
                   "text": "Have you built component libraries or design systems?"
+                },
+                {
+                  "text": "Have you used ARIA attributes?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you used CSS preprocessors?",
+              "children": [
+                {
+                  "text": "Did you use Sass?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Less?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with a UI framework?",
+              "children": [
+                {
+                  "text": "Did you use Material-UI?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Ant Design?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Tailwind CSS?",
+                  "children": []
                 }
               ]
             }
@@ -139,6 +490,23 @@
                   "text": "Have you built Progressive Web Apps (PWAs)?"
                 }
               ]
+            },
+            {
+              "text": "Have you used a CDN for static assets?",
+              "children": []
+            },
+            {
+              "text": "Have you optimized images and other media?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with state management?",
+          "children": [
+            {
+              "text": "Have you used tools like Zustand or Jotai?",
+              "children": []
             }
           ]
         }
@@ -153,15 +521,41 @@
           "text": "Have you containerized applications with Docker?",
           "children": [
             {
+              "text": "Have you written Dockerfiles to optimize image size and build time?",
+              "children": []
+            },
+            {
+              "text": "Have you used Docker Compose for local development?",
+              "children": []
+            },
+            {
               "text": "Have you deployed to Kubernetes?",
               "children": [
                 {
                   "text": "Have you written Helm charts?",
                   "children": [
                     {
-                      "text": "Have you implemented GitOps?"
+                      "text": "Have you implemented GitOps?",
+                      "children": [
+                        {
+                          "text": "Did you use Argo CD?",
+                          "children": []
+                        },
+                        {
+                          "text": "Did you use Flux?",
+                          "children": []
+                        }
+                      ]
                     }
                   ]
+                },
+                {
+                  "text": "Have you managed Kubernetes secrets?",
+                  "children": []
+                },
+                {
+                  "text": "Have you configured Ingress controllers?",
+                  "children": []
                 }
               ]
             }
@@ -171,15 +565,62 @@
           "text": "Have you built CI/CD pipelines?",
           "children": [
             {
-              "text": "Have you worked with Jenkins, GitHub Actions, or GitLab CI?",
+              "text": "Have you worked with Jenkins?",
               "children": [
                 {
                   "text": "Have you implemented automated testing in pipelines?",
                   "children": [
                     {
-                      "text": "Have you done blue-green or canary deployments?"
+                      "text": "Have you done blue-green deployments?"
                     }
                   ]
+                },
+                {
+                  "text": "Have you managed Jenkinsfile scripts?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with GitHub Actions?",
+              "children": [
+                {
+                  "text": "Have you implemented automated testing in pipelines?",
+                  "children": [
+                    {
+                      "text": "Have you done canary deployments?"
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you created custom GitHub Actions?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with GitLab CI?",
+              "children": [
+                {
+                  "text": "Have you managed GitLab CI/CD YAML files?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with other CI/CD tools?",
+              "children": [
+                {
+                  "text": "Did you use CircleCI?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Travis CI?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Azure DevOps?",
+                  "children": []
                 }
               ]
             }
@@ -189,12 +630,89 @@
           "text": "Have you implemented monitoring and observability?",
           "children": [
             {
-              "text": "Have you worked with Prometheus and Grafana?",
+              "text": "Have you worked with Prometheus?",
               "children": [
                 {
-                  "text": "Have you implemented distributed tracing?"
+                  "text": "Have you implemented distributed tracing?",
+                  "children": [
+                    {
+                      "text": "Did you use Jaeger?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use Zipkin?",
+                      "children": []
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you created custom Prometheus exporters?",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you worked with Grafana?",
+              "children": [
+                {
+                  "text": "Have you created custom Grafana dashboards?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you used Arctibax?",
+              "category": "Pokemon",
+              "children": []
+            },
+            {
+              "text": "Have you worked with a log management solution?",
+              "children": [
+                {
+                  "text": "Did you use the ELK Stack (Elasticsearch, Logstash, Kibana)?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Splunk?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you implemented an alerting system?",
+              "children": [
+                {
+                  "text": "Did you use PagerDuty?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Alertmanager?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Are you familiar with Donphan frameworks?",
+      "is_base": true,
+      "category": "Pokemon",
+      "children": [
+        {
+          "text": "Have you used Fezandipiti?",
+          "children": [
+            {
+              "text": "Have you implemented rigid and loose structures with Fezandipiti?"
+            }
+          ]
+        },
+        {
+          "text": "Have you used NumPy?",
+          "children": [
+            {
+              "text": "Have you used Deino?"
             }
           ]
         }
@@ -206,11 +724,23 @@
       "category": "Cloud",
       "children": [
         {
-          "text": "Have you deployed to AWS, Azure, or GCP?",
+          "text": "Have you deployed to AWS?",
           "children": [
             {
-              "text": "Have you worked with compute services (EC2, Lambda)?",
+              "text": "Have you worked with AWS compute services?",
               "children": [
+                {
+                  "text": "Did you use EC2?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Lambda?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Fargate?",
+                  "children": []
+                },
                 {
                   "text": "Have you implemented auto-scaling?",
                   "children": [
@@ -226,6 +756,124 @@
               "children": [
                 {
                   "text": "Have you worked with API Gateway and Lambda?"
+                },
+                {
+                  "text": "Have you used a serverless framework?",
+                  "children": [
+                    {
+                      "text": "Did you use Serverless Framework?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use AWS SAM?",
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with AWS storage services?",
+              "children": [
+                {
+                  "text": "Did you use S3?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use EBS?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use EFS?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with AWS database services?",
+              "children": [
+                {
+                  "text": "Did you use RDS?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use DynamoDB?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use DocumentDB?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you managed IAM roles and policies?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you deployed to Azure?",
+          "children": [
+            {
+              "text": "Have you worked with Azure compute services?",
+              "children": [
+                {
+                  "text": "Did you use Azure Functions?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Azure App Service?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Azure database services?",
+              "children": [
+                {
+                  "text": "Did you use Azure SQL?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Cosmos DB?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you deployed to GCP?",
+          "children": [
+            {
+              "text": "Have you worked with GCP compute services?",
+              "children": [
+                {
+                  "text": "Did you use Google Cloud Functions?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use App Engine?",
+                  "children": []
+                },
+                {
+                  "text": "Have you used Curfant?",
+                  "category": "Pokemon",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with GCP data services?",
+              "children": [
+                {
+                  "text": "Did you use BigQuery?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Firestore?",
+                  "children": []
                 }
               ]
             }
@@ -235,10 +883,31 @@
           "text": "Have you implemented Infrastructure as Code?",
           "children": [
             {
-              "text": "Have you worked with Terraform or CloudFormation?",
+              "text": "Have you worked with Terraform?",
               "children": [
                 {
                   "text": "Have you built reusable infrastructure modules?"
+                },
+                {
+                  "text": "Have you managed Terraform state in a remote backend?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with other IaC tools?",
+              "children": [
+                {
+                  "text": "Did you use CloudFormation?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Pulumi?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Ansible?",
+                  "children": []
                 }
               ]
             }
@@ -255,10 +924,45 @@
           "text": "Have you built ETL/ELT pipelines?",
           "children": [
             {
-              "text": "Have you worked with Apache Airflow or similar?",
+              "text": "Have you worked with Apache Airflow?",
               "children": [
                 {
                   "text": "Have you built real-time streaming pipelines?"
+                },
+                {
+                  "text": "Have you written custom Airflow operators or sensors?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with similar data pipeline tools?",
+              "children": [
+                {
+                  "text": "Did you use Dagster?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Prefect?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you used a data transformation tool?",
+              "children": [
+                {
+                  "text": "Did you use dbt?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Spark SQL?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Froslass?",
+                  "category": "Pokemon",
+                  "children": []
                 }
               ]
             }
@@ -268,10 +972,32 @@
           "text": "Have you worked with data warehouses?",
           "children": [
             {
-              "text": "Have you worked with Snowflake, BigQuery, or Redshift?",
+              "text": "Have you worked with Snowflake?",
               "children": [
                 {
                   "text": "Have you designed dimensional models?"
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with BigQuery?",
+              "children": [
+                {
+                  "text": "Have you used federated queries or streaming inserts?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with other data warehouses?",
+              "children": [
+                {
+                  "text": "Did you use Redshift?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Teradata?",
+                  "children": []
                 }
               ]
             }
@@ -285,8 +1011,56 @@
               "children": [
                 {
                   "text": "Have you optimized Spark jobs for performance?"
+                },
+                {
+                  "text": "Have you worked with PySpark or Scala?",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you used other big data tools?",
+              "children": [
+                {
+                  "text": "Did you use Apache Flink?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Hadoop?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with a data lake?",
+              "children": [
+                {
+                  "text": "Did you use Delta Lake?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Iceberg?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Dewott?",
+                  "category": "Pokemon",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with data governance and data quality tools?",
+          "children": [
+            {
+              "text": "Did you use Great Expectations?",
+              "children": []
+            },
+            {
+              "text": "Did you use Soda Core?",
+              "children": []
             }
           ]
         }
@@ -301,15 +1075,53 @@
           "text": "Have you built and trained ML models?",
           "children": [
             {
-              "text": "Have you worked with scikit-learn or XGBoost?",
+              "text": "Have you worked with scikit-learn?",
               "children": [
                 {
                   "text": "Have you performed feature engineering?",
+                  "children": []
+                },
+                {
+                  "text": "Have you used different types of models (e.g., regression, classification, clustering)?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you deployed models to production?",
+              "children": [
+                {
+                  "text": "Have you uploaded or accessed a model from Hugging Face?"
+                },
+                {
+                  "text": "Have you used a serving framework?",
                   "children": [
                     {
-                      "text": "Have you deployed models to production?"
+                      "text": "Did you use TensorFlow Serving?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use TorchServe?",
+                      "children": []
                     }
                   ]
+                },
+                {
+                  "text": "Have you containerized and deployed models with Docker?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with gradient boosting frameworks?",
+              "children": [
+                {
+                  "text": "Did you use XGBoost?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use LightGBM?",
+                  "children": []
                 }
               ]
             }
@@ -319,17 +1131,37 @@
           "text": "Have you worked with deep learning?",
           "children": [
             {
-              "text": "Have you used TensorFlow or PyTorch?",
+              "text": "Have you used a deep learning framework?",
               "children": [
                 {
-                  "text": "Have you built neural networks for computer vision or NLP?",
-                  "children": [
-                    {
-                      "text": "Have you fine-tuned large language models?"
-                    }
-                  ]
+                  "text": "Did you use PyTorch?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use TensorFlow?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Jax?",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you built neural networks for computer vision?",
+              "children": []
+            },
+            {
+              "text": "Have you fine-tuned language models?",
+              "children": []
+            },
+            {
+              "text": "Have you built neural networks for NLP?",
+              "children": []
+            },
+            {
+              "text": "Have you worked with attention mechanisms or transformers?",
+              "children": []
             }
           ]
         },
@@ -337,12 +1169,46 @@
           "text": "Have you implemented MLOps practices?",
           "children": [
             {
-              "text": "Have you used MLflow or similar tools?",
+              "text": "Have you used an MLOps tool?",
               "children": [
                 {
-                  "text": "Have you built automated retraining pipelines?"
+                  "text": "Did you use MLflow?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Kubeflow?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use SageMaker?",
+                  "children": []
+                },
+                {
+                  "text": "Have you used Probopass?",
+                  "category": "Pokemon",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you built automated retraining pipelines?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with large language models (LLMs)?",
+          "children": [
+            {
+              "text": "Have you used retrieval-augmented generation (RAG)?"
+            },
+            {
+              "text": "Have you fine-tuned an LLM for a specific task?"
+            },
+            {
+              "text": "Have you used Roaring Moon?",
+              "category": "Pokemon",
+              "children": []
             }
           ]
         }
@@ -361,6 +1227,19 @@
               "children": [
                 {
                   "text": "Have you published apps to the App Store?"
+                },
+                {
+                  "text": "Have you worked with a UI framework?",
+                  "children": [
+                    {
+                      "text": "Did you use SwiftUI?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use UIKit?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
             },
@@ -369,8 +1248,29 @@
               "children": [
                 {
                   "text": "Have you published apps to Google Play?"
+                },
+                {
+                  "text": "Have you worked with a UI framework?",
+                  "children": [
+                    {
+                      "text": "Did you use Jetpack Compose?",
+                      "children": []
+                    },
+                    {
+                      "text": "Did you use XML layouts?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "text": "Have you handled push notifications?",
+              "children": []
+            },
+            {
+              "text": "Have you integrated with mobile APIs (e.g., camera, GPS)?",
+              "children": []
             }
           ]
         },
@@ -378,12 +1278,29 @@
           "text": "Have you built cross-platform apps?",
           "children": [
             {
-              "text": "Have you worked with React Native or Flutter?",
+              "text": "Have you worked with React Native?",
               "children": [
                 {
                   "text": "Have you optimized cross-platform app performance?"
+                },
+                {
+                  "text": "Have you used native modules?",
+                  "children": []
                 }
               ]
+            },
+            {
+              "text": "Have you worked with Flutter?",
+              "children": [
+                {
+                  "text": "Have you worked with Dart?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Xamarin?",
+              "children": []
             }
           ]
         }
@@ -401,12 +1318,38 @@
               "text": "Have you addressed OWASP Top 10 vulnerabilities?",
               "children": [
                 {
-                  "text": "Have you prevented SQL injection and XSS?",
+                  "text": "Have you prevented SQL injection?",
                   "children": [
                     {
                       "text": "Have you implemented secure authentication?"
                     }
                   ]
+                },
+                {
+                  "text": "Have you prevented XSS?",
+                  "children": []
+                },
+                {
+                  "text": "Have you managed secrets and credentials securely?",
+                  "children": [
+                    {
+                      "text": "Have you used a secret manager?",
+                      "children": [
+                        {
+                          "text": "Did you use AWS Secrets Manager?",
+                          "children": []
+                        },
+                        {
+                          "text": "Did you use HashiCorp Vault?",
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "text": "Have you configured CORS policies?",
+                  "children": []
                 }
               ]
             }
@@ -419,9 +1362,31 @@
               "text": "Have you conducted penetration testing?",
               "children": [
                 {
-                  "text": "Have you implemented security scanning in CI/CD?"
+                  "text": "Have you implemented security scanning in CI/CD (e.g., SAST/DAST)?"
                 }
               ]
+            },
+            {
+              "text": "Have you performed vulnerability assessments?",
+              "children": []
+            },
+            {
+              "text": "Have you used Rufflet?",
+              "category": "Pokemon",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with network security?",
+          "children": [
+            {
+              "text": "Have you configured firewalls or security groups?",
+              "children": []
+            },
+            {
+              "text": "Have you worked with encryption (e.g., TLS/SSL)?",
+              "children": []
             }
           ]
         }
@@ -436,8 +1401,16 @@
           "text": "Have you designed microservices architectures?",
           "children": [
             {
-              "text": "Have you implemented service discovery and API gateways?",
+              "text": "Have you implemented service discovery?",
               "children": [
+                {
+                  "text": "Did you use Consul?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Eureka?",
+                  "children": []
+                },
                 {
                   "text": "Have you designed event-driven systems?",
                   "children": [
@@ -447,6 +1420,27 @@
                   ]
                 }
               ]
+            },
+            {
+              "text": "Have you implemented API gateways?",
+              "children": [
+                {
+                  "text": "Did you use Kong?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Apigee?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with serverless architectures?",
+              "children": []
+            },
+            {
+              "text": "Have you implemented data consistency patterns across microservices?",
+              "children": []
             }
           ]
         },
@@ -454,12 +1448,39 @@
           "text": "Have you implemented resilience patterns?",
           "children": [
             {
-              "text": "Have you implemented circuit breakers and retries?",
+              "text": "Have you implemented circuit breakers?",
               "children": [
                 {
-                  "text": "Have you conducted chaos engineering?"
+                  "text": "Have you conducted chaos engineering?",
+                  "children": [
+                    {
+                      "text": "Did you use Chaos Monkey?",
+                      "children": []
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "text": "Have you implemented retries?",
+              "children": []
+            },
+            {
+              "text": "Have you used sagas for distributed transactions?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you designed for scalability and high availability?",
+          "children": [
+            {
+              "text": "Have you used load balancing?",
+              "children": []
+            },
+            {
+              "text": "Have you designed a system to be stateless?",
+              "children": []
             }
           ]
         }
@@ -477,12 +1498,34 @@
               "text": "Have you achieved high test coverage (>80%)?",
               "children": [
                 {
-                  "text": "Have you practiced TDD?",
+                  "text": "Have you practiced Test Driven Development?",
                   "children": [
                     {
                       "text": "Have you implemented property-based testing?"
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "text": "Have you used Litten?",
+              "category": "Pokemon",
+              "children": []
+            },
+            {
+              "text": "Have you worked with mocking frameworks?",
+              "children": [
+                {
+                  "text": "Did you use Mockito?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Jest?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use pytest-mock?",
+                  "children": []
                 }
               ]
             }
@@ -492,10 +1535,31 @@
           "text": "Have you written integration and E2E tests?",
           "children": [
             {
-              "text": "Have you worked with Cypress, Playwright, or Selenium?",
+              "text": "Have you worked with Cypress?",
               "children": [
                 {
                   "text": "Have you implemented contract testing?"
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with Playwright?",
+              "children": []
+            },
+            {
+              "text": "Have you worked with Selenium?",
+              "children": []
+            },
+            {
+              "text": "Have you used a mocking service for API testing?",
+              "children": [
+                {
+                  "text": "Did you use Postman?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use MockLab?",
+                  "children": []
                 }
               ]
             }
@@ -505,12 +1569,29 @@
           "text": "Have you performed performance testing?",
           "children": [
             {
-              "text": "Have you used JMeter or K6?",
+              "text": "Have you used JMeter?",
               "children": [
                 {
                   "text": "Have you implemented load testing in CI/CD?"
                 }
               ]
+            },
+            {
+              "text": "Have you used K6?",
+              "children": []
+            },
+            {
+              "text": "Have you conducted stress testing?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you implemented accessibility testing?",
+          "children": [
+            {
+              "text": "Did you use Axe-core?",
+              "children": []
             }
           ]
         }
@@ -534,6 +1615,10 @@
                       "text": "Have you led technical training?"
                     }
                   ]
+                },
+                {
+                  "text": "Have you given feedback on code quality and best practices?",
+                  "children": []
                 }
               ]
             }
@@ -554,6 +1639,252 @@
                   ]
                 }
               ]
+            },
+            {
+              "text": "Have you managed stakeholder expectations?",
+              "children": []
+            },
+            {
+              "text": "Have you led agile ceremonies?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you managed a team's budget?",
+          "children": []
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with data science?",
+      "is_base": true,
+      "category": "Data Science",
+      "children": [
+        {
+          "text": "Have you performed data analysis?",
+          "children": [
+            {
+              "text": "Have you used Python libraries for data manipulation?",
+              "children": [
+                {
+                  "text": "Did you use Pandas?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use NumPy?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you created data visualizations?",
+              "children": [
+                {
+                  "text": "Did you use Matplotlib?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Seaborn?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Plotly?",
+                  "children": []
+                }
+              ]
+            },
+            {
+              "text": "Have you worked with SQL for data extraction and manipulation?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you built predictive models?",
+          "children": [
+            {
+              "text": "Have you used scikit-learn for model building?",
+              "children": []
+            },
+            {
+              "text": "Have you evaluated model performance (e.g., using precision, recall, F1 score)?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you communicated data insights to non-technical stakeholders?",
+          "children": []
+        },
+        {
+          "text": "Have you worked with data storytelling and dashboarding?",
+          "children": [
+            {
+              "text": "Have you used tools like Tableau, Power BI, or Looker?",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with AI/ML engineering?",
+      "is_base": true,
+      "category": "AI/ML Engineering",
+      "children": [
+        {
+          "text": "Have you deployed ML models to production environments?",
+          "children": [
+            {
+              "text": "Have you built model serving APIs?",
+              "children": [
+                {
+                  "text": "Did you use FastAPI?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Flask?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you managed ML pipelines?",
+          "children": [
+            {
+              "text": "Have you used an orchestration tool?",
+              "children": [
+                {
+                  "text": "Did you use Kubeflow?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Airflow?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you managed ML model versions and experiments?",
+          "children": [
+            {
+              "text": "Have you used a versioning tool?",
+              "children": [
+                {
+                  "text": "Did you use MLflow?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use DVC?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you handled data and feature stores?",
+          "children": [
+            {
+              "text": "Have you worked with a feature store?",
+              "children": [
+                {
+                  "text": "Did you use Feast?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Tecton?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with Generative AI?",
+          "children": [
+            {
+              "text": "Have you built applications using LLM APIs?",
+              "children": []
+            },
+            {
+              "text": "Have you used tools like LangChain or LlamaIndex?",
+              "children": []
+            },
+            {
+              "text": "Have you used Wynaut?",
+              "category": "Pokemon",
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "text": "Have you worked with UI/UX design?",
+      "is_base": true,
+      "category": "UI/UX Design",
+      "children": [
+        {
+          "text": "Have you created wireframes and prototypes?",
+          "children": [
+            {
+              "text": "Have you used a design tool?",
+              "children": [
+                {
+                  "text": "Did you use Figma?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Sketch?",
+                  "children": []
+                },
+                {
+                  "text": "Did you use Adobe XD?",
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "text": "Have you conducted user research?",
+          "children": [
+            {
+              "text": "Have you performed user interviews or surveys?",
+              "children": []
+            },
+            {
+              "text": "Have you created user personas or journey maps?",
+              "children": []
+            },
+            {
+              "text": "Have you used Toxel?",
+              "category": "Pokemon",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you designed for accessibility?",
+          "children": [
+            {
+              "text": "Have you considered WCAG standards in your designs?",
+              "children": []
+            }
+          ]
+        },
+        {
+          "text": "Have you worked with a design system?",
+          "children": [
+            {
+              "text": "Have you created and maintained a component library?",
+              "children": []
             }
           ]
         }
