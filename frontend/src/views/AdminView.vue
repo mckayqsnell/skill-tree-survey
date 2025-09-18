@@ -291,7 +291,8 @@
             </div>
 
             <!-- Top Skills -->
-            <div v-if="analytics.top_skills && analytics.top_skills.length > 0" class="analytics-card">
+            <!-- TODO: Implement Top Skills Section (This is not part of the SessionAnalytics object)-->
+            <!-- <div v-if="analytics.top_skills && analytics.top_skills.length > 0" class="analytics-card">
               <h3 class="text-primary font-semibold mb-4">Most Common Skills</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <div 
@@ -303,7 +304,7 @@
                   <span class="text-cyan-400 font-mono-primary text-sm">{{ skill.count }}</span>
                 </div>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
@@ -681,20 +682,20 @@ const getCompletionRate = (): number => {
 };
 
 const getTotalUsers = (): string => {
-  if (!analytics.value || typeof analytics.value.total_users !== 'number' || analytics.value.total_users === 0) {
+  if (!analytics.value || typeof analytics.value.unique_users !== 'number' || analytics.value.unique_users === 0) {
     return '0';
   }
-  return analytics.value.total_users.toString();
+  return analytics.value.unique_users.toString();
 };
 
 const getAvgSessionsPerUser = (): string => {
   if (!analytics.value || 
       typeof analytics.value.total_sessions !== 'number' || 
-      typeof analytics.value.total_users !== 'number' || 
-      analytics.value.total_users === 0) {
+      typeof analytics.value.unique_users !== 'number' || 
+      analytics.value.unique_users === 0) {
     return '0.0';
   }
-  const avg = analytics.value.total_sessions / analytics.value.total_users;
+  const avg = analytics.value.total_sessions / analytics.value.unique_users;
   return isNaN(avg) ? '0.0' : avg.toFixed(1);
 };
 
