@@ -96,8 +96,7 @@
 
       <!-- Session Info -->
       <div class="mt-8 text-center text-xs text-primary-faint font-mono-primary">
-        <p>Session: {{ sessionId }}</p>
-        <p v-if="summary?.completed_at">{{ formatDate(summary.completed_at) }}</p>
+        <p v-if="summary?.completed_at">Completed: {{ formatDate(summary.completed_at) }}</p>
       </div>
     </div>
   </div>
@@ -148,10 +147,10 @@ const loadSummary = async () => {
       categoryStats.value = stats
         .map(s => ({
           ...s,
-          percentage_yes: (s.total && s.total > 0) ? (s.yes_count / s.total) * 100 : 
+          percentage_yes: (s.total && s.total > 0) ? (s.yes_count / s.total) * 100 :
                         (s.total_questions > 0) ? (s.yes_count / s.total_questions) * 100 : 0
         }))
-        .filter(s => s.yes_count > 0)
+        .filter(s => s.yes_count > 0 && s.category !== 'Pokemon') // Filter out Pokemon category
         .sort((a, b) => b.percentage_yes - a.percentage_yes);
       if (import.meta.env.DEV) {
         logger.info(`Loaded ${categoryStats.value.length} category statistics`);

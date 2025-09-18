@@ -83,11 +83,11 @@
             <button
               v-if="answerHistory.length > 0 && canUndo"
               @click="undoAnswer"
-              class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative"
+              class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative undo-button"
             >
               <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
               <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
-              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded"></div>
+              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded undo-hover-bg"></div>
             </button>
           </div>
         </div>
@@ -96,7 +96,7 @@
         <div v-if="answerHistory.length > 0 && canUndo" class="block md:hidden mt-4 text-center">
           <button
             @click="undoAnswer"
-            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors bg-black/50 border border-accent-dim/30 rounded"
+            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors bg-black/50 border border-accent-dim/30 rounded mobile-undo-button"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
