@@ -105,7 +105,7 @@
             <div>
               <h3 class="text-red-600 font-bold text-lg">PRODUCTIVITY ALERT</h3>
               <p class="text-red-400 text-sm mt-1">
-                This developer has demonstrated knowledge of {{ pokemonStats.yes_count }} Pokémon. 
+                This developer has demonstrated knowledge of {{ pokemonStats?.yes_count || 0 }} Pokémon. 
                 Studies show inverse correlation between Pokémon knowledge and code quality.
               </p>
             </div>
