@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4" :class="{ 'stiff-mode': isStiffMode }">
+  <div class="min-h-screen bg-black star-field flex items-center justify-center px-4 py-8 md:py-0" :class="{ 'stiff-mode': isStiffMode }">
     <div class="max-w-xl w-full">
       <!-- Main Card -->
-      <div class="glass-card">
+      <div class="glass-card p-4 md:p-6">
         <!-- Header -->
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold text-primary mb-2 font-heading">
+        <div class="text-center mb-6 md:mb-8">
+          <h1 class="text-2xl md:text-3xl font-bold text-primary mb-2 font-heading">
             SKILL TREE ASSESSMENT
           </h1>
-          <p class="text-sm text-primary-dim font-mono-primary">Technical Competency Mapping System</p>
+          <p class="text-xs md:text-sm text-primary-dim font-mono-primary">Technical Competency Mapping System</p>
         </div>
 
         <div class="mb-6 p-3 border-l-2 border-primary-dim bg-overlay">
@@ -20,38 +20,41 @@
 
         <!-- Form Section -->
         <form @submit.prevent="startSurvey" class="space-y-4">
-          <!-- First Name -->
-          <div>
-            <label for="firstName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
-              First Name <span class="text-accent">*</span>
-            </label>
-            <input
-              id="firstName"
-              v-model="formData.firstName"
-              type="text"
-              required
-              class="input-field"
-              placeholder="John"
-              :class="{ 'border-danger': errors.firstName }"
-            />
-            <p v-if="errors.firstName" class="text-danger text-xs mt-1">{{ errors.firstName }}</p>
-          </div>
+          <!-- Name Fields - Side by side on desktop, stacked on mobile -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- First Name -->
+            <div>
+              <label for="firstName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+                First Name <span class="text-accent">*</span>
+              </label>
+              <input
+                id="firstName"
+                v-model="formData.firstName"
+                type="text"
+                required
+                class="input-field mobile-input"
+                placeholder="John"
+                :class="{ 'border-danger': errors.firstName }"
+              />
+              <p v-if="errors.firstName" class="text-danger text-xs mt-1">{{ errors.firstName }}</p>
+            </div>
 
-          <!-- Last Name -->
-          <div>
-            <label for="lastName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
-              Last Name <span class="text-accent">*</span>
-            </label>
-            <input
-              id="lastName"
-              v-model="formData.lastName"
-              type="text"
-              required
-              class="input-field"
-              placeholder="Doe"
-              :class="{ 'border-danger': errors.lastName }"
-            />
-            <p v-if="errors.lastName" class="text-danger text-xs mt-1">{{ errors.lastName }}</p>
+            <!-- Last Name -->
+            <div>
+              <label for="lastName" class="block text-xs text-primary-subtle mb-1 font-mono-primary uppercase">
+                Last Name <span class="text-accent">*</span>
+              </label>
+              <input
+                id="lastName"
+                v-model="formData.lastName"
+                type="text"
+                required
+                class="input-field mobile-input"
+                placeholder="Doe"
+                :class="{ 'border-danger': errors.lastName }"
+              />
+              <p v-if="errors.lastName" class="text-danger text-xs mt-1">{{ errors.lastName }}</p>
+            </div>
           </div>
 
           <!-- Email -->
@@ -64,7 +67,7 @@
               v-model="formData.email"
               type="email"
               required
-              class="input-field"
+              class="input-field mobile-input"
               placeholder="john@example.com"
               :class="{ 'border-danger': errors.email }"
             />
@@ -81,7 +84,7 @@
               v-model="formData.company"
               type="text"
               required
-              class="input-field"
+              class="input-field mobile-input"
               placeholder="Acme Corp"
               :class="{ 'border-danger': errors.company }"
             />

@@ -4,7 +4,7 @@
     <div class="w-full px-4 pt-4">
       <div class="max-w-3xl mx-auto">
         <div class="h-2 bg-primary/10 rounded-full overflow-hidden">
-          <div 
+          <div
             class="h-full bg-gradient-to-r from-primary to-cyan-400 transition-all duration-500 rounded-full"
             :style="{ width: `${progressPercentage}%` }"
           />
@@ -30,57 +30,85 @@
       </div>
 
       <div v-else-if="currentQuestion" class="w-full max-w-3xl">
-        <!-- Category Display -->
-        <div class="text-center mb-6">
-          <p v-if="currentQuestion.category" class="text-sm text-primary-dim font-mono-primary">
-            {{ currentQuestion.category }}
-          </p>
+        <!-- Mobile View with Swipeable Card (below md breakpoint) -->
+        <div class="block md:hidden">
+          <SwipeableCard
+            :text="currentQuestion.text"
+            :category="currentQuestion.category || undefined"
+            :animating="animating"
+            @swipeLeft="handleAnswer(false)"
+            @swipeRight="handleAnswer(true)"
+            @swipeStart="() => lastKey = null"
+          />
         </div>
 
-        <!-- Question Card -->
-        <div
-          class="glass-card text-center"
-          :key="currentQuestion.id"
-          :class="{ 'scale-95': animating }"
-        >
-          <h2 class="text-2xl md:text-3xl font-semibold mb-8 text-primary">
-            {{ currentQuestion.text }}
-          </h2>
+        <!-- Desktop View (md and above) -->
+        <div class="hidden md:block">
+          <!-- Category Display -->
+          <div class="text-center mb-6">
+            <p v-if="currentQuestion.category" class="text-sm text-primary-dim font-mono-primary">
+              {{ currentQuestion.category }}
+            </p>
+          </div>
 
-          <!-- Response Buttons -->
-          <div class="flex justify-center gap-6">
-            <button
-              @click="handleAnswer(true)"
-              class="btn-yes group relative"
-              :class="{ 'btn-yes-active': lastKey === 'yes' }"
-            >
-              <span class="btn-yes-text">YES</span>
-              <div class="flex gap-1 text-xs opacity-70">
-                <kbd class="kbd-key kbd-yes">Y</kbd>
-                <span class="text-primary-dim">/</span>
-                <kbd class="kbd-key kbd-yes">↵</kbd>
-              </div>
-              <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-            </button>
+          <!-- Question Card -->
+          <div
+            class="glass-card text-center"
+            :key="currentQuestion.id"
+            :class="{ 'scale-95': animating }"
+          >
+            <h2 class="text-2xl md:text-3xl font-semibold mb-8 text-primary">
+              {{ currentQuestion.text }}
+            </h2>
 
+            <!-- Response Buttons -->
+            <div class="flex justify-center gap-6">
+              <button
+                @click="handleAnswer(true)"
+                class="btn-yes group relative"
+                :class="{ 'btn-yes-active': lastKey === 'yes' }"
+              >
+                <span class="btn-yes-text">YES</span>
+                <div class="flex gap-1 text-xs opacity-70">
+                  <kbd class="kbd-key kbd-yes">Y</kbd>
+                  <span class="text-primary-dim">/</span>
+                  <kbd class="kbd-key kbd-yes">↵</kbd>
+                </div>
+                <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              </button>
+
+              <button
+                @click="handleAnswer(false)"
+                class="btn-no group relative"
+                :class="{ 'btn-no-active': lastKey === 'no' }"
+              >
+                <span class="btn-no-text">NO</span>
+                <kbd class="kbd-key kbd-no px-2">N</kbd>
+                <div class="absolute inset-0 bg-danger/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              </button>
+            </div>
             <button
-              @click="handleAnswer(false)"
-              class="btn-no group relative"
-              :class="{ 'btn-no-active': lastKey === 'no' }"
+              v-if="answerHistory.length > 0 && canUndo"
+              @click="undoAnswer"
+              class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative"
             >
-              <span class="btn-no-text">NO</span>
-              <kbd class="kbd-key kbd-no px-2">N</kbd>
-              <div class="absolute inset-0 bg-danger/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
+              <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
+              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded"></div>
             </button>
           </div>
+        </div>
+
+        <!-- Mobile Undo Button -->
+        <div v-if="answerHistory.length > 0 && canUndo" class="block md:hidden mt-6 text-center">
           <button
-            v-if="answerHistory.length > 0 && canUndo"
             @click="undoAnswer"
-            class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative"
+            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors"
           >
-            <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
-            <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
-            <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded"></div>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+            </svg>
+            <span class="text-sm font-bold tracking-wider">Undo</span>
           </button>
         </div>
       </div>
@@ -114,6 +142,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { questionsApi, responsesApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { Question, ResponseCreate } from '@/types';
+import SwipeableCard from '@/components/SwipeableCard.vue';
 
 // Props
 const props = defineProps<{
