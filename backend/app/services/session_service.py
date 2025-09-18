@@ -121,12 +121,12 @@ class SessionService:
     ) -> List[SessionResponse]:
         """
         Get all sessions with pagination.
-        
+
         Args:
             skip: Number to skip
             limit: Maximum number to return
             completed_only: Only return completed sessions
-            
+
         Returns:
             List[SessionResponse]: Sessions
         """
@@ -134,8 +134,38 @@ class SessionService:
             sessions = self.session_dao.get_completed_sessions()
         else:
             sessions = self.session_dao.get_all(skip, limit)
-        
+
         return [SessionResponse.model_validate(s) for s in sessions]
+
+    def get_all_sessions_with_summaries(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        completed_only: bool = False
+    ) -> List[SessionSummary]:
+        """
+        Get all sessions with summaries including completion time.
+
+        Args:
+            skip: Number to skip
+            limit: Maximum number to return
+            completed_only: Only return completed sessions
+
+        Returns:
+            List[SessionSummary]: Sessions with summaries
+        """
+        if completed_only:
+            sessions = self.session_dao.get_completed_sessions()
+        else:
+            sessions = self.session_dao.get_all(skip, limit)
+
+        summaries = []
+        for session in sessions:
+            summary_data = self.session_dao.get_session_summary(session.id)
+            if summary_data:
+                summaries.append(SessionSummary(**summary_data))
+
+        return summaries
     
     def get_sessions_by_email(self, email: str) -> List[SessionResponse]:
         """

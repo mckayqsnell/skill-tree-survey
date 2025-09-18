@@ -143,6 +143,7 @@
                   <th class="text-left py-2 px-3">Email</th>
                   <th class="text-left py-2 px-3">Company</th>
                   <th class="text-left py-2 px-3">Started</th>
+                  <th class="text-left py-2 px-3">Duration</th>
                   <th class="text-left py-2 px-3">Status</th>
                   <th class="text-left py-2 px-3">Actions</th>
                 </tr>
@@ -159,6 +160,9 @@
                   <td class="py-2 px-3 text-primary-subtle group-hover:text-primary font-mono-primary text-xs">{{ session.user_email }}</td>
                   <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.company }}</td>
                   <td class="py-2 px-3 text-primary-subtle group-hover:text-primary text-xs">{{ formatDate(session.started_at) }}</td>
+                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary text-xs font-mono-primary">
+                    {{ formatDuration(session.completion_time_minutes) }}
+                  </td>
                   <td class="py-2 px-3">
                     <span v-if="session.completed_at" class="flex items-center gap-1">
                       <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -432,7 +436,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { questionsApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
-import type { QuestionTree, Session, SessionAnalytics } from '@/types';
+import type { QuestionTree, SessionSummary, SessionAnalytics } from '@/types';
 import QuestionTreeItem from '@/components/admin/QuestionTreeItem.vue';
 import { useAdminAuth } from '@/composables/useAdminAuth';
 
@@ -458,7 +462,7 @@ const lastApiCheck = ref(new Date());
 
 // Data
 const questions = ref<QuestionTree[]>([]);
-const sessions = ref<Session[]>([]);
+const sessions = ref<SessionSummary[]>([]);
 const analytics = ref<SessionAnalytics | null>(null);
 const showAddQuestion = ref(false);
 const showEditQuestion = ref(false);
@@ -471,7 +475,7 @@ const newQuestionCategory = ref('');
 // Delete session state
 const showDeleteConfirm = ref(false);
 const showDeleteAllConfirm = ref(false);
-const sessionToDelete = ref<Session | null>(null);
+const sessionToDelete = ref<SessionSummary | null>(null);
 
 // Authentication
 const handleAuthenticate = async () => {
@@ -666,6 +670,26 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
+// Format duration
+const formatDuration = (minutes: number | null): string => {
+  if (minutes === null || minutes === undefined) {
+    return '--';
+  }
+
+  if (minutes < 1) {
+    return '< 1 min';
+  } else if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
+  } else {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (mins === 0) {
+      return `${hours} hr`;
+    }
+    return `${hours} hr ${mins} min`;
+  }
+};
+
 // Analytics helper functions
 const getInProgressSessions = (): number => {
   if (!analytics.value || typeof analytics.value.total_sessions !== 'number' || typeof analytics.value.completed_sessions !== 'number') {
@@ -700,10 +724,25 @@ const getAvgSessionsPerUser = (): string => {
 };
 
 const getEstimatedAvgDuration = (): string => {
-  if (!analytics.value || typeof analytics.value.completed_sessions !== 'number' || analytics.value.completed_sessions === 0) {
-    return '< 1 min';
+  if (!analytics.value || typeof analytics.value.average_completion_time_minutes !== 'number' || analytics.value.completed_sessions === 0) {
+    return 'No data';
   }
-  return '7-10 min';
+
+  const minutes = analytics.value.average_completion_time_minutes;
+
+  // Format the duration nicely
+  if (minutes < 1) {
+    return '< 1 min';
+  } else if (minutes < 60) {
+    return `${Math.round(minutes)} min`;
+  } else {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (mins === 0) {
+      return `${hours} hr`;
+    }
+    return `${hours} hr ${mins} min`;
+  }
 };
 
 const getSuccessRate = (): number => {
@@ -722,7 +761,7 @@ const formatLastUpdate = (): string => {
 };
 
 // Session deletion
-const confirmDeleteSession = (session: Session) => {
+const confirmDeleteSession = (session: SessionSummary) => {
   sessionToDelete.value = session;
   showDeleteConfirm.value = true;
 };

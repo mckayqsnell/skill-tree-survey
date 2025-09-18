@@ -9,12 +9,6 @@
       @touchend="handleTouchEnd"
       @touchcancel="swipe.handleTouchCancel"
     >
-      <div v-if="category" class="text-center mb-4">
-        <p class="text-sm text-primary-dim font-mono-primary">
-          {{ category }}
-        </p>
-      </div>
-
       <h2 class="text-xl md:text-2xl lg:text-3xl font-semibold text-primary text-center px-4">
         {{ text }}
       </h2>
@@ -200,14 +194,12 @@ onUnmounted(() => {
   color: #4ade80;
   background: rgba(74, 222, 128, 0.1);
   border: 2px solid #4ade80;
-  text-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
 }
 
 .swipe-indicator.swipe-no {
   color: #ef4444;
   background: rgba(239, 68, 68, 0.1);
   border: 2px solid #ef4444;
-  text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
 }
 
 .swipe-hints {

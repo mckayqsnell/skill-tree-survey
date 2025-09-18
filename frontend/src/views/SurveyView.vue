@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-black star-field flex flex-col" :class="{ 'stiff-mode': isStiffMode }">
-    <!-- Progress Bar -->
-    <div class="w-full px-4 pt-4">
+    <!-- Progress Bar - Fixed at top -->
+    <div class="fixed top-0 left-0 right-0 w-full px-4 pt-4 pb-2 bg-black/95 backdrop-blur-sm z-40 border-b border-green-400/20">
       <div class="max-w-3xl mx-auto">
         <div class="h-2 bg-primary/10 rounded-full overflow-hidden">
           <div
@@ -15,8 +15,8 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="flex-1 flex items-center justify-center px-4">
+    <!-- Main Content with padding for fixed header and footer on mobile -->
+    <div class="flex-1 flex items-center justify-center px-4 pt-20 pb-20 md:pb-4">
       <div v-if="loading" class="text-center">
         <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-4"></div>
         <p class="text-primary-dim font-mono-primary text-sm">Loading questions...</p>
@@ -44,13 +44,6 @@
 
         <!-- Desktop View (md and above) -->
         <div class="hidden md:block">
-          <!-- Category Display -->
-          <div class="text-center mb-6">
-            <p v-if="currentQuestion.category" class="text-sm text-primary-dim font-mono-primary">
-              {{ currentQuestion.category }}
-            </p>
-          </div>
-
           <!-- Question Card -->
           <div
             class="glass-card text-center"
@@ -100,10 +93,10 @@
         </div>
 
         <!-- Mobile Undo Button -->
-        <div v-if="answerHistory.length > 0 && canUndo" class="block md:hidden mt-6 text-center">
+        <div v-if="answerHistory.length > 0 && canUndo" class="block md:hidden mt-4 text-center">
           <button
             @click="undoAnswer"
-            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors"
+            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors bg-black/50 border border-accent-dim/30 rounded"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
@@ -118,21 +111,6 @@
       </div>
     </div>
 
-    <!-- Footer -->
-    <div class="p-4 text-center">
-      <div class="flex justify-center items-center gap-4 text-xs font-mono">
-        <span class="text-primary-dim">
-          Question {{ baseQuestionIndex + 1 }} of {{ baseQuestions.length }}
-        </span>
-        <span class="text-primary-faint">•</span>
-        <span class="text-cyan-400/60" v-if="questionPath.length > 0">
-          Depth {{ questionPath.length + 1 }}
-        </span>
-        <span class="text-accent-dim" v-else>
-          Base Level
-        </span>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -169,6 +147,11 @@ const baseQuestionIndex = ref(0);
 const answeredQuestions = ref(new Set<number>());
 const pendingResponses = ref<ResponseCreate[]>([]);
 
+// Progress tracking
+const totalQuestionsCount = ref(0);
+const questionsAnswered = ref(0);
+const questionTree = ref<Map<number, number>>(new Map()); // Maps question ID to number of children
+
 // Undo Logic
 const UNDO_TIMEOUT = 10000;
 const canUndo = ref(false);
@@ -178,10 +161,29 @@ const answerHistory = ref<Question[]>([]);
 
 // Computed
 const progressPercentage = computed(() => {
-  if (baseQuestions.value.length === 0) return 0;
-  const progress = (baseQuestionIndex.value / baseQuestions.value.length) * 100;
+  if (totalQuestionsCount.value === 0) return 0;
+  const progress = (questionsAnswered.value / totalQuestionsCount.value) * 100;
   return Math.min(progress, 100);
 });
+
+// Helper function to count children of a question recursively
+const countQuestionChildren = async (questionId: number): Promise<number> => {
+  try {
+    const children = await questionsApi.getChildQuestions(questionId);
+    let count = children.length;
+
+    // Recursively count children of children
+    for (const child of children) {
+      const childCount = await countQuestionChildren(child.id);
+      questionTree.value.set(child.id, childCount);
+      count += childCount;
+    }
+
+    return count;
+  } catch (err) {
+    return 0;
+  }
+};
 
 // Load initial data
 const loadSurvey = async () => {
@@ -206,6 +208,20 @@ const loadSurvey = async () => {
     }
 
     baseQuestions.value = questions.sort((a, b) => a.order_index - b.order_index);
+
+    // Count total questions including all children
+    let total = baseQuestions.value.length;
+    for (const question of baseQuestions.value) {
+      const childCount = await countQuestionChildren(question.id);
+      questionTree.value.set(question.id, childCount);
+      total += childCount;
+    }
+
+    totalQuestionsCount.value = total;
+    if (import.meta.env.DEV) {
+      logger.info(`Total questions count: ${total}`);
+    }
+
     currentQuestion.value = baseQuestions.value[0];
   } catch (err: any) {
     logger.error('Failed to load survey', err);
@@ -238,8 +254,18 @@ const handleAnswer = async (answer: boolean) => {
     // Add answer to history for undo
     answerHistory.value.push(currentQuestion.value);
 
-    // Mark as answered
+    // Mark as answered and update progress
     answeredQuestions.value.add(currentQuestion.value.id);
+    questionsAnswered.value++;
+
+    // If answering NO, add the number of skipped children to progress
+    if (!answer) {
+      const skippedCount = questionTree.value.get(currentQuestion.value.id) || 0;
+      questionsAnswered.value += skippedCount;
+      if (import.meta.env.DEV && skippedCount > 0) {
+        logger.info(`Skipping ${skippedCount} child questions`);
+      }
+    }
 
     // Store response
     const response: ResponseCreate = {
@@ -347,6 +373,19 @@ const undoAnswer = async () => {
     lastPendingSend = null;
     const previousQuestion = answerHistory.value.pop();
     if (previousQuestion) {
+      // Get the last response to check if it was a NO answer
+      const lastResponse = pendingResponses.value[pendingResponses.value.length - 1];
+      const wasNoAnswer = lastResponse && !lastResponse.answer;
+
+      // Decrease progress for the question itself
+      questionsAnswered.value--;
+
+      // If it was a NO answer, also decrease by the number of skipped children
+      if (wasNoAnswer) {
+        const skippedCount = questionTree.value.get(previousQuestion.id) || 0;
+        questionsAnswered.value -= skippedCount;
+      }
+
       if (baseQuestions.value.some(q => q.id === currentQuestion.value!.id)) {
         baseQuestionIndex.value -= 1;
       } else {

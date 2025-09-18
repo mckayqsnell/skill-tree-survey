@@ -57,8 +57,8 @@ export const sessionsApi = {
     skip = 0,
     limit = 100,
     completedOnly = false
-  ): Promise<Session[]> {
-    const { data } = await adminClient.get<Session[]>('/api/admin/sessions', {
+  ): Promise<SessionSummary[]> {
+    const { data } = await adminClient.get<SessionSummary[]>('/api/admin/sessions', {
       params: { skip, limit, completed_only: completedOnly },
     });
     return data;

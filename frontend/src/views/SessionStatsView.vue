@@ -327,7 +327,7 @@
                   :class="isStiffMode ? 'px-2 py-1' : 'p-3'"
                 >
                   <div class="flex items-center" :class="isStiffMode ? 'gap-2' : 'gap-3'">
-                    <div 
+                    <div
                       class="rounded-full flex-shrink-0"
                       :class="isStiffMode ? 'w-2 h-2' : 'w-3 h-3'"
                       :style="{ backgroundColor: getRadarPointColor(cat.percentage_yes) }"
@@ -339,7 +339,7 @@
                           {{ cat.yes_count }}/{{ cat.total_questions }}
                         </p>
                       </div>
-                      <div v-else class="text-right">
+                      <div v-else>
                         <h3 class="text-primary font-semibold text-sm">{{ cat.category }}</h3>
                         <p class="text-xs text-primary-dim font-mono-primary">
                           {{ cat.yes_count }}/{{ cat.total_questions }}

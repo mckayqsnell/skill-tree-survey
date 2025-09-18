@@ -14,7 +14,7 @@ from app.schemas.question import (
     QuestionCreate, QuestionUpdate, QuestionResponse,
     QuestionReorder, QuestionMove, QuestionStatistics
 )
-from app.schemas.session import SessionResponse, SessionAnalytics
+from app.schemas.session import SessionResponse, SessionSummary, SessionAnalytics
 from app.schemas.response import ResponseInDB
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -173,7 +173,7 @@ def get_question_statistics(
 
 # Session Management Routes
 
-@router.get("/sessions", response_model=List[SessionResponse])
+@router.get("/sessions", response_model=List[SessionSummary])
 def get_all_sessions(
     skip: int = 0,
     limit: int = 100,
@@ -183,17 +183,17 @@ def get_all_sessions(
 ):
     """
     Get all sessions with pagination.
-    
+
     Args:
         skip: Number to skip
         limit: Maximum number to return
         completed_only: Only return completed sessions
         service: Session service
-        
+
     Returns:
-        List of sessions
+        List of sessions with summaries
     """
-    return service.get_all_sessions(skip, limit, completed_only)
+    return service.get_all_sessions_with_summaries(skip, limit, completed_only)
 
 
 @router.get("/analytics", response_model=SessionAnalytics)
