@@ -27,14 +27,14 @@
     </div>
 
     <div class="swipe-hints mt-6 flex justify-between px-8">
-      <div class="flex items-center gap-2 text-red-500/60">
+      <div class="flex items-center gap-2 text-red-500/60 swipe-hint-no">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
         </svg>
-        <span class="text-xs font-mono-primary">Swipe for NO</span>
+        <span class="text-xs font-mono-primary swipe-hint-text">Swipe for NO</span>
       </div>
-      <div class="flex items-center gap-2 text-green-400/60">
-        <span class="text-xs font-mono-primary">Swipe for YES</span>
+      <div class="flex items-center gap-2 text-green-400/60 swipe-hint-yes">
+        <span class="text-xs font-mono-primary swipe-hint-text">Swipe for YES</span>
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
         </svg>
@@ -203,8 +203,30 @@ onUnmounted(() => {
 }
 
 .swipe-hints {
-  opacity: 0.8;
+  opacity: 0.9;
   transition: opacity 0.3s;
+}
+
+/* Regular mode swipe hints - bolder and more readable */
+.swipe-hint-text {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.025em;
+}
+
+.swipe-hint-no {
+  color: rgb(239 68 68 / 0.8) !important;
+}
+
+.swipe-hint-yes {
+  color: rgb(74 222 128 / 0.8) !important;
+}
+
+.swipe-hint-no svg,
+.swipe-hint-yes svg {
+  width: 1.375rem !important;
+  height: 1.375rem !important;
+  stroke-width: 2.5 !important;
 }
 
 .stiff-mode .swipeable-card {
@@ -225,6 +247,28 @@ onUnmounted(() => {
   background: rgba(220, 38, 38, 0.1);
   border: 2px solid #dc2626;
   text-shadow: none;
+}
+
+/* Stiff mode swipe hints - bolder and more readable */
+.stiff-mode .swipe-hint-no {
+  color: #dc2626 !important;
+}
+
+.stiff-mode .swipe-hint-yes {
+  color: #2563eb !important;
+}
+
+.stiff-mode .swipe-hint-text {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.stiff-mode .swipe-hint-no svg,
+.stiff-mode .swipe-hint-yes svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  stroke-width: 2.5 !important;
 }
 
 @keyframes pulse {
