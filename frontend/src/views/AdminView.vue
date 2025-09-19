@@ -267,7 +267,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { questionsApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { QuestionTree, SessionSummary, SessionAnalytics } from '@/types';
@@ -278,7 +278,6 @@ import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard.vue';
 import { useAdminAuth } from '@/composables/useAdminAuth';
 
 // Router
-const router = useRouter();
 const route = useRoute();
 
 // Check if stiff mode is active
@@ -507,95 +506,6 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
-// Format duration
-const formatDuration = (minutes: number | null): string => {
-  if (minutes === null || minutes === undefined) {
-    return '--';
-  }
-
-  if (minutes < 1) {
-    return '< 1 min';
-  } else if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
-  } else {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    if (mins === 0) {
-      return `${hours} hr`;
-    }
-    return `${hours} hr ${mins} min`;
-  }
-};
-
-// Analytics helper functions
-const getInProgressSessions = (): number => {
-  if (!analytics.value || typeof analytics.value.total_sessions !== 'number' || typeof analytics.value.completed_sessions !== 'number') {
-    return 0;
-  }
-  return Math.max(0, analytics.value.total_sessions - analytics.value.completed_sessions);
-};
-
-const getCompletionRate = (): number => {
-  if (!analytics.value || typeof analytics.value.completion_rate !== 'number' || isNaN(analytics.value.completion_rate)) {
-    return 0;
-  }
-  return Math.round(analytics.value.completion_rate);
-};
-
-const getTotalUsers = (): string => {
-  if (!analytics.value || typeof analytics.value.total_users !== 'number' || analytics.value.total_users === 0) {
-    return '0';
-  }
-  return analytics.value.total_users.toString();
-};
-
-const getAvgSessionsPerUser = (): string => {
-  if (!analytics.value || 
-      typeof analytics.value.total_sessions !== 'number' || 
-      typeof analytics.value.total_users !== 'number' || 
-      analytics.value.total_users === 0) {
-    return '0.0';
-  }
-  const avg = analytics.value.total_sessions / analytics.value.total_users;
-  return isNaN(avg) ? '0.0' : avg.toFixed(1);
-};
-
-const getEstimatedAvgDuration = (): string => {
-  if (!analytics.value || analytics.value.average_completion_time_minutes === null || analytics.value.completed_sessions === 0) {
-    return 'No data';
-  }
-
-  const minutes = analytics.value.average_completion_time_minutes;
-
-  // Format the duration nicely
-  if (minutes < 1) {
-    return '< 1 min';
-  } else if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
-  } else {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    if (mins === 0) {
-      return `${hours} hr`;
-    }
-    return `${hours} hr ${mins} min`;
-  }
-};
-
-const getSuccessRate = (): number => {
-  if (!analytics.value || typeof analytics.value.completion_rate !== 'number' || isNaN(analytics.value.completion_rate)) {
-    return 0;
-  }
-  return Math.round(analytics.value.completion_rate);
-};
-
-const formatLastUpdate = (): string => {
-  try {
-    return lastApiCheck.value.toLocaleTimeString();
-  } catch {
-    return 'Unknown';
-  }
-};
 
 // Session deletion
 const confirmDeleteSession = (session: SessionSummary) => {
@@ -647,17 +557,6 @@ const cancelDelete = () => {
   sessionToDelete.value = null;
 };
 
-// Navigation
-const viewSessionStats = (sessionId: number) => {
-  if (import.meta.env.DEV) {
-    logger.info('Navigating to session stats', { sessionId });
-  }
-  router.push({
-    name: 'SessionStats',
-    params: { sessionId: sessionId.toString() },
-    query: isStiffMode.value ? { mode: 'stiff' } : {}
-  });
-};
 
 // Watch tab changes - removed since we're calling loadData directly in switchTab
 
