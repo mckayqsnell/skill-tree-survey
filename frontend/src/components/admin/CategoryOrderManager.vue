@@ -64,6 +64,9 @@
         item-key="id"
         handle=".drag-handle"
         animation="200"
+        ghost-class="sortable-ghost"
+        chosen-class="sortable-chosen"
+        drag-class="sortable-drag"
       >
         <template #item="{element, index}">
           <div
@@ -110,24 +113,35 @@
 </template>
 
 <style scoped>
-/* Hide the ghost element that appears while dragging */
+/* Style for the placeholder/ghost element where the item will be dropped */
 :deep(.sortable-ghost) {
-  opacity: 0 !important;
-  visibility: hidden !important;
+  opacity: 0.3 !important;
+  background: rgba(74, 222, 128, 0.1) !important;
+  border: 2px dashed rgba(74, 222, 128, 0.5) !important;
 }
 
-/* Style the element being dragged - subtle lift with glow */
+/* Style the element being dragged - attached to cursor */
 :deep(.sortable-drag) {
-  opacity: 0.9 !important;
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 255, 65, 0.25);
-  transition: none !important;
+  opacity: 0.95 !important;
+  cursor: grabbing !important;
+  background: rgba(0, 0, 0, 0.98) !important;
+  border: 1px solid rgba(74, 222, 128, 0.6) !important;
+  box-shadow: 0 4px 16px rgba(0, 255, 65, 0.4) !important;
 }
 
-/* Style the chosen element (when clicked but not yet dragging) */
+/* Style the chosen element (when mousedown but not yet dragging) */
 :deep(.sortable-chosen) {
-  opacity: 1 !important;
-  border-color: rgba(74, 222, 128, 0.6) !important;
+  opacity: 0.6 !important;
+  cursor: grabbing !important;
+}
+
+/* Ensure drag handle has proper cursor */
+.drag-handle {
+  cursor: grab !important;
+}
+
+.drag-handle:active {
+  cursor: grabbing !important;
 }
 
 /* Ensure all buttons have pointer cursor */

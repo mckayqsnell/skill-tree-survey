@@ -51,7 +51,7 @@
         <button
           @click="switchTab('questions')"
           type="button"
-          class="px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-[80px]"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'questions' ? 'tab-active' : 'tab-inactive'"
         >
           Questions
@@ -59,7 +59,7 @@
         <button
           @click="switchTab('sessions')"
           type="button"
-          class="px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-[80px]"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'sessions' ? 'tab-active' : 'tab-inactive'"
         >
           Sessions
@@ -67,7 +67,7 @@
         <button
           @click="switchTab('analytics')"
           type="button"
-          class="px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-[80px]"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'analytics' ? 'tab-active' : 'tab-inactive'"
         >
           Analytics
@@ -75,11 +75,10 @@
         <button
           @click="switchTab('categories')"
           type="button"
-          class="px-2 sm:px-4 py-2 text-xs sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-[80px]"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'categories' ? 'tab-active' : 'tab-inactive'"
         >
-          <span class="hidden sm:inline">Report Settings</span>
-          <span class="sm:hidden">Reports</span>
+          Report Settings
         </button>
       </div>
 
