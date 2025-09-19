@@ -51,7 +51,7 @@ class CategoryService:
                     "Backend", "Frontend", "DevOps", "Cloud", "Data",
                     "Machine Learning", "Mobile", "Security", "Architecture",
                     "Testing", "Leadership", "Data Science", "AI/ML Engineering",
-                    "UI/UX Design", "Pokemon"
+                    "UI/UX Design"
                 ]
                 categories = self.category_dao.initialize_defaults(default_categories)
 
@@ -120,7 +120,7 @@ class CategoryService:
                 "Backend", "Frontend", "DevOps", "Cloud", "Data",
                 "Machine Learning", "Mobile", "Security", "Architecture",
                 "Testing", "Leadership", "Data Science", "AI/ML Engineering",
-                "UI/UX Design", "Pokemon"
+                "UI/UX Design"
             ]
 
             # Create bulk update with default order

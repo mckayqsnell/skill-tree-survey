@@ -49,6 +49,18 @@ async def lifespan(app: FastAPI):
             if seeder.is_database_empty():
                 print("Database is empty, seeding with initial data...")
                 seeder.seed_database()
+
+            # Clean up Pokemon from category orders if it exists
+            from app.dao.factory import DAOFactory
+            dao_factory = DAOFactory(db)
+            category_dao = dao_factory.get_category_dao()
+
+            # Check if Pokemon exists and delete it
+            pokemon_category = category_dao.get_by_category("Pokemon")
+            if pokemon_category:
+                print("Removing Pokemon from category orders...")
+                category_dao.delete("Pokemon")
+                print("Pokemon removed from category management")
         finally:
             db.close()
     

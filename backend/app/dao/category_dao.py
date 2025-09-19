@@ -32,15 +32,18 @@ class CategoryDAO:
 
     def get_all_ordered(self) -> List[CategoryOrder]:
         """
-        Get all categories in order.
+        Get all categories in order, excluding Pokemon.
 
         Returns:
-            List of category orders sorted by order_index
+            List of category orders sorted by order_index, excluding Pokemon
         """
         try:
-            stmt = select(CategoryOrder).order_by(CategoryOrder.order_index)
+            # Exclude Pokemon from category management
+            stmt = select(CategoryOrder).where(
+                CategoryOrder.category != "Pokemon"
+            ).order_by(CategoryOrder.order_index)
             result = list(self.db.execute(stmt).scalars())
-            logger.debug(f"Retrieved {len(result)} category orders")
+            logger.debug(f"Retrieved {len(result)} category orders (excluding Pokemon)")
             return result
         except SQLAlchemyError as e:
             logger.error(f"Error retrieving category orders: {str(e)}")
@@ -134,9 +137,11 @@ class CategoryDAO:
         """
         result = []
         try:
-            logger.info(f"Bulk updating {len(categories)} category orders")
+            # Filter out Pokemon from updates
+            filtered_categories = [cat for cat in categories if cat.category != "Pokemon"]
+            logger.info(f"Bulk updating {len(filtered_categories)} category orders (excluding Pokemon)")
 
-            for cat_data in categories:
+            for cat_data in filtered_categories:
                 existing = self.get_by_category(cat_data.category)
                 if existing:
                     existing.order_index = cat_data.order_index
