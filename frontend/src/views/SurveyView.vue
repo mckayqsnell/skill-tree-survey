@@ -80,29 +80,37 @@
                 <div class="absolute inset-0 bg-danger/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </button>
             </div>
-            <button
-              v-if="answerHistory.length > 0 && canUndo"
-              @click="undoAnswer"
-              class="mt-6 text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative undo-button"
-            >
-              <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
-              <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
-              <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded undo-hover-bg"></div>
-            </button>
+            <!-- Desktop Undo Button Container - Always present to maintain layout -->
+            <div class="mt-6 min-h-[48px] flex items-center justify-center">
+              <Transition name="fade-undo">
+                <button
+                  v-if="answerHistory.length > 0 && canUndo"
+                  @click="undoAnswer"
+                  class="text-xs flex-col items-center text-accent-dim hover:text-accent transition-colors group relative undo-button"
+                >
+                  <span class="text-accent-dim text-[14px] font-bold mb-1 tracking-wider font-heading"> ← Undo <br></span>
+                  <kbd class="px-2 py-0.5 bg-accent/10 border border-accent-dim text-accent-dim text-[10px] rounded">BACKSPACE</kbd>
+                  <div class="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded undo-hover-bg"></div>
+                </button>
+              </Transition>
+            </div>
           </div>
         </div>
 
-        <!-- Mobile Undo Button -->
-        <div v-if="answerHistory.length > 0 && canUndo" class="block md:hidden mt-4 text-center">
-          <button
-            @click="undoAnswer"
-            class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors bg-black/50 border border-accent-dim/30 rounded mobile-undo-button"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-            </svg>
-            <span class="text-sm font-bold tracking-wider">Undo</span>
-          </button>
+        <!-- Mobile Undo Button Container - Always present to maintain layout -->
+        <div class="block md:hidden mt-4 text-center min-h-[44px] flex items-center justify-center">
+          <Transition name="fade-undo">
+            <button
+              v-if="answerHistory.length > 0 && canUndo"
+              @click="undoAnswer"
+              class="inline-flex items-center gap-2 px-4 py-2 text-accent-dim hover:text-accent transition-colors bg-black/50 border border-accent-dim/30 rounded mobile-undo-button"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+              </svg>
+              <span class="text-sm font-bold tracking-wider">Undo</span>
+            </button>
+          </Transition>
         </div>
       </div>
 
@@ -573,3 +581,27 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyPress);
 });
 </script>
+
+<style scoped>
+/* Smooth fade transition for undo button - no transform to prevent layout shift */
+.fade-undo-enter-active,
+.fade-undo-leave-active {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.fade-undo-enter-from {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.fade-undo-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.fade-undo-enter-to,
+.fade-undo-leave-from {
+  opacity: 1;
+  transform: scale(1);
+}
+</style>

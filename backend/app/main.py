@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from app.config.settings import get_settings
 from app.database.connection import init_db, reset_db
 from app.seeders.seeder import Seeder, get_db
-from app.routes import questions, sessions, responses, admin
+from app.routes import questions, sessions, responses, admin, categories
 
 settings = get_settings()
 
@@ -49,6 +49,18 @@ async def lifespan(app: FastAPI):
             if seeder.is_database_empty():
                 print("Database is empty, seeding with initial data...")
                 seeder.seed_database()
+
+            # Clean up Pokemon from category orders if it exists
+            from app.dao.factory import DAOFactory
+            dao_factory = DAOFactory(db)
+            category_dao = dao_factory.get_category_dao()
+
+            # Check if Pokemon exists and delete it
+            pokemon_category = category_dao.get_by_category("Pokemon")
+            if pokemon_category:
+                print("Removing Pokemon from category orders...")
+                category_dao.delete("Pokemon")
+                print("Pokemon removed from category management")
         finally:
             db.close()
     
@@ -80,6 +92,7 @@ app.add_middleware(
 app.include_router(questions.router, prefix=settings.API_PREFIX)
 app.include_router(sessions.router, prefix=settings.API_PREFIX)
 app.include_router(responses.router, prefix=settings.API_PREFIX)
+app.include_router(categories.router, prefix=settings.API_PREFIX)
 app.include_router(admin.router, prefix=settings.API_PREFIX)
 
 

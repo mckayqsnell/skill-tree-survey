@@ -47,11 +47,11 @@
       </div>
 
       <!-- Tabs -->
-      <div class="flex gap-2 mb-6" style="position: relative; z-index: 10;">
+      <div class="flex flex-wrap gap-1 sm:gap-2 mb-6" style="position: relative; z-index: 10;">
         <button
           @click="switchTab('questions')"
           type="button"
-          class="px-4 py-2 text-sm transition-all cursor-pointer"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'questions' ? 'tab-active' : 'tab-inactive'"
         >
           Questions
@@ -59,7 +59,7 @@
         <button
           @click="switchTab('sessions')"
           type="button"
-          class="px-4 py-2 text-sm transition-all cursor-pointer"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'sessions' ? 'tab-active' : 'tab-inactive'"
         >
           Sessions
@@ -67,10 +67,18 @@
         <button
           @click="switchTab('analytics')"
           type="button"
-          class="px-4 py-2 text-sm transition-all cursor-pointer"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
           :class="activeTab === 'analytics' ? 'tab-active' : 'tab-inactive'"
         >
           Analytics
+        </button>
+        <button
+          @click="switchTab('categories')"
+          type="button"
+          class="px-1 sm:px-4 py-2 text-[11px] sm:text-sm transition-all cursor-pointer flex-1 sm:flex-initial min-w-0 sm:min-w-[80px]"
+          :class="activeTab === 'categories' ? 'tab-active' : 'tab-inactive'"
+        >
+          Report Settings
         </button>
       </div>
 
@@ -110,205 +118,31 @@
 
         <!-- Sessions Tab -->
         <div v-if="activeTab === 'sessions'">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg text-primary">Recent Sessions</h2>
-            <div class="flex items-center gap-4">
-              <button
-                @click="showDeleteAllConfirm = true"
-                class="flex items-center gap-2 px-3 py-1 text-xs border border-red-500/50 text-red-500 hover:bg-red-500/10 hover:border-red-500 transition-all rounded"
-                :disabled="sessions.length === 0"
-              >
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Clear All
-              </button>
-              <p class="text-xs text-primary-dim font-mono-primary">Click on a session to view detailed analysis</p>
-            </div>
-          </div>
-          
-          <!-- Loading State -->
-          <div v-if="loading" class="text-center py-8">
-            <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-2"></div>
-            <p class="text-primary-dim text-sm">Loading sessions...</p>
-          </div>
-
-          <!-- Sessions List -->
-          <div v-else-if="sessions.length > 0" class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-primary-faint text-primary-subtle">
-                  <th class="text-left py-2 px-3">ID</th>
-                  <th class="text-left py-2 px-3">User</th>
-                  <th class="text-left py-2 px-3">Email</th>
-                  <th class="text-left py-2 px-3">Company</th>
-                  <th class="text-left py-2 px-3">Started</th>
-                  <th class="text-left py-2 px-3">Duration</th>
-                  <th class="text-left py-2 px-3">Status</th>
-                  <th class="text-left py-2 px-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr 
-                  v-for="session in sessions" 
-                  :key="session.id" 
-                  class="border-b border-primary-faint hover:bg-primary/5 transition-colors cursor-pointer group"
-                  @click="viewSessionStats(session.id)"
-                >
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.id }}</td>
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.user_name }}</td>
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary font-mono-primary text-xs">{{ session.user_email }}</td>
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary">{{ session.company }}</td>
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary text-xs">{{ formatDate(session.started_at) }}</td>
-                  <td class="py-2 px-3 text-primary-subtle group-hover:text-primary text-xs font-mono-primary">
-                    {{ formatDuration(session.completion_time_minutes) }}
-                  </td>
-                  <td class="py-2 px-3">
-                    <span v-if="session.completed_at" class="flex items-center gap-1">
-                      <svg class="w-3 h-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      <span class="text-primary text-xs">Complete</span>
-                    </span>
-                    <span v-else class="flex items-center gap-1">
-                      <svg class="w-3 h-3 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                      </svg>
-                      <span class="text-amber-500 text-xs">In Progress</span>
-                    </span>
-                  </td>
-                  <td class="py-2 px-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click.stop="viewSessionStats(session.id)"
-                        class="btn-view-stats"
-                      >
-                        View Stats
-                      </button>
-                      <button
-                        @click.stop="confirmDeleteSession(session)"
-                        class="text-xs p-1 border border-red-500/30 text-red-500/80 hover:bg-red-500/10 hover:border-red-500 transition-all rounded"
-                        title="Delete session"
-                      >
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Empty State -->
-          <div v-else class="text-center py-8">
-            <p class="text-primary-dim text-sm">No sessions found</p>
-          </div>
+          <SessionsTable
+            :sessions="sessions"
+            :loading="loading"
+            :error="error"
+            @clear-all="showDeleteAllConfirm = true"
+            @delete-session="confirmDeleteSession"
+            @reload="loadSessions"
+          />
         </div>
 
         <!-- Analytics Tab -->
         <div v-if="activeTab === 'analytics'">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-lg text-primary">Analytics Overview</h2>
-            <!-- API Health Status -->
-            <div class="flex items-center gap-2">
-              <div class="flex items-center gap-1">
-                <div 
-                  class="w-2 h-2 rounded-full"
-                  :class="apiHealthy ? 'bg-primary' : 'bg-danger'"
-                ></div>
-                <span class="text-xs font-mono-primary" :class="apiHealthy ? 'text-primary' : 'text-danger'">
-                  API {{ apiHealthy ? 'CONNECTED' : 'DISCONNECTED' }}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Loading State -->
-          <div v-if="loading" class="text-center py-8">
-            <div class="inline-block w-8 h-8 border-2 border-primary-faint border-t-primary rounded-full animate-spin mb-2"></div>
-            <p class="text-primary-dim text-sm">Loading analytics...</p>
-          </div>
+          <AnalyticsDashboard
+            :analytics="analytics"
+            :loading="loading"
+            :error="error"
+            :api-healthy="apiHealthy"
+            :api-response-time="apiResponseTime"
+            @reload="loadAnalytics"
+          />
+        </div>
 
-          <!-- Analytics Data -->
-          <div v-else-if="analytics" class="space-y-6">
-            <!-- Main Stats Grid -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div class="stat-card">
-                <p class="text-2xl font-bold text-cyan-400">{{ analytics.total_sessions }}</p>
-                <p class="text-xs text-primary-dim font-mono-primary uppercase">Total Sessions</p>
-              </div>
-              <div class="stat-card">
-                <p class="text-2xl font-bold text-primary">{{ analytics.completed_sessions }}</p>
-                <p class="text-xs text-primary-dim font-mono-primary uppercase">Completed</p>
-              </div>
-              <div class="stat-card-red">
-                <p class="text-2xl font-bold text-red-400">{{ getInProgressSessions() }}</p>
-                <p class="text-xs text-red-400/50 font-mono-primary uppercase">In Progress</p>
-              </div>
-              <div class="stat-card-amber">
-                <p class="text-2xl font-bold text-amber-500">{{ getCompletionRate() }}%</p>
-                <p class="text-xs text-amber-500/50 font-mono-primary uppercase">Completion Rate</p>
-              </div>
-            </div>
-
-            <!-- Additional Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <!-- User Stats -->
-              <div class="analytics-card">
-                <h3 class="text-primary font-semibold mb-4">User Engagement</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">Unique Users:</span>
-                    <span class="text-primary font-mono-primary">{{ getTotalUsers() }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">Avg Sessions per User:</span>
-                    <span class="text-cyan-400 font-mono-primary">{{ getAvgSessionsPerUser() }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">Est. Avg Duration:</span>
-                    <span class="text-amber-500 font-mono-primary">{{ getEstimatedAvgDuration() }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Performance Stats -->
-              <div class="analytics-card">
-                <h3 class="text-primary font-semibold mb-4">System Performance</h3>
-                <div class="space-y-3">
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">API Response:</span>
-                    <span class="text-primary font-mono-primary">{{ apiResponseTime }}ms</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">Success Rate:</span>
-                    <span class="text-cyan-400 font-mono-primary">{{ getSuccessRate() }}%</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-primary-dim text-sm">Last Updated:</span>
-                    <span class="text-amber-500 font-mono-primary text-xs">{{ formatLastUpdate() }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Top Skills -->
-            <div v-if="analytics.top_skills && analytics.top_skills.length > 0" class="analytics-card">
-              <h3 class="text-primary font-semibold mb-4">Most Common Skills</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                <div 
-                  v-for="skill in analytics.top_skills.slice(0, 6)"
-                  :key="skill.skill"
-                  class="skill-badge"
-                >
-                  <span class="text-primary text-sm">{{ skill.skill }}</span>
-                  <span class="text-cyan-400 font-mono-primary text-sm">{{ skill.count }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
+        <!-- Categories Tab -->
+        <div v-if="activeTab === 'categories'">
+          <CategoryOrderManager />
         </div>
       </div>
 
@@ -432,15 +266,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { questionsApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
 import type { QuestionTree, SessionSummary, SessionAnalytics } from '@/types';
 import QuestionTreeItem from '@/components/admin/QuestionTreeItem.vue';
+import CategoryOrderManager from '@/components/admin/CategoryOrderManager.vue';
+import SessionsTable from '@/components/admin/SessionsTable.vue';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard.vue';
 import { useAdminAuth } from '@/composables/useAdminAuth';
 
 // Router
-const router = useRouter();
 const route = useRoute();
 
 // Check if stiff mode is active
@@ -450,7 +286,7 @@ const isStiffMode = computed(() => route.query.mode === 'stiff');
 const { authenticated, authError, loading: authLoading, authenticate, logout, requireAuth, passwordInput } = useAdminAuth();
 
 // State
-const activeTab = ref<'questions' | 'sessions' | 'analytics'>('questions');
+const activeTab = ref<'questions' | 'sessions' | 'analytics' | 'categories'>('questions');
 const loading = ref(false);
 const error = ref('');
 
@@ -485,7 +321,7 @@ const handleAuthenticate = async () => {
 };
 
 // Tab switching
-const switchTab = async (tab: 'questions' | 'sessions' | 'analytics') => {
+const switchTab = async (tab: 'questions' | 'sessions' | 'analytics' | 'categories') => {
   // Only switch if different from current tab
   if (activeTab.value === tab) {
     return;
@@ -669,95 +505,6 @@ const formatDate = (dateStr: string): string => {
   }
 };
 
-// Format duration
-const formatDuration = (minutes: number | null): string => {
-  if (minutes === null || minutes === undefined) {
-    return '--';
-  }
-
-  if (minutes < 1) {
-    return '< 1 min';
-  } else if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
-  } else {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    if (mins === 0) {
-      return `${hours} hr`;
-    }
-    return `${hours} hr ${mins} min`;
-  }
-};
-
-// Analytics helper functions
-const getInProgressSessions = (): number => {
-  if (!analytics.value || typeof analytics.value.total_sessions !== 'number' || typeof analytics.value.completed_sessions !== 'number') {
-    return 0;
-  }
-  return Math.max(0, analytics.value.total_sessions - analytics.value.completed_sessions);
-};
-
-const getCompletionRate = (): number => {
-  if (!analytics.value || typeof analytics.value.completion_rate !== 'number' || isNaN(analytics.value.completion_rate)) {
-    return 0;
-  }
-  return Math.round(analytics.value.completion_rate);
-};
-
-const getTotalUsers = (): string => {
-  if (!analytics.value || typeof analytics.value.total_users !== 'number' || analytics.value.total_users === 0) {
-    return '0';
-  }
-  return analytics.value.total_users.toString();
-};
-
-const getAvgSessionsPerUser = (): string => {
-  if (!analytics.value || 
-      typeof analytics.value.total_sessions !== 'number' || 
-      typeof analytics.value.total_users !== 'number' || 
-      analytics.value.total_users === 0) {
-    return '0.0';
-  }
-  const avg = analytics.value.total_sessions / analytics.value.total_users;
-  return isNaN(avg) ? '0.0' : avg.toFixed(1);
-};
-
-const getEstimatedAvgDuration = (): string => {
-  if (!analytics.value || analytics.value.average_completion_time_minutes === null || analytics.value.completed_sessions === 0) {
-    return 'No data';
-  }
-
-  const minutes = analytics.value.average_completion_time_minutes;
-
-  // Format the duration nicely
-  if (minutes < 1) {
-    return '< 1 min';
-  } else if (minutes < 60) {
-    return `${Math.round(minutes)} min`;
-  } else {
-    const hours = Math.floor(minutes / 60);
-    const mins = Math.round(minutes % 60);
-    if (mins === 0) {
-      return `${hours} hr`;
-    }
-    return `${hours} hr ${mins} min`;
-  }
-};
-
-const getSuccessRate = (): number => {
-  if (!analytics.value || typeof analytics.value.completion_rate !== 'number' || isNaN(analytics.value.completion_rate)) {
-    return 0;
-  }
-  return Math.round(analytics.value.completion_rate);
-};
-
-const formatLastUpdate = (): string => {
-  try {
-    return lastApiCheck.value.toLocaleTimeString();
-  } catch {
-    return 'Unknown';
-  }
-};
 
 // Session deletion
 const confirmDeleteSession = (session: SessionSummary) => {
@@ -809,17 +556,6 @@ const cancelDelete = () => {
   sessionToDelete.value = null;
 };
 
-// Navigation
-const viewSessionStats = (sessionId: number) => {
-  if (import.meta.env.DEV) {
-    logger.info('Navigating to session stats', { sessionId });
-  }
-  router.push({
-    name: 'SessionStats',
-    params: { sessionId: sessionId.toString() },
-    query: isStiffMode.value ? { mode: 'stiff' } : {}
-  });
-};
 
 // Watch tab changes - removed since we're calling loadData directly in switchTab
 

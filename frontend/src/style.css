@@ -532,21 +532,39 @@
   .stiff-mode .bg-primary {
     @apply bg-blue-600 !important;
   }
-  
+
   .stiff-mode .from-primary {
     @apply from-blue-600 !important;
   }
-  
+
   .stiff-mode .bg-primary\/10 {
     background-color: rgb(37 99 235 / 0.1) !important;
   }
-  
+
   .stiff-mode .bg-primary\/50 {
     background-color: rgb(37 99 235 / 0.5) !important;
   }
-  
+
   .stiff-mode .bg-primary\/5 {
     background-color: rgb(37 99 235 / 0.05) !important;
+  }
+
+  /* Progress bar container background in stiff mode */
+  .stiff-mode .bg-black\/95 {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+  }
+
+  .stiff-mode .bg-black\/50 {
+    background-color: rgba(255, 255, 255, 0.7) !important;
+  }
+
+  .stiff-mode .bg-black\/30 {
+    background-color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Progress bar border in stiff mode */
+  .stiff-mode .border-green-400\/20 {
+    border-color: rgba(229, 229, 229, 1) !important; /* Light gray border */
   }
   
   /* Loading spinner */

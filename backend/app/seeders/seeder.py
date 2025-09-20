@@ -7,6 +7,7 @@ from typing import Dict, Any, List
 from sqlalchemy.orm import Session
 
 from app.models.question import Question
+from app.models.category_order import CategoryOrder
 from app.database.connection import get_db, init_db
 
 
@@ -94,31 +95,44 @@ class Seeder:
     
     def seed_database(self) -> int:
         """
-        Seed the database with initial questions.
-        
+        Seed the database with initial questions and category orders.
+
         Returns:
             int: Number of base questions created
         """
         if not self.is_database_empty():
             print("Database already contains questions. Skipping seeding.")
             return 0
-        
-        print("Seeding database with initial questions...")
-        
+
+        print("Seeding database with initial questions and category orders...")
+
         try:
             seed_data = self.load_seed_data()
             questions = seed_data.get("questions", [])
-            
+            categories = seed_data.get("categories", [])
+
+            # Seed category orders
+            print(f"Seeding {len(categories)} category orders...")
+            for idx, category in enumerate(categories):
+                # Check if category order already exists
+                existing = self.db.query(CategoryOrder).filter_by(category=category).first()
+                if not existing:
+                    category_order = CategoryOrder(
+                        category=category,
+                        order_index=idx
+                    )
+                    self.db.add(category_order)
+
             # Create all base questions and their trees
             base_count = 0
             for idx, question_data in enumerate(questions):
                 self.create_question_tree(question_data, None, idx, None)
                 base_count += 1
-            
+
             self.db.commit()
-            print(f"Successfully seeded {base_count} base questions with their children")
+            print(f"Successfully seeded {base_count} base questions with their children and {len(categories)} category orders")
             return base_count
-            
+
         except Exception as e:
             self.db.rollback()
             print(f"Error seeding database: {str(e)}")

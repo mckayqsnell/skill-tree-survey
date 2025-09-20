@@ -8,6 +8,7 @@ from fastapi import Depends
 from app.dao.question_dao import QuestionDAO
 from app.dao.session_dao import SessionDAO
 from app.dao.response_dao import ResponseDAO
+from app.dao.category_dao import CategoryDAO
 from app.database.connection import get_db
 
 
@@ -54,13 +55,24 @@ class DAOFactory:
     def get_response_dao(self) -> ResponseDAO:
         """
         Get or create ResponseDAO instance.
-        
+
         Returns:
             ResponseDAO: DAO for Response model
         """
         if "response" not in self._daos:
             self._daos["response"] = ResponseDAO(self.db)
         return self._daos["response"]
+
+    def get_category_dao(self) -> CategoryDAO:
+        """
+        Get or create CategoryDAO instance.
+
+        Returns:
+            CategoryDAO: DAO for CategoryOrder model
+        """
+        if "category" not in self._daos:
+            self._daos["category"] = CategoryDAO(self.db)
+        return self._daos["category"]
     
     def commit(self) -> None:
         """

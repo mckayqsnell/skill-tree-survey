@@ -10,12 +10,16 @@ from app.dao.factory import get_dao_factory, DAOFactory
 from app.services.question_service import QuestionService
 from app.services.session_service import SessionService
 from app.services.response_service import ResponseService
+from app.services.category_service import CategoryService
 from app.schemas.question import (
     QuestionCreate, QuestionUpdate, QuestionResponse,
     QuestionReorder, QuestionMove, QuestionStatistics
 )
 from app.schemas.session import SessionResponse, SessionSummary, SessionAnalytics
 from app.schemas.response import ResponseInDB
+from app.schemas.category import (
+    CategoryOrderResponse, CategoryOrderBulkUpdate
+)
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 settings = get_settings()
@@ -52,6 +56,11 @@ def get_session_service(dao_factory: DAOFactory = Depends(get_dao_factory)) -> S
 def get_response_service(dao_factory: DAOFactory = Depends(get_dao_factory)) -> ResponseService:
     """Get ResponseService instance."""
     return ResponseService(dao_factory)
+
+
+def get_category_service(dao_factory: DAOFactory = Depends(get_dao_factory)) -> CategoryService:
+    """Get CategoryService instance."""
+    return CategoryService(dao_factory)
 
 
 # Question Management Routes
@@ -250,3 +259,81 @@ def cleanup_incomplete_sessions(
     """
     count = service.cleanup_incomplete_sessions(hours_threshold)
     return {"deleted_sessions": count}
+
+
+# Category Order Management Routes
+
+@router.get("/categories/order", response_model=List[CategoryOrderResponse])
+def get_category_order(
+    service: CategoryService = Depends(get_category_service),
+    _: bool = Depends(verify_admin_password)
+):
+    """
+    Get current category display order.
+
+    Args:
+        service: Category service
+
+    Returns:
+        List of categories in their display order
+    """
+    try:
+        return service.get_category_order()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve category order: {str(e)}"
+        )
+
+
+@router.put("/categories/order", response_model=List[CategoryOrderResponse])
+def update_category_order(
+    bulk_update: CategoryOrderBulkUpdate,
+    service: CategoryService = Depends(get_category_service),
+    _: bool = Depends(verify_admin_password)
+):
+    """
+    Update category display order.
+
+    Args:
+        bulk_update: New category order configuration
+        service: Category service
+
+    Returns:
+        Updated list of categories in their new order
+    """
+    try:
+        return service.update_category_order(bulk_update)
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(ve)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update category order: {str(e)}"
+        )
+
+
+@router.post("/categories/order/reset", response_model=List[CategoryOrderResponse])
+def reset_category_order(
+    service: CategoryService = Depends(get_category_service),
+    _: bool = Depends(verify_admin_password)
+):
+    """
+    Reset category order to default configuration.
+
+    Args:
+        service: Category service
+
+    Returns:
+        List of categories in default order
+    """
+    try:
+        return service.reset_to_defaults()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reset category order: {str(e)}"
+        )

@@ -1,235 +1,414 @@
-# Skill Tree Survey - Project Context
+# Skill Tree Survey - Claude AI Development Guide
 
-## Project Overview
-A gamified employee skills assessment tool that uses branching logic to efficiently map technical competencies across an organization. The survey is keyboard-driven, takes 5-10 minutes to complete, and provides organizations with a clear view of their technical talent portfolio.
+## 🚨 CRITICAL INSTRUCTIONS FOR CLAUDE
 
-## Core Functionality
-- **Branching Survey Logic**: Questions form a tree structure where "yes" answers lead to deeper follow-up questions, while "no" answers return to the next base question
-- **Keyboard Navigation**: Space/Enter for "yes", 'N' key for "no" - optimized for speed
-- **Question Management**: Admin interface to create, edit, delete, and reorder questions while maintaining tree structure
-- **Employee Tracking**: Store responses per session with user information
-- **Skills Summary**: Admin view to see aggregated skills data per employee
-- **Individual Session Analysis**: Detailed per-session view with radar charts and performance metrics
-- **Session Management**: Delete individual sessions or bulk clear all data
-- **Real-time Progress**: Visual progress tracking with depth indicators and question counts
+### **UPDATE THIS FILE AS YOU WORK**
+When making significant structural changes, new features, or architectural decisions that would help future Claude sessions, update this file immediately. Don't wait until the end of the session.
 
-## Technical Stack
-- **Backend**: FastAPI with SQLAlchemy ORM, Pydantic for validation
-- **Frontend**: Vue 3 (Composition API), TypeScript, Vite, Tailwind CSS
-- **Database**: SQLite with SQLAlchemy
-- **Deployment**: Docker Compose with persistent volumes
+### Core Development Principles
+1. **Defensive Programming**: ALWAYS use try-catch/try-except blocks with proper error handling
+2. **Logging**: Use comprehensive logging (logger.info, logger.error, logger.debug) for debugging
+3. **Type Safety**: Use TypeScript strictly in frontend, type hints in Python backend
+4. **Componentization**: Break down UI into reusable components, especially in frontend
+5. **Separation of Concerns**: Follow DAO → Service → Route pattern in backend
+6. **Single Responsibility**: Each function/component should do ONE thing well
+7. **Error Recovery**: Graceful error handling with user feedback
 
-## Architecture Patterns
-- **Backend Structure**: Factory pattern for DAOs, clear separation of concerns
-  - `/app/routes/` - API endpoints
-  - `/app/services/` - Business logic layer
-  - `/app/dao/` - Data access layer with factory pattern
-  - `/app/models/` - SQLAlchemy models
-  - `/app/schemas/` - Pydantic schemas
-  - `/app/config/` - Configuration and settings
-- **Frontend Structure**: Single-page application with component-based architecture
-  - Focus on single survey component for entire flow
-  - Admin panel for question management and analytics
-  - Shared authentication state with session persistence
-  - SVG-based radar chart visualizations
-  - Component reusability with TypeScript composables
+## 📁 Project Overview
 
-## Database Schema
+A gamified employee skills assessment tool that uses branching question logic to efficiently map technical competencies across an organization. Built with Vue 3, TypeScript, FastAPI, and a retro-futuristic terminal UI theme.
 
-```sql
--- Questions table with self-referencing for tree structure
-questions:
-  - id (PRIMARY KEY)
-  - parent_id (FOREIGN KEY -> questions.id, nullable)
-  - text (TEXT, required)
-  - is_base (BOOLEAN, default false)
-  - category (VARCHAR, nullable) 
-  - order_index (INTEGER)
-  - created_at (TIMESTAMP)
-  - updated_at (TIMESTAMP)
+### Key Features
+- **Branching Survey Logic**: Tree-structured questions where "yes" leads deeper
+- **Keyboard-Driven**: Space/Enter for YES, 'N' for NO - optimized for speed
+- **Admin Dashboard**: Full CRUD for questions, session analytics, drag-and-drop category ordering
+- **Real-time Analytics**: Radar charts, skill depth analysis, performance metrics
+- **Session Management**: Individual session analysis, bulk operations, data cleanup
+- **Responsive Design**: Mobile-optimized with touch support
+- **Stiff Mode**: Professional Apple-style UI alternative to terminal theme
 
--- Survey session tracking
-survey_sessions:
-  - id (PRIMARY KEY)
-  - user_name (VARCHAR)
-  - user_email (VARCHAR) 
-  - company (VARCHAR)
-  - started_at (TIMESTAMP)
-  - completed_at (TIMESTAMP, nullable)
+## 🏗️ Architecture & Patterns
 
--- Individual responses
-responses:
-  - id (PRIMARY KEY)
-  - session_id (FOREIGN KEY -> survey_sessions.id)
-  - question_id (FOREIGN KEY -> questions.id)
-  - answer (BOOLEAN)
-  - answered_at (TIMESTAMP)
+### Backend Architecture (FastAPI + SQLAlchemy)
+
+```
+backend/
+├── app/
+│   ├── config/           # Environment settings
+│   │   └── settings.py   # Pydantic settings management
+│   ├── database/         # Database configuration
+│   │   └── connection.py # SQLAlchemy setup, Base class
+│   ├── models/           # SQLAlchemy ORM models
+│   │   ├── question.py   # Self-referencing tree structure
+│   │   ├── session.py    # Survey session tracking
+│   │   ├── response.py   # Individual answers
+│   │   └── category_order.py # Display ordering
+│   ├── schemas/          # Pydantic validation schemas
+│   │   └── [matching model schemas with validation]
+│   ├── dao/              # Data Access Objects (database layer)
+│   │   ├── factory.py    # DAO Factory pattern
+│   │   ├── base.py       # Generic CRUD operations
+│   │   └── [model]_dao.py # Model-specific queries
+│   ├── services/         # Business logic layer
+│   │   └── [model]_service.py # Business rules, validation
+│   ├── routes/           # API endpoints
+│   │   ├── questions.py  # Public question endpoints
+│   │   ├── admin.py      # Protected admin endpoints
+│   │   └── [...]         # Other route modules
+│   └── seeders/          # Database initialization
+│       └── initial_questions.json # 60+ seed questions
 ```
 
-## API Routes
+#### Backend Patterns & Best Practices
 
-### Public Routes
-- `POST /api/sessions` - Start new survey session with user info
-- `GET /api/questions/base` - Get all base questions
-- `GET /api/questions/{id}/children` - Get child questions for a parent
-- `POST /api/responses` - Submit answer for a question
-- `GET /api/sessions/{id}/summary` - Get session results
+**DAO Factory Pattern**:
+```python
+# Always use factory for DAO access
+dao_factory = DAOFactory(db)
+question_dao = dao_factory.get_question_dao()
 
-### Admin Routes (password protected)
-- `GET /api/admin/questions` - Get all questions in tree structure
-- `POST /api/admin/questions` - Create new question
-- `PUT /api/admin/questions/{id}` - Update question (text, parent, order)
-- `DELETE /api/admin/questions/{id}` - Delete question and children
-- `PUT /api/admin/questions/reorder` - Bulk update order_index
-- `GET /api/admin/sessions` - Get all sessions with responses
-- `DELETE /api/admin/sessions/{id}` - Delete individual session
-- `POST /api/admin/sessions/cleanup` - Bulk delete incomplete sessions
-- `GET /api/admin/analytics` - Get aggregated skills data with health metrics
+# Proper error handling in DAOs
+try:
+    result = question_dao.create(data)
+    dao_factory.commit()
+    logger.info(f"Created question: {result.id}")
+except Exception as e:
+    dao_factory.rollback()
+    logger.error(f"Failed to create question: {str(e)}")
+    raise
+```
 
-## Key Features to Implement
+**Service Layer Pattern**:
+```python
+# Services handle business logic
+class QuestionService:
+    def __init__(self, dao_factory: DAOFactory):
+        self.dao_factory = dao_factory
+        self.question_dao = dao_factory.get_question_dao()
 
-### Phase 1 (MVP) - COMPLETED
-- [x] Basic backend structure with proper separation of concerns
-- [x] Database models and migrations
-- [x] Seeder for initial questions
-- [x] CRUD operations for questions
-- [x] Session and response tracking
-- [x] Vue frontend with survey flow
-- [x] Keyboard navigation
-- [x] Docker Compose setup
+    def create_question(self, data: QuestionCreate):
+        try:
+            # Business validation
+            if data.parent_id:
+                parent = self.question_dao.get(data.parent_id)
+                if not parent:
+                    raise HTTPException(404, "Parent not found")
 
-### Phase 2 (Enhanced) - COMPLETED
-- [x] Question categories
-- [x] Admin dashboard with analytics
-- [x] Individual session analysis with radar charts
-- [x] Session management (delete/cleanup)
-- [x] Performance metrics with tooltips
-- [x] API health monitoring
-- [x] Admin authentication persistence
-- [ ] Drag-and-drop question reordering
-- [ ] Export functionality (CSV)
-- [ ] Response time tracking
-- [ ] Bulk question import
+            # Create with logging
+            question = self.question_dao.create(**data.dict())
+            logger.info(f"Question created: {question.id}")
+            return question
+        except Exception as e:
+            logger.error(f"Service error: {str(e)}")
+            raise
+```
 
-## Configuration
+### Frontend Architecture (Vue 3 + TypeScript)
 
-### Backend Environment Variables
-- `DATABASE_URL`: SQLite connection string (default: sqlite:///./skill_survey.db)
-- `ADMIN_PASSWORD`: Simple password for admin routes
-- `CORS_ORIGINS`: Allowed origins for frontend (default: http://localhost:5173)
-- `SEED_ON_STARTUP`: Whether to seed database if empty (default: true)
+```
+frontend/
+├── src/
+│   ├── api/              # API client layer
+│   │   ├── client.ts     # Axios setup, interceptors, logging
+│   │   ├── questions.ts  # Question-specific API calls
+│   │   └── [...]         # Other API modules
+│   ├── components/       # Reusable UI components
+│   │   ├── admin/        # Admin-specific components
+│   │   │   ├── AnalyticsDashboard.vue
+│   │   │   ├── CategoryOrderManager.vue
+│   │   │   ├── QuestionTreeItem.vue
+│   │   │   └── SessionsTable.vue
+│   │   └── [...]         # Other shared components
+│   ├── views/            # Page-level components
+│   │   ├── SurveyView.vue    # Main survey interface
+│   │   ├── AdminView.vue     # Admin dashboard
+│   │   └── SessionStatsView.vue # Individual session analysis
+│   ├── composables/      # Shared Vue composition functions
+│   │   └── useAdminAuth.ts # Authentication state management
+│   ├── types/            # TypeScript type definitions
+│   │   └── index.ts      # Centralized types
+│   └── styles/           # Global styles
+│       └── style.css     # Tailwind + custom styles
+```
 
-### Frontend Environment Variables
-- `VITE_API_URL`: Backend API URL (default: http://localhost:8000)
-- `VITE_ADMIN_PASSWORD`: Admin password for protected routes
+## 📊 Database Schema
 
-## Development Guidelines
+See `/docs/database_schema.sql` for complete SQL schema with indexes and sample queries.
 
-### Code Style
-- Use type hints throughout Python code
-- Implement proper error handling with meaningful HTTP status codes
-- Use Pydantic schemas for all request/response models
-- Keep business logic in service layer, not in routes
-- Use TypeScript strictly in frontend
-- Follow Vue 3 Composition API best practices
+### Core Tables
+1. **questions**: Self-referencing tree structure with categories
+2. **survey_sessions**: User session tracking with timestamps
+3. **responses**: Individual answers linking sessions to questions
+4. **category_orders**: Display ordering for report categories
 
-### Testing Approach
-- Unit tests for service layer
-- Integration tests for DAOs
-- API tests for routes
-- Component tests for Vue components
+### Key Relationships
+- Questions → Questions (parent-child tree)
+- Sessions → Responses (one-to-many)
+- Questions → Responses (one-to-many)
+- Unique constraint: One response per question per session
 
-## Seeder Data Structure
+## 🐳 Docker & Deployment
 
-```json
-{
-  "categories": ["DevOps", "Backend", "Frontend", "Data"],
-  "questions": [
-    {
-      "text": "Have you worked with Kubernetes?",
-      "is_base": true,
-      "category": "DevOps",
-      "children": [
-        {
-          "text": "Have you deployed production workloads?",
-          "children": [
-            {
-              "text": "Have you managed clusters with 100+ nodes?"
-            }
-          ]
-        }
-      ]
-    }
-  ]
+### Environment Files
+```
+environments/
+├── .env.development     # Local development
+├── .env.test           # Test environment
+└── .env.production     # Production environment
+```
+
+### Docker Compose Configurations
+- `docker-compose.yml`: Development with hot-reload
+- `docker-compose.test.yml`: Test environment
+- `docker-compose.prod.yml`: Production with nginx
+
+### Key Environment Variables
+```bash
+# Backend
+DATABASE_URL=sqlite:////app/data/skill_survey.db
+ADMIN_PASSWORD=admin123  # CHANGE IN PRODUCTION!
+CORS_ORIGINS=["http://localhost:5173"]
+RESET_DATABASE=false
+API_PREFIX=/api
+
+# Frontend
+VITE_API_URL=http://localhost:8000
+VITE_ADMIN_PASSWORD=admin123
+```
+
+### Nginx Configuration
+- SSL termination with Let's Encrypt
+- Reverse proxy for frontend (port 80/443) and backend (/api)
+- Security headers (CSP, X-Frame-Options, etc.)
+- Health check endpoints
+
+## 🚀 GitHub Actions Workflows
+
+### PR Validation (`pr-validation.yml`)
+- Triggers: PRs to main/develop
+- Builds Docker images
+- Runs health checks
+- Posts status to PR
+
+### Test Deployment (`deploy-test.yml`)
+- Triggers: Push to develop (automatic)
+- Deploys to test-skills-survey.heal.engineering
+- Container names: test-skill-survey-*
+
+### Production Deployment (`deploy-production.yml`)
+- Triggers: Manual only
+- Deploys to skills-survey.heal.engineering
+- Requires approval
+- Automatic backup before deployment
+
+### Docker Cleanup (`docker-cleanup.yml`)
+- Runs daily at 3 AM UTC
+- Removes unused images/containers
+- Cleans build cache
+- Maintains last 5 deployment backups
+
+## 🎨 Styling & UI
+
+### Design System
+- **Terminal Theme**: Green-on-black retro-futuristic
+- **Stiff Mode**: Clean Apple-style professional theme
+- **Responsive**: Mobile-first with Tailwind breakpoints
+- **Animations**: Smooth transitions, no jarring movements
+
+### Global Styles Location
+- `/frontend/src/style.css`: Main styles, theme definitions
+- Component-scoped styles: Use `<style scoped>` in .vue files
+- Tailwind utilities: Use inline classes for common patterns
+
+### Key CSS Classes
+```css
+/* Text colors */
+.text-primary       /* Green in terminal, gray in stiff */
+.text-accent        /* Amber in terminal, blue in stiff */
+.text-danger        /* Red in both themes */
+
+/* Buttons */
+.btn-primary        /* Primary action button */
+.btn-secondary      /* Secondary action button */
+.btn-view-stats     /* Smaller utility button */
+
+/* Containers */
+.glass-card         /* Main content container */
+.analytics-card     /* Stats container */
+.stat-card          /* Metric display */
+```
+
+## 📝 Development Workflow
+
+### Git Branching Strategy
+```
+feature/<username>/<ticket>/<description> → develop → main
+                                                ↓        ↓
+                                             Test Env  Production
+```
+
+### Branch Naming
+- Format: `<username>/<ticket-id>/<feature-name>`
+- Example: `nate/HEA-123/add-user-dashboard`
+
+### Commit Message Format
+```bash
+feat: add new feature
+fix: resolve bug
+docs: update documentation
+style: formatting changes
+refactor: code restructuring
+test: add tests
+chore: maintenance
+```
+
+## 🔍 Common Patterns to Follow
+
+### Error Handling Pattern
+```python
+# Backend
+try:
+    result = await some_operation()
+    logger.info(f"Operation successful: {result.id}")
+    return result
+except ValidationError as e:
+    logger.warning(f"Validation error: {e}")
+    raise HTTPException(400, str(e))
+except Exception as e:
+    logger.error(f"Unexpected error: {e}", exc_info=True)
+    raise HTTPException(500, "Internal server error")
+```
+
+```typescript
+// Frontend
+try {
+  const data = await api.fetchData()
+  logger.info('Data fetched successfully')
+  return data
+} catch (error) {
+  logger.error('Failed to fetch data', error)
+  // Show user-friendly error
+  showNotification('Failed to load data. Please try again.')
+  throw error
 }
 ```
 
-## Docker Deployment
-
-### Development (docker-compose.yml)
-- Backend service (FastAPI on port 8000) with hot-reload
-- Frontend service (Vite dev server on port 5173) with hot-reload
-- SQLite volume for data persistence
-- Automatic database initialization and seeding
-
-### Production (docker-compose.prod.yml)
-- Multi-stage build with optimized images
-- Frontend served via nginx on port 80
-- Backend on port 8000 with production settings
-- Environment variables for configuration
-- Health checks and restart policies
-
-## Common Commands
-
-```bash
-# Development
-docker-compose up                    # Start with hot-reload
-docker-compose up --build           # Rebuild after changes
-docker-compose logs -f backend      # View backend logs
-docker-compose logs -f frontend     # View frontend logs
-docker-compose down -v && docker-compose up  # Reset database
-
-# Production
-docker-compose -f docker-compose.prod.yml up -d  # Start production build
-docker-compose -f docker-compose.prod.yml logs -f  # View production logs
+### Component Creation Pattern
+```vue
+<!-- New component checklist -->
+1. Check existing components for similar functionality
+2. Define props and emits with TypeScript types
+3. Use Composition API (script setup)
+4. Extract reusable logic to composables
+5. Add proper logging for debugging
+6. Include loading and error states
+7. Make it responsive (mobile-first)
+8. Test with both themes (terminal and stiff mode)
 ```
 
-## Component Architecture
+## 🛠️ Useful Commands
 
-### Key Frontend Components
-- **SurveyView.vue**: Main survey interface with keyboard navigation and progress tracking
-- **SessionStatsView.vue**: Individual session analysis with SVG radar charts and performance metrics
-- **AdminView.vue**: Admin dashboard with analytics, session management, and question CRUD
-- **useAdminAuth.ts**: Shared authentication composable with session persistence
+### Development
+```bash
+# Start development environment
+docker-compose up
 
-### Development Patterns
-- Vue 3 Composition API with TypeScript
-- Shared state management via composables
-- SVG-based data visualization (radar charts)
-- Authentication caching in sessionStorage
-- Proper error handling with user feedback
-- Responsive design with Tailwind CSS
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
 
-## Production Deployment
+# Reset database
+docker-compose down -v && docker-compose up
 
-### Performance Optimizations
-- Multi-stage Docker builds for minimal image size
-- Frontend served via nginx for static assets
-- SQLite with persistent volumes
-- Environment-based configuration
-- Health checks for service monitoring
+# Run specific service
+docker-compose up backend
+```
 
-### Security Considerations
-- Admin password protection for sensitive endpoints
-- CORS configuration for frontend origins
-- No sensitive data in environment defaults
-- Session-based authentication caching
+### Production
+```bash
+# Deploy to production (after PR to main)
+# Go to GitHub Actions → Deploy to Production → Run workflow
 
-## Notes for Future Development
-- Consider adding Redis for session management if scaling
-- Implement proper authentication system if needed
-- Add WebSocket support for real-time admin updates
-- Consider PostgreSQL if concurrent writes become an issue
-- Add rate limiting for public endpoints
-- Export functionality (CSV) for analytics data
-- Drag-and-drop question reordering interface
+# SSH to production
+ssh ec2-user@skills-survey.heal.engineering
+
+# Check production logs
+docker-compose -f docker-compose.prod.yml logs --tail=100
+
+# Rollback if needed
+docker tag skill-survey-backend:rollback skill-survey-backend:latest
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 📚 Important Files Reference
+
+### Configuration Files
+- `/backend/app/config/settings.py` - Environment configuration
+- `/frontend/.env` - Frontend environment variables
+- `/docker-compose.yml` - Development orchestration
+- `/infrastructure/nginx/production.conf` - Production nginx
+
+### Database
+- `/docs/database_schema.sql` - Complete SQL schema
+- `/backend/app/models/` - SQLAlchemy models
+- `/backend/app/seeders/initial_questions.json` - Seed data
+
+### API Documentation
+- Backend Swagger: `http://localhost:8000/docs`
+- API routes: `/backend/app/routes/`
+- Schemas: `/backend/app/schemas/`
+
+### Frontend Entry Points
+- `/frontend/src/main.ts` - App initialization
+- `/frontend/src/router/index.ts` - Route definitions
+- `/frontend/src/views/` - Page components
+- `/frontend/src/api/client.ts` - API client setup
+
+## 🚨 Critical Reminders
+
+1. **ALWAYS UPDATE THIS FILE** when making structural changes
+2. **Use proper error handling** - try/catch everywhere
+3. **Add logging** for debugging - logger.info(), logger.error()
+4. **Componentize** - Don't create monolithic components
+5. **Type everything** - No 'any' types in TypeScript
+6. **Test on mobile** - Responsive design is required
+7. **Check both themes** - Terminal and stiff mode compatibility
+8. **Review Docker configs** before deployment changes
+9. **Document API changes** in schemas and routes
+10. **Maintain backwards compatibility** when updating APIs
+
+## 🔄 Recent Updates Log
+
+### 2024-09-19
+- Added dynamic category ordering with drag-and-drop admin interface
+- Fixed mobile responsiveness issues in admin panel
+- Improved analytics with abandonment rate metric
+- Added smooth transitions for UI elements (undo button)
+- Fixed stiff mode styling inconsistencies
+- Created comprehensive database schema documentation
+- Updated CLAUDE.md with complete project guide
+
+### Future Enhancements Planned
+- [ ] CSV export functionality for analytics
+- [ ] WebSocket support for real-time updates
+- [ ] Redis integration for session management
+- [ ] PostgreSQL migration path for scaling
+- [ ] Advanced question branching conditions
+- [ ] Multi-language support
+- [ ] Email notifications for session completion
+- [ ] API rate limiting
+- [ ] Automated testing suite
+- [ ] Performance monitoring dashboard
+
+## 📖 Additional Documentation
+
+- [README.md](./README.md) - Quick start guide
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Development workflow
+- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - CI/CD pipeline
+- [docs/WORKFLOW_EXAMPLES.md](./docs/WORKFLOW_EXAMPLES.md) - Common scenarios
+- [docs/database_schema.sql](./docs/database_schema.sql) - Database structure
+- [docs/AWS_SETUP.md](./docs/AWS_SETUP.md) - Infrastructure setup
+
+---
+
+**Remember**: This is a living document. Update it as the project evolves to help future Claude sessions be more effective!

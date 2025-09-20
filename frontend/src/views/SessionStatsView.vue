@@ -415,9 +415,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { sessionsApi, responsesApi, questionsApi } from '@/api';
+import { sessionsApi, responsesApi, questionsApi, categoriesApi } from '@/api';
 import { logger } from '@/api/client';
 import type { SessionSummary, CategoryStatistics } from '@/types';
+import type { CategoryOrder } from '@/api/categories';
 import { useAdminAuth } from '@/composables/useAdminAuth';
 
 // Props
@@ -440,6 +441,7 @@ const error = ref('');
 const summary = ref<SessionSummary | null>(null);
 const categoryStats = ref<CategoryStatistics[]>([]);
 const pokemonStats = ref<CategoryStatistics | null>(null);
+const categoryOrders = ref<CategoryOrder[]>([]);
 
 // Load session data
 const loadSessionData = async () => {
@@ -461,11 +463,14 @@ const loadSessionData = async () => {
         logger.info(`Fetching category stats for session ${props.sessionId}`);
       }
       
-      // Get both response stats and all questions to calculate proper totals
-      const [stats, allQuestions] = await Promise.all([
+      // Get response stats, all questions, and category order
+      const [stats, allQuestions, categoryOrderData] = await Promise.all([
         responsesApi.getCategoryStatistics(Number(props.sessionId)),
-        questionsApi.getAllQuestions()
+        questionsApi.getAllQuestions(),
+        categoriesApi.getCategoryOrder()
       ]);
+
+      categoryOrders.value = categoryOrderData;
       
       if (import.meta.env.DEV) {
         logger.info('Raw category stats from API:', stats);
@@ -514,10 +519,28 @@ const loadSessionData = async () => {
         pokemonStats.value = pokemonCat;
       }
       
-      // Filter out Pokemon from skill profile
-      categoryStats.value = allCategoryStats
-        .filter(cat => cat.category.toLowerCase() !== 'pokemon')
-        .sort((a, b) => b.percentage_yes - a.percentage_yes);
+      // Filter out Pokemon from skill profile and sort by defined category order
+      const filteredStats = allCategoryStats
+        .filter(cat => cat.category.toLowerCase() !== 'pokemon');
+
+      // Create a map of category to order_index for efficient lookup
+      const categoryOrderMap: Record<string, number> = {};
+      categoryOrders.value.forEach((order) => {
+        categoryOrderMap[order.category] = order.order_index;
+      });
+
+      // Sort by the defined order, with any unknown categories at the end
+      categoryStats.value = filteredStats.sort((a, b) => {
+        const orderA = categoryOrderMap[a.category] ?? 999;
+        const orderB = categoryOrderMap[b.category] ?? 999;
+
+        // If both have the same order (e.g., both unknown), sort alphabetically
+        if (orderA === orderB) {
+          return a.category.localeCompare(b.category);
+        }
+
+        return orderA - orderB;
+      });
       
       if (import.meta.env.DEV) {
         logger.info(`Processed ${categoryStats.value.length} category statistics:`, categoryStats.value);
