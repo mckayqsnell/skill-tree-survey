@@ -54,6 +54,25 @@
               {{ currentQuestion.text }}
             </h2>
 
+            <!-- Technology Icons for Desktop -->
+            <div v-if="detectedTechnologies.length > 0" class="mb-8 flex flex-wrap justify-center gap-2">
+              <div
+                v-for="tech in detectedTechnologies"
+                :key="tech.key"
+                class="flex items-center gap-1 px-2 py-1"
+              >
+                <img
+                  :src="tech.icon.url"
+                  :alt="tech.icon.alt"
+                  :aria-label="tech.icon.ariaLabel"
+                  :class="getTechnologyIconClasses(tech.key, 'survey')"
+                  loading="lazy"
+                  decoding="async"
+                  @error="handleImageError"
+                />
+              </div>
+            </div>
+
             <!-- Response Buttons -->
             <div class="flex justify-center gap-6">
               <button
@@ -127,8 +146,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { questionsApi, responsesApi, sessionsApi } from '@/api';
 import { logger } from '@/api/client';
-import type { Question, ResponseCreate } from '@/types';
+import type { Question, ResponseCreate, TechnologyIcon } from '@/types';
 import SwipeableCard from '@/components/SwipeableCard.vue';
+import { icons } from '@/constants/icons';
+import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
 
 // Props
 const props = defineProps<{
@@ -167,11 +189,59 @@ let undoTimer: ReturnType<typeof setTimeout> | null = null;
 let lastPendingSend: (() => void) | null = null;
 const answerHistory = ref<Question[]>([]);
 
+// Handle image loading errors
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  logger.warn(`Failed to load icon: ${img.src}`);
+  // Hide the broken image
+  img.style.display = 'none';
+};
+
 // Computed
 const progressPercentage = computed(() => {
   if (totalQuestionsCount.value === 0) return 0;
   const progress = (questionsAnswered.value / totalQuestionsCount.value) * 100;
   return Math.min(progress, 100);
+});
+
+
+// Detect technologies mentioned in the current question text
+const detectedTechnologies = computed(() => {
+  if (!currentQuestion.value) return [];
+  
+  const technologies: Array<{ key: string; name: string; icon: TechnologyIcon }> = [];
+  
+  for (const [key, pattern] of Object.entries(technologyPatterns)) {
+    if (pattern.test(currentQuestion.value.text)) {
+      const iconKey = key as keyof typeof icons;
+      if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
+        technologies.push({
+          key,
+          name,
+          icon: icons[iconKey]
+        });
+        if (import.meta.env.DEV) {
+          logger.info(`Detected technology: ${key} for text: "${currentQuestion.value.text}"`);
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          logger.warn(`No icon found for technology: ${key}`);
+        }
+      }
+    }
+  }
+  
+  // Remove duplicates and limit to 4 technologies max
+  const unique = technologies.filter((tech, index, self) => 
+    index === self.findIndex(t => t.key === tech.key)
+  ).slice(0, 4);
+  
+  if (import.meta.env.DEV && unique.length > 0) {
+    console.log(`Final detected technologies:`, unique.map(t => t.key));
+  }
+  
+  return unique;
 });
 
 // Store the full question tree for efficient lookups

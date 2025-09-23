@@ -22,6 +22,20 @@
             <span v-if="question.category" class="ml-2 text-xs text-accent-dim">
               [{{ question.category }}]
             </span>
+            <!-- Technology Icons -->
+            <div v-if="detectedTechnologies.length > 0" class="flex items-center gap-1">
+              <img
+                v-for="tech in detectedTechnologies"
+                :key="tech.key"
+                :src="tech.icon.url"
+                :alt="tech.icon.alt"
+                :aria-label="tech.icon.ariaLabel"
+                :class="getTechnologyIconClasses(tech.key, 'admin')"
+                loading="lazy"
+                decoding="async"
+                @error="handleImageError"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -73,7 +87,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import type { QuestionTree } from '@/types';
+import type { QuestionTree, TechnologyIcon } from '@/types';
+import { icons } from '@/constants/icons';
+import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
 
 const props = defineProps<{
   question: QuestionTree;
@@ -84,6 +101,43 @@ defineEmits<{
   delete: [questionId: number];
   'add-child': [parentId: number];
 }>();
+
+
+// Detect technologies mentioned in the question text
+const detectedTechnologies = computed(() => {
+  if (!props.question.text) return [];
+  
+  const technologies: Array<{ key: string; name: string; icon: TechnologyIcon }> = [];
+  
+  for (const [key, pattern] of Object.entries(technologyPatterns)) {
+    if (pattern.test(props.question.text)) {
+      const iconKey = key as keyof typeof icons;
+      if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
+        technologies.push({
+          key,
+          name,
+          icon: icons[iconKey]
+        });      
+      }
+    }
+  }
+  
+  // Remove duplicates and limit to 3 technologies max for admin view
+  const unique = technologies.filter((tech, index, self) => 
+    index === self.findIndex(t => t.key === tech.key)
+  ).slice(0, 3);
+  
+  return unique;
+});
+
+// Handle image loading errors
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  console.warn(`Failed to load icon: ${img.src}`);
+  // Hide the broken image
+  img.style.display = 'none';
+};
 
 // Track if on mobile or touch device
 const isMobile = ref(false);
