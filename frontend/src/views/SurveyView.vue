@@ -65,21 +65,7 @@
                   :src="tech.icon.url"
                   :alt="tech.icon.alt"
                   :aria-label="tech.icon.ariaLabel"
-                  :class="[
-                    'w-16 h-16',
-                    tech.key === 'kafka' ? 'bg-white p-3' : '',
-                    tech.key === 'neo4j' ? 'bg-white p-3' : '',
-                    tech.key === 'flyway' ? 'bg-white p-3' : '',
-                    tech.key === 'django' ? 'bg-white p-3' : '',
-                    tech.key === 'astro' ? 'bg-white p-3' : '',
-                    tech.key === 'github' ? 'bg-white p-3' : '',
-                    tech.key === 'remix' ? 'bg-white p-3' : '',
-                    tech.key === 'helm' ? 'bg-white p-3' : '',
-                    tech.key === 'aws' ? 'bg-white p-3' : '',
-                    tech.key === 'flask' ? 'bg-white p-3' : '',
-                    tech.key === 'express' ? 'bg-white p-3' : '',
-                    tech.key === 'nextjs' ? 'bg-white p-3' : '',
-                  ]"
+                  :class="getTechnologyIconClasses(tech.key, 'survey')"
                   loading="lazy"
                   decoding="async"
                   @error="handleImageError"
@@ -165,6 +151,7 @@ import type { Question, ResponseCreate } from '@/types';
 import SwipeableCard from '@/components/SwipeableCard.vue';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses } from '@/utils/iconClasses';
 
 // Props
 const props = defineProps<{

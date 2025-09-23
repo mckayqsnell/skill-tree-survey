@@ -30,30 +30,7 @@
                 :src="tech.icon.url"
                 :alt="tech.icon.alt"
                 :aria-label="tech.icon.ariaLabel"
-                :class="[
-                  'w-6 h-6',
-                  tech.key === 'kafka' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'neo4j' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'flyway' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'django' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'astro' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'github' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'remix' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'helm' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'aws' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'flask' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'express' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'nextjs' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'splunk' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'dbt' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'flink' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'scikitLearn' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'seaborn' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'jmeter' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'cypress' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'pandas' ? 'bg-white p-1 rounded' : '',
-                  tech.key === 'feast' ? 'bg-white p-1 rounded' : '',
-                ]"
+                :class="getTechnologyIconClasses(tech.key, 'admin')"
                 loading="lazy"
                 decoding="async"
                 @error="handleImageError"
@@ -113,6 +90,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { QuestionTree } from '@/types';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses } from '@/utils/iconClasses';
 
 const props = defineProps<{
   question: QuestionTree;

@@ -25,11 +25,7 @@
             :alt="tech.icon.alt"
             :aria-label="tech.icon.ariaLabel"
             :data-tech-key="tech.key"
-            :class="[
-              'w-16 h-16',
-              tech.key === 'kafka' ? 'kafka-icon' : '',
-              tech.key === 'neo4j' ? 'bg-white p-3' : '',
-            ]"
+            :class="getTechnologyIconClasses(tech.key, 'card')"
             loading="lazy"
             decoding="async"
             @error="handleImageError"
@@ -73,6 +69,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useSwipeGestures } from '@/composables/useSwipeGestures';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses } from '@/utils/iconClasses';
 
 interface Props {
   text: string;
