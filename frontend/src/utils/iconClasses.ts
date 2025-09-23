@@ -52,12 +52,12 @@ export const BACKGROUND_CLASSES = {
  * Get the appropriate CSS classes for a technology icon based on context
  * @param techKey - The technology key
  * @param context - The component context (survey, card, admin)
- * @returns Array of CSS classes
+ * @returns Space-separated string of CSS classes
  */
 export function getTechnologyIconClasses(
   techKey: string, 
   context: 'survey' | 'card' | 'admin'
-): string[] {
+): string {
   const classes: string[] = [BASE_ICON_CLASSES[context]];
   
   // Add background styling for technologies that need it
@@ -66,17 +66,4 @@ export function getTechnologyIconClasses(
   }
   
   return classes.join(' ');
-}
-
-/**
- * Get a single string of CSS classes for a technology icon
- * @param techKey - The technology key
- * @param context - The component context (survey, card, admin)
- * @returns Space-separated string of CSS classes
- */
-export function getTechnologyIconClassString(
-  techKey: string, 
-  context: 'survey' | 'card' | 'admin'
-): string {
-  return getTechnologyIconClasses(techKey, context).join(' ');
 }
