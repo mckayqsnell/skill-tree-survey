@@ -70,7 +70,6 @@
                   decoding="async"
                   @error="handleImageError"
                 />
-                <!-- <span class="text-xs text-primary-subtle font-mono-primary">{{ tech.name }}</span> -->
               </div>
             </div>
 
@@ -151,7 +150,7 @@ import type { Question, ResponseCreate, TechnologyIcon } from '@/types';
 import SwipeableCard from '@/components/SwipeableCard.vue';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
-import { getTechnologyIconClasses } from '@/utils/iconClasses';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
 
 // Props
 const props = defineProps<{
@@ -193,7 +192,7 @@ const answerHistory = ref<Question[]>([]);
 // Handle image loading errors
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  console.warn(`Failed to load icon: ${img.src}`);
+  logger.warn(`Failed to load icon: ${img.src}`);
   // Hide the broken image
   img.style.display = 'none';
 };
@@ -216,17 +215,18 @@ const detectedTechnologies = computed(() => {
     if (pattern.test(currentQuestion.value.text)) {
       const iconKey = key as keyof typeof icons;
       if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
         technologies.push({
           key,
-          name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+          name,
           icon: icons[iconKey]
         });
         if (import.meta.env.DEV) {
-          console.log(`Detected technology: ${key} for text: "${currentQuestion.value.text}"`);
+          logger.info(`Detected technology: ${key} for text: "${currentQuestion.value.text}"`);
         }
       } else {
         if (import.meta.env.DEV) {
-          console.warn(`No icon found for technology: ${key}`);
+          logger.warn(`No icon found for technology: ${key}`);
         }
       }
     }

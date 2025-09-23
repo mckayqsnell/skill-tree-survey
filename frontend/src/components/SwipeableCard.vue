@@ -68,8 +68,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useSwipeGestures } from '@/composables/useSwipeGestures';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
-import { getTechnologyIconClasses } from '@/utils/iconClasses';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
 import type { TechnologyIcon } from '@/types';
+import { logger } from '@/api/client';
 
 interface Props {
   text: string;
@@ -91,11 +92,10 @@ const isAnimatingOut = ref(false);
 // Handle image loading errors
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  console.warn(`Failed to load icon: ${img.src}`);
+  logger.warn(`Failed to load icon: ${img.src}`);
   // Hide the broken image
   img.style.display = 'none';
 };
-
 
 // Detect technologies mentioned in the question text
 const detectedTechnologies = computed(() => {
@@ -105,18 +105,12 @@ const detectedTechnologies = computed(() => {
     if (pattern.test(props.text)) {
       const iconKey = key as keyof typeof icons;
       if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
         technologies.push({
           key,
-          name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+          name,
           icon: icons[iconKey]
-        });
-        if (import.meta.env.DEV) {
-          console.log(`Detected technology: ${key} for text: "${props.text}"`);
-        }
-      } else {
-        if (import.meta.env.DEV) {
-          console.warn(`No icon found for technology: ${key}`);
-        }
+        });     
       }
     }
   }
@@ -127,12 +121,11 @@ const detectedTechnologies = computed(() => {
   ).slice(0, 4);
   
   if (import.meta.env.DEV && unique.length > 0) {
-    console.log(`Final detected technologies:`, unique.map(t => t.key));
+    logger.info(`Final detected technologies:`, unique.map(t => t.key));
   }
   
   return unique;
 });
-
 const swipe = useSwipeGestures({
   threshold: 80,
   velocityThreshold: 300,
@@ -404,3 +397,5 @@ onUnmounted(() => {
   }
 }
 </style>
+
+

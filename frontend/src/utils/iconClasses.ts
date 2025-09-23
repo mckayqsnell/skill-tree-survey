@@ -49,6 +49,20 @@ export const BACKGROUND_CLASSES = {
 } as const;
 
 /**
+ * Transform a technology key into a human-readable name
+ * @param techKey - The technology key (e.g., 'reactNative', 'scikitLearn')
+ * @returns Human-readable name (e.g., 'React Native', 'Scikit Learn')
+ * 
+ * @example
+ * formatTechnologyName('reactNative') // 'React Native'
+ * formatTechnologyName('scikitLearn') // 'Scikit Learn'
+ * formatTechnologyName('kafka') // 'Kafka'
+ */
+export function formatTechnologyName(techKey: string): string {
+  return techKey.charAt(0).toUpperCase() + techKey.slice(1).replace(/([A-Z])/g, ' $1').trim();
+}
+
+/**
  * Get the appropriate CSS classes for a technology icon based on context
  * @param techKey - The technology key
  * @param context - The component context (survey, card, admin)

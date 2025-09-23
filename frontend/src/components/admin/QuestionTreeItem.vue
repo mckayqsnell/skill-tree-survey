@@ -90,7 +90,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import type { QuestionTree, TechnologyIcon } from '@/types';
 import { icons } from '@/constants/icons';
 import { technologyPatterns } from '@/constants/technologyPatterns';
-import { getTechnologyIconClasses } from '@/utils/iconClasses';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
 
 const props = defineProps<{
   question: QuestionTree;
@@ -113,11 +113,12 @@ const detectedTechnologies = computed(() => {
     if (pattern.test(props.question.text)) {
       const iconKey = key as keyof typeof icons;
       if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
         technologies.push({
           key,
-          name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+          name,
           icon: icons[iconKey]
-        });
+        });      
       }
     }
   }
