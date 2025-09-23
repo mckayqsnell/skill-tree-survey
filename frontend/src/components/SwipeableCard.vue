@@ -13,6 +13,31 @@
         {{ text }}
       </h2>
 
+      <!-- Technology Icons -->
+      <div v-if="detectedTechnologies.length > 0" class="mt-4 flex flex-wrap justify-center gap-2">
+        <div
+          v-for="tech in detectedTechnologies"
+          :key="tech.key"
+          class="flex items-center gap-1 px-2 py-1"
+        >
+          <img
+            :src="tech.icon.url"
+            :alt="tech.icon.alt"
+            :aria-label="tech.icon.ariaLabel"
+            :data-tech-key="tech.key"
+            :class="[
+              'w-16 h-16',
+              tech.key === 'kafka' ? 'kafka-icon' : '',
+              tech.key === 'neo4j' ? 'bg-white p-3' : '',
+            ]"
+            loading="lazy"
+            decoding="async"
+            @error="handleImageError"
+          />
+          <!-- <span class="text-xs text-primary-subtle font-mono-primary">{{ tech.name }}</span> -->
+        </div>
+      </div>
+
       <div
         v-if="swipe.state.isSwiping && swipe.state.direction"
         class="swipe-indicator"
@@ -46,6 +71,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useSwipeGestures } from '@/composables/useSwipeGestures';
+import { icons } from '@/constants/icons';
 
 interface Props {
   text: string;
@@ -63,6 +89,135 @@ const emit = defineEmits<{
 
 const cardElement = ref<HTMLElement | null>(null);
 const isAnimatingOut = ref(false);
+
+// Handle image loading errors
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  console.warn(`Failed to load icon: ${img.src}`);
+  // Hide the broken image
+  img.style.display = 'none';
+};
+
+// Technology detection patterns
+const technologyPatterns = {
+  // Programming Languages
+  'python': /\b(python)\b/i,
+  'nodejs': /\b(node\.?js|nodejs)\b/i,
+  'typescript': /\b(typescript|ts)\b/i,
+  'java': /\b(java)\b/i,
+  'go': /\b(go|golang)\b/i,
+  'rust': /\b(rust)\b/i,
+  'swift': /\b(swift)\b/i,
+  'kotlin': /\b(kotlin|jetpack compose)\b/i,
+  'dart': /\b(dart|flutter)\b/i,
+  
+  // Frameworks & Libraries
+  'react': /\b(react)\b/i,
+  'vue': /\b(vue)\b/i,
+  'angular': /\b(angular)\b/i,
+  'svelte': /\b(svelte)\b/i,
+  'express': /\b(express)\b/i,
+  'django': /\b(django)\b/i,
+  'fastapi': /\b(fastapi)\b/i,
+  'tailwind': /\b(tailwind|tailwind css)\b/i,
+  'graphql': /\b(graphql)\b/i,
+  
+  // Databases
+  'mongodb': /\b(mongodb|mongo)\b/i,
+  'mysql': /\b(mysql)\b/i,
+  'postgres': /\b(postgresql|postgres)\b/i,
+  'dynamodb': /\b(dynamodb)\b/i,
+  'couchbase': /\b(couchbase)\b/i,
+  'redis': /\b(redis)\b/i,
+  'memcached': /\b(memcached)\b/i,
+  
+  // Cloud & Infrastructure
+  'docker': /\b(docker)\b/i,
+  'kubernetes': /\b(kubernetes|k8s)\b/i,
+  'helm': /\b(helm|argo cd|flux)\b/i,
+  'terraform': /\b(terraform)\b/i,
+  'ansible': /\b(ansible)\b/i,
+  'aws': /\b(aws)\b/i,
+  'azureDevops': /\b(azure devops)\b/i,
+  'azureServiceBus': /\b(azure service bus)\b/i,
+  
+  // Testing
+  'jest': /\b(jest)\b/i,
+  'cypress': /\b(cypress)\b/i,
+  'playwright': /\b(playwright)\b/i,
+  'selenium': /\b(selenium)\b/i,
+  'jmeter': /\b(jmeter)\b/i,
+  'k6': /\b(k6)\b/i,
+  
+  // Tools & Services
+  'git': /\b(git)\b/i,
+  'github': /\b(github)\b/i,
+  'gitlab': /\b(gitlab)\b/i,
+  'jenkins': /\b(jenkins)\b/i,
+  'circleci': /\b(circleci)\b/i,
+  'travis': /\b(travis ci)\b/i,
+  'prometheus': /\b(prometheus)\b/i,
+  'grafana': /\b(grafana)\b/i,
+  'jaeger': /\b(jaeger)\b/i,
+  'zipkin': /\b(zipkin)\b/i,
+  'kafka': /\b(kafka)\b/i,
+  'rabbitmq': /\b(rabbitmq)\b/i,
+  'pubsub': /\b(pubsub|google pub\/sub)\b/i,
+  'postman': /\b(postman)\b/i,
+  'figma': /\b(figma)\b/i,
+  'sketch': /\b(sketch)\b/i,
+  'adobeXd': /\b(adobe xd)\b/i,
+  'nginx': /\b(nginx)\b/i,
+  'vite': /\b(vite)\b/i,
+  'webpack': /\b(webpack)\b/i,
+  'babel': /\b(babel)\b/i,
+  'reactNative': /\b(react native)\b/i,
+  'xamarin': /\b(xamarin)\b/i,
+  
+  // Data Science & ML (individual patterns for technologies not covered by python pattern)
+  'lightgbm': /\b(lightgbm)\b/i,
+  'sagemaker': /\b(sagemaker)\b/i,
+  'mlflow': /\b(mlflow)\b/i,
+  'kubeflow': /\b(kubeflow)\b/i,
+
+  'grpc': /\b(grpc)\b/i,
+};
+
+// Detect technologies mentioned in the question text
+const detectedTechnologies = computed(() => {
+  const technologies: Array<{ key: string; name: string; icon: any }> = [];
+  
+  for (const [key, pattern] of Object.entries(technologyPatterns)) {
+    if (pattern.test(props.text)) {
+      const iconKey = key as keyof typeof icons;
+      if (icons[iconKey]) {
+        technologies.push({
+          key,
+          name: key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1').trim(),
+          icon: icons[iconKey]
+        });
+        if (import.meta.env.DEV) {
+          console.log(`Detected technology: ${key} for text: "${props.text}"`);
+        }
+      } else {
+        if (import.meta.env.DEV) {
+          console.warn(`No icon found for technology: ${key}`);
+        }
+      }
+    }
+  }
+  
+  // Remove duplicates and limit to 4 technologies max
+  const unique = technologies.filter((tech, index, self) => 
+    index === self.findIndex(t => t.key === tech.key)
+  ).slice(0, 4);
+  
+  if (import.meta.env.DEV && unique.length > 0) {
+    console.log(`Final detected technologies:`, unique.map(t => t.key));
+  }
+  
+  return unique;
+});
 
 const swipe = useSwipeGestures({
   threshold: 80,
@@ -147,6 +302,12 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* Kafka icon styling */
+.kafka-icon {
+  background-color: white;
+  border-radius: 8px;
+  padding: 4px;
+}
 .swipeable-container {
   position: relative;
   width: 100%;
@@ -284,6 +445,47 @@ onUnmounted(() => {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+}
+
+/* Technology icons styling */
+.technology-icon {
+  transition: all 0.2s ease;
+}
+
+.technology-icon img {
+  transition: opacity 0.3s ease;
+}
+
+.technology-icon img[style*="display: none"] {
+  opacity: 0;
+}
+
+.technology-icon:hover {
+  transform: scale(1.05);
+  background: rgba(74, 222, 128, 0.15);
+}
+
+.technology-icon img {
+  filter: brightness(0.9);
+  transition: filter 0.2s ease;
+}
+
+.technology-icon:hover img {
+  filter: brightness(1.1);
+}
+
+/* Stiff mode technology icons */
+.stiff-mode .technology-icon {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.stiff-mode .technology-icon:hover {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.stiff-mode .technology-icon span {
+  color: #1e40af;
 }
 
 @media (min-width: 768px) {
