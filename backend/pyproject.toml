@@ -1,0 +1,91 @@
+[project]
+name = "skill-tree-survey-backend"
+version = "1.0.0"
+description = "Gamified employee skills assessment backend (FastAPI + sync SQLAlchemy + SQLite)"
+requires-python = ">=3.13"
+
+# Production dependencies - minimal packages needed to run the application.
+# Top-level constraints use lower bounds (latest stable as of 2026-06); uv.lock pins
+# exact versions for reproducible builds. Run `uv lock --upgrade` to bump.
+dependencies = [
+    "fastapi>=0.136",
+    "uvicorn[standard]>=0.49",
+    "sqlalchemy>=2.0.50",
+    "pydantic[email]>=2.13",
+    "pydantic-settings>=2.14",
+    "sentry-struct-logger>=1.0.0,<2",
+]
+
+[dependency-groups]
+# Development and testing dependencies (installed with `uv sync`, omitted in prod via --no-dev).
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=1.0.0",
+    "pytest-cov>=7.0.0",
+    "httpx>=0.28",
+    "ruff>=0.15",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "F",   # Pyflakes (unused imports, undefined names)
+    "E",   # Pycodestyle errors
+    "W",   # Pycodestyle warnings
+    "I",   # Import sorting (isort)
+    "N",   # PEP8 naming conventions
+    "UP",  # Pyupgrade (modern Python syntax)
+    "B",   # Flake8-bugbear
+    "C4",  # Flake8-comprehensions
+    "SIM", # Flake8-simplify
+]
+ignore = [
+    "E501",  # Line too long (formatter handles this)
+    "B008",  # Function call in argument defaults (FastAPI Depends pattern)
+    "B024",  # BaseDAO is intentionally an ABC providing shared (non-abstract) CRUD
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "F403", "F405"]
+"__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--cov=app",
+    "--cov-branch",
+    "--cov-report=term-missing:skip-covered",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+omit = ["*/tests/*", "*/__pycache__/*", "*/.venv/*"]

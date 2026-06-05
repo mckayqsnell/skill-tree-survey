@@ -1,19 +1,22 @@
 """
 Database connection and session management.
 """
+
+from collections.abc import Generator
+
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Generator
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-from app.config.settings import get_settings
+from app.core.config import settings
 
-settings = get_settings()
+logger = settings.logger
 
 # Create engine
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {}
+    connect_args={"check_same_thread": False}
+    if "sqlite" in settings.DATABASE_URL
+    else {},
 )
 
 # Create session factory
@@ -23,10 +26,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """
     Get database session for dependency injection.
-    
+
     Yields:
         Session: Database session
     """
@@ -41,7 +44,7 @@ def init_db() -> None:
     """
     Initialize database by creating all tables.
     """
-    from app.models import question, session, response  # Import models to register them
+
     Base.metadata.create_all(bind=engine)
 
 
@@ -50,9 +53,9 @@ def reset_db() -> None:
     Reset database by dropping all tables and recreating them.
     WARNING: This will delete all data!
     """
-    from app.models import question, session, response  # Import models to register them
-    print("WARNING: Resetting database - all data will be lost!")
+
+    logger.warning("Resetting database - all data will be lost!")
     Base.metadata.drop_all(bind=engine)
-    print("All tables dropped.")
+    logger.info("All tables dropped")
     Base.metadata.create_all(bind=engine)
-    print("All tables recreated.")
+    logger.info("All tables recreated")

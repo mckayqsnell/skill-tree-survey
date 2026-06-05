@@ -1,10 +1,10 @@
 """
 Question model for skill tree structure.
 """
-from sqlalchemy import Column, Integer, String, Text, Boolean, ForeignKey, DateTime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from typing import Optional, List
 
 from app.database.connection import Base
 
@@ -12,7 +12,7 @@ from app.database.connection import Base
 class Question(Base):
     """
     Question model with self-referencing for tree structure.
-    
+
     Attributes:
         id: Primary key
         parent_id: Foreign key to parent question (nullable for base questions)
@@ -23,8 +23,9 @@ class Question(Base):
         created_at: Timestamp when created
         updated_at: Timestamp when last updated
     """
+
     __tablename__ = "questions"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     parent_id = Column(Integer, ForeignKey("questions.id"), nullable=True, index=True)
     text = Column(Text, nullable=False)
@@ -33,21 +34,23 @@ class Question(Base):
     order_index = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     # Self-referencing relationship
     parent = relationship("Question", remote_side=[id], backref="children")
-    
+
     # Relationship to responses
-    responses = relationship("Response", back_populates="question", cascade="all, delete-orphan")
-    
+    responses = relationship(
+        "Response", back_populates="question", cascade="all, delete-orphan"
+    )
+
     def __repr__(self) -> str:
         """String representation of Question."""
         return f"<Question(id={self.id}, text='{self.text[:50]}...', is_base={self.is_base})>"
-    
-    def get_all_descendants(self) -> List["Question"]:
+
+    def get_all_descendants(self) -> list["Question"]:
         """
         Get all descendant questions recursively.
-        
+
         Returns:
             List[Question]: All descendant questions
         """
@@ -56,11 +59,11 @@ class Question(Base):
             descendants.append(child)
             descendants.extend(child.get_all_descendants())
         return descendants
-    
+
     def get_depth(self) -> int:
         """
         Get the depth of this question in the tree.
-        
+
         Returns:
             int: Depth level (0 for base questions)
         """

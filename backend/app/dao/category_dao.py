@@ -1,16 +1,16 @@
 """
 Data Access Object for category order operations.
 """
-from typing import List, Optional
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError
-import logging
 
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.models.category_order import CategoryOrder
 from app.schemas.category import CategoryOrderCreate, CategoryOrderUpdate
 
-logger = logging.getLogger(__name__)
+logger = settings.logger
 
 
 class CategoryDAO:
@@ -30,7 +30,7 @@ class CategoryDAO:
         """
         self.db = db
 
-    def get_all_ordered(self) -> List[CategoryOrder]:
+    def get_all_ordered(self) -> list[CategoryOrder]:
         """
         Get all categories in order, excluding Pokemon.
 
@@ -39,9 +39,11 @@ class CategoryDAO:
         """
         try:
             # Exclude Pokemon from category management
-            stmt = select(CategoryOrder).where(
-                CategoryOrder.category != "Pokemon"
-            ).order_by(CategoryOrder.order_index)
+            stmt = (
+                select(CategoryOrder)
+                .where(CategoryOrder.category != "Pokemon")
+                .order_by(CategoryOrder.order_index)
+            )
             result = list(self.db.execute(stmt).scalars())
             logger.debug(f"Retrieved {len(result)} category orders (excluding Pokemon)")
             return result
@@ -49,7 +51,7 @@ class CategoryDAO:
             logger.error(f"Error retrieving category orders: {str(e)}")
             return []
 
-    def get_by_category(self, category: str) -> Optional[CategoryOrder]:
+    def get_by_category(self, category: str) -> CategoryOrder | None:
         """
         Get category order by category name.
 
@@ -71,7 +73,7 @@ class CategoryDAO:
             logger.error(f"Error retrieving category order for '{category}': {str(e)}")
             return None
 
-    def create(self, category_data: CategoryOrderCreate) -> Optional[CategoryOrder]:
+    def create(self, category_data: CategoryOrderCreate) -> CategoryOrder | None:
         """
         Create a new category order entry.
 
@@ -82,22 +84,30 @@ class CategoryDAO:
             Created category order or None on error
         """
         try:
-            category_order = CategoryOrder(**category_data.dict())
+            category_order = CategoryOrder(**category_data.model_dump())
             self.db.add(category_order)
             self.db.commit()
             self.db.refresh(category_order)
-            logger.info(f"Created category order for '{category_data.category}' with index {category_data.order_index}")
+            logger.info(
+                f"Created category order for '{category_data.category}' with index {category_data.order_index}"
+            )
             return category_order
         except IntegrityError as e:
             self.db.rollback()
-            logger.error(f"Integrity error creating category order for '{category_data.category}': {str(e)}")
+            logger.error(
+                f"Integrity error creating category order for '{category_data.category}': {str(e)}"
+            )
             return None
         except SQLAlchemyError as e:
             self.db.rollback()
-            logger.error(f"Error creating category order for '{category_data.category}': {str(e)}")
+            logger.error(
+                f"Error creating category order for '{category_data.category}': {str(e)}"
+            )
             return None
 
-    def update(self, category: str, update_data: CategoryOrderUpdate) -> Optional[CategoryOrder]:
+    def update(
+        self, category: str, update_data: CategoryOrderUpdate
+    ) -> CategoryOrder | None:
         """
         Update category order.
 
@@ -111,21 +121,25 @@ class CategoryDAO:
         try:
             category_order = self.get_by_category(category)
             if not category_order:
-                logger.warning(f"Cannot update non-existent category order for '{category}'")
+                logger.warning(
+                    f"Cannot update non-existent category order for '{category}'"
+                )
                 return None
 
             old_index = category_order.order_index
             category_order.order_index = update_data.order_index
             self.db.commit()
             self.db.refresh(category_order)
-            logger.info(f"Updated category order for '{category}': {old_index} -> {update_data.order_index}")
+            logger.info(
+                f"Updated category order for '{category}': {old_index} -> {update_data.order_index}"
+            )
             return category_order
         except SQLAlchemyError as e:
             self.db.rollback()
             logger.error(f"Error updating category order for '{category}': {str(e)}")
             return None
 
-    def bulk_update(self, categories: List[CategoryOrderCreate]) -> List[CategoryOrder]:
+    def bulk_update(self, categories: list[CategoryOrderCreate]) -> list[CategoryOrder]:
         """
         Bulk update category orders.
 
@@ -138,23 +152,30 @@ class CategoryDAO:
         result = []
         try:
             # Filter out Pokemon from updates
-            filtered_categories = [cat for cat in categories if cat.category != "Pokemon"]
-            logger.info(f"Bulk updating {len(filtered_categories)} category orders (excluding Pokemon)")
+            filtered_categories = [
+                cat for cat in categories if cat.category != "Pokemon"
+            ]
+            logger.info(
+                f"Bulk updating {len(filtered_categories)} category orders (excluding Pokemon)"
+            )
 
             for cat_data in filtered_categories:
                 existing = self.get_by_category(cat_data.category)
                 if existing:
                     existing.order_index = cat_data.order_index
                     result.append(existing)
-                    logger.debug(f"Updated existing category '{cat_data.category}' to index {cat_data.order_index}")
+                    logger.debug(
+                        f"Updated existing category '{cat_data.category}' to index {cat_data.order_index}"
+                    )
                 else:
                     new_order = CategoryOrder(
-                        category=cat_data.category,
-                        order_index=cat_data.order_index
+                        category=cat_data.category, order_index=cat_data.order_index
                     )
                     self.db.add(new_order)
                     result.append(new_order)
-                    logger.debug(f"Created new category order '{cat_data.category}' with index {cat_data.order_index}")
+                    logger.debug(
+                        f"Created new category order '{cat_data.category}' with index {cat_data.order_index}"
+                    )
 
             self.db.commit()
             for item in result:
@@ -181,7 +202,9 @@ class CategoryDAO:
         try:
             category_order = self.get_by_category(category)
             if not category_order:
-                logger.warning(f"Cannot delete non-existent category order for '{category}'")
+                logger.warning(
+                    f"Cannot delete non-existent category order for '{category}'"
+                )
                 return False
 
             self.db.delete(category_order)
@@ -193,7 +216,7 @@ class CategoryDAO:
             logger.error(f"Error deleting category order for '{category}': {str(e)}")
             return False
 
-    def initialize_defaults(self, categories: List[str]) -> List[CategoryOrder]:
+    def initialize_defaults(self, categories: list[str]) -> list[CategoryOrder]:
         """
         Initialize default category orders if they don't exist.
 
@@ -205,21 +228,24 @@ class CategoryDAO:
         """
         result = []
         try:
-            logger.info(f"Initializing default category orders for {len(categories)} categories")
+            logger.info(
+                f"Initializing default category orders for {len(categories)} categories"
+            )
 
             for index, category in enumerate(categories):
                 existing = self.get_by_category(category)
                 if not existing:
-                    new_order = CategoryOrder(
-                        category=category,
-                        order_index=index
-                    )
+                    new_order = CategoryOrder(category=category, order_index=index)
                     self.db.add(new_order)
                     result.append(new_order)
-                    logger.debug(f"Created default order for '{category}' at index {index}")
+                    logger.debug(
+                        f"Created default order for '{category}' at index {index}"
+                    )
                 else:
                     result.append(existing)
-                    logger.debug(f"Category '{category}' already has order index {existing.order_index}")
+                    logger.debug(
+                        f"Category '{category}' already has order index {existing.order_index}"
+                    )
 
             self.db.commit()
             logger.info(f"Successfully initialized {len(result)} category orders")

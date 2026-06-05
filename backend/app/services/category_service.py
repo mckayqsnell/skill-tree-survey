@@ -1,18 +1,16 @@
 """
 Service layer for category order management.
 """
-from typing import List, Optional
-import logging
 
+from app.core.config import settings
 from app.dao.factory import DAOFactory
 from app.schemas.category import (
+    CategoryOrderBulkUpdate,
     CategoryOrderCreate,
-    CategoryOrderUpdate,
     CategoryOrderResponse,
-    CategoryOrderBulkUpdate
 )
 
-logger = logging.getLogger(__name__)
+logger = settings.logger
 
 
 class CategoryService:
@@ -33,7 +31,7 @@ class CategoryService:
         self.dao_factory = dao_factory
         self.category_dao = dao_factory.get_category_dao()
 
-    def get_category_order(self) -> List[CategoryOrderResponse]:
+    def get_category_order(self) -> list[CategoryOrderResponse]:
         """
         Get all categories in their display order.
 
@@ -48,20 +46,32 @@ class CategoryService:
                 logger.info("No category orders found, initializing defaults")
                 # Initialize with default order from seeder categories
                 default_categories = [
-                    "Backend", "Frontend", "DevOps", "Cloud", "Data",
-                    "Machine Learning", "Mobile", "Security", "Architecture",
-                    "Testing", "Leadership", "Data Science", "AI/ML Engineering",
-                    "UI/UX Design"
+                    "Backend",
+                    "Frontend",
+                    "DevOps",
+                    "Cloud",
+                    "Data",
+                    "Machine Learning",
+                    "Mobile",
+                    "Security",
+                    "Architecture",
+                    "Testing",
+                    "Leadership",
+                    "Data Science",
+                    "AI/ML Engineering",
+                    "UI/UX Design",
                 ]
                 categories = self.category_dao.initialize_defaults(default_categories)
 
-            return [CategoryOrderResponse.from_orm(cat) for cat in categories]
+            return [CategoryOrderResponse.model_validate(cat) for cat in categories]
 
         except Exception as e:
             logger.error(f"Error fetching category order: {str(e)}")
             raise
 
-    def update_category_order(self, bulk_update: CategoryOrderBulkUpdate) -> List[CategoryOrderResponse]:
+    def update_category_order(
+        self, bulk_update: CategoryOrderBulkUpdate
+    ) -> list[CategoryOrderResponse]:
         """
         Bulk update category display orders.
 
@@ -82,10 +92,7 @@ class CategoryService:
 
             # Convert to CategoryOrderCreate objects
             category_creates = [
-                CategoryOrderCreate(
-                    category=cat.category,
-                    order_index=cat.order_index
-                )
+                CategoryOrderCreate(category=cat.category, order_index=cat.order_index)
                 for cat in bulk_update.categories
             ]
 
@@ -97,7 +104,7 @@ class CategoryService:
                 raise Exception("Failed to update category orders")
 
             logger.info(f"Successfully updated {len(updated)} category orders")
-            return [CategoryOrderResponse.from_orm(cat) for cat in updated]
+            return [CategoryOrderResponse.model_validate(cat) for cat in updated]
 
         except ValueError as ve:
             logger.error(f"Validation error updating category order: {str(ve)}")
@@ -106,7 +113,7 @@ class CategoryService:
             logger.error(f"Error updating category order: {str(e)}")
             raise
 
-    def reset_to_defaults(self) -> List[CategoryOrderResponse]:
+    def reset_to_defaults(self) -> list[CategoryOrderResponse]:
         """
         Reset category orders to default configuration.
 
@@ -117,10 +124,20 @@ class CategoryService:
             logger.info("Resetting category orders to defaults")
 
             default_categories = [
-                "Backend", "Frontend", "DevOps", "Cloud", "Data",
-                "Machine Learning", "Mobile", "Security", "Architecture",
-                "Testing", "Leadership", "Data Science", "AI/ML Engineering",
-                "UI/UX Design"
+                "Backend",
+                "Frontend",
+                "DevOps",
+                "Cloud",
+                "Data",
+                "Machine Learning",
+                "Mobile",
+                "Security",
+                "Architecture",
+                "Testing",
+                "Leadership",
+                "Data Science",
+                "AI/ML Engineering",
+                "UI/UX Design",
             ]
 
             # Create bulk update with default order
@@ -132,7 +149,7 @@ class CategoryService:
             updated = self.category_dao.bulk_update(category_creates)
 
             logger.info(f"Reset {len(updated)} categories to default order")
-            return [CategoryOrderResponse.from_orm(cat) for cat in updated]
+            return [CategoryOrderResponse.model_validate(cat) for cat in updated]
 
         except Exception as e:
             logger.error(f"Error resetting category order to defaults: {str(e)}")
@@ -155,7 +172,7 @@ class CategoryService:
             existing = self.category_dao.get_by_category(category_name)
             if existing:
                 logger.warning(f"Category '{category_name}' already exists")
-                return CategoryOrderResponse.from_orm(existing)
+                return CategoryOrderResponse.model_validate(existing)
 
             # Get current max order index
             all_categories = self.category_dao.get_all_ordered()
@@ -163,16 +180,19 @@ class CategoryService:
 
             # Create new category with next index
             new_category = CategoryOrderCreate(
-                category=category_name,
-                order_index=max_index + 1
+                category=category_name, order_index=max_index + 1
             )
 
             created = self.category_dao.create(new_category)
             if not created:
-                raise Exception(f"Failed to create category order for '{category_name}'")
+                raise Exception(
+                    f"Failed to create category order for '{category_name}'"
+                )
 
-            logger.info(f"Successfully added category '{category_name}' with order index {created.order_index}")
-            return CategoryOrderResponse.from_orm(created)
+            logger.info(
+                f"Successfully added category '{category_name}' with order index {created.order_index}"
+            )
+            return CategoryOrderResponse.model_validate(created)
 
         except Exception as e:
             logger.error(f"Error adding new category '{category_name}': {str(e)}")
