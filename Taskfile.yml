@@ -1,0 +1,68 @@
+version: '3'
+
+# =============================================================================
+# Task runner for skill-tree-survey.
+# Project values are read from .setup.config (VAULT_PREFIX, APP_NAME, EXTERNAL_PORT).
+# Run `task` (or `task help`) to list everything.
+# =============================================================================
+
+vars:
+  APP_NAME:
+    sh: . ./.setup.config && echo "$APP_NAME"
+  EXTERNAL_PORT:
+    sh: . ./.setup.config && echo "$EXTERNAL_PORT"
+
+env:
+  # Scope all containers/networks/volumes to this project.
+  COMPOSE_PROJECT_NAME: "{{.APP_NAME}}"
+  EXTERNAL_PORT: "{{.EXTERNAL_PORT}}"
+  # Compose reads variable substitution from .env.local (default is .env, unused here).
+  COMPOSE_ENV_FILES: ".env.local"
+
+includes:
+  env:
+    taskfile: ./tasks/env.yml
+    dir: .
+  helpers:
+    taskfile: ./tasks/helpers.yml
+    dir: .
+
+tasks:
+  default:
+    desc: "List all available tasks"
+    aliases: [help]
+    silent: true
+    cmds:
+      - task --list
+
+  start:
+    desc: "Start the backend dev environment (generates .env.local if missing, builds & runs)"
+    cmds:
+      - task: helpers:dev_smart
+
+  down:
+    desc: "Stop the dev environment (docker compose down)"
+    cmds:
+      - docker compose down
+
+  logs:
+    desc: "Tail backend container logs"
+    cmds:
+      - docker compose logs -f backend
+
+  test:
+    desc: "Run the backend test suite inside the container"
+    cmds:
+      - docker compose exec backend uv run pytest -v
+
+  clean:
+    desc: "Stop containers and prune dangling images (keeps volumes & built images)"
+    cmds:
+      - task: helpers:clean_environment
+
+  clean:all:
+    desc: "Wipe everything: containers, volumes, project images, data, caches"
+    cmds:
+      - task: helpers:clean_environment
+        vars:
+          ALL: "true"

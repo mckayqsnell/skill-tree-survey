@@ -1,56 +1,43 @@
+# Local development. The frontend runs separately via `pnpm dev` (Vite proxies
+# /api -> localhost:8000), so this compose only runs the backend.
+# Start with: task start   (generates .env.local from 1Password if signed in).
 services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: skill-survey-backend
+      target: dev
     ports:
-      - "8000:8000"
+      - "${EXTERNAL_PORT:-8000}:8000"
+    # Secrets pulled from 1Password into .env.local (optional — app has safe
+    # local defaults, so this works even without 1Password configured).
+    env_file:
+      - path: .env.local
+        required: false
     environment:
+      # Container-path / dev overrides (these win over .env.local).
       - DATABASE_URL=sqlite:////app/data/skill_survey.db
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
-      - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
+      - ENVIRONMENT=development
       - RESET_DATABASE=${RESET_DATABASE:-false}
-      - ENVIRONMENT=${ENVIRONMENT:-development}
-      - API_PREFIX=/api
-      - APP_NAME=Skill Tree Survey
-      - APP_VERSION=1.0.0
-      - DEBUG=false
+      - DEBUG=true
     volumes:
       - sqlite_data:/app/data
-      - ./backend/app:/app/app  # For development hot-reload
+      - ./backend/app:/app/app # hot-reload (uvicorn --reload)
     networks:
-      - skill-survey-network
+      - skill-tree-survey
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=5).status == 200 else 1)"
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: skill-survey-frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-      - VITE_ADMIN_PASSWORD=${VITE_ADMIN_PASSWORD:-admin123}
-      - VITE_CLOUDFRONT_URL=${VITE_CLOUDFRONT_URL:-https://example.cloudfront.net}
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules  # Prevent node_modules from being overwritten by host
-    networks:
-      - skill-survey-network
-    depends_on:
-      - backend
-    restart: unless-stopped
+      start_period: 20s
 
 networks:
-  skill-survey-network:
+  skill-tree-survey:
     driver: bridge
 
 volumes:
