@@ -170,10 +170,11 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 **Gate:** after Phase 7 (docs + `LICENSE`) **and** a secret-history scrub.
 **Where:** GitHub repo settings.
 
-1. [ ] ⚠️ **Secret scrub — current tree AND git history.** Old compose/docs had placeholder creds (`admin123`); make sure no **real** secret, token, or cert was ever committed. If history has a real secret → **rotate it** and/or rewrite history (`git filter-repo`) before going public.
-2. [ ] Confirm `LICENSE` (MIT, `HEAL USA Inc.`) + accurate `README` are present.
-3. [ ] GitHub → **Settings → General → Danger Zone → Change visibility → Public**.
-4. [ ] Confirm the **GHCR package is Public** (Step 4) and Actions still run on the public repo.
+1. [ ] ⚠️ **Secret scrub — current tree AND git history.** Old compose/docs had placeholder creds (`admin123`); make sure no **real** secret, token, or cert was ever committed. If history has a real secret → **rotate it** and/or rewrite history (`git filter-repo`) before going public. _(Phase 7 verified the current tree: no `.env*`, private keys, tokens, or Sentry DSNs are tracked. History still needs a pass.)_
+2. [ ] ⚠️ **Internal infrastructure identifiers** — not secrets, but decide before publishing. The AWS **account ID**, **instance/VPC/subnet/SG IDs**, and **Elastic IP** appear in `infrastructure/terraform/environments/prod.tfvars` (VPC + subnet) and in this checklist. Options: gitignore `*.tfvars` and commit a `prod.tfvars.example` with placeholders, and/or move this checklist to an internal location. Decide with the team.
+3. [ ] Confirm `LICENSE` (MIT, `HEAL USA Inc.`) + accurate `README` are present.
+4. [ ] GitHub → **Settings → General → Danger Zone → Change visibility → Public**.
+5. [ ] Confirm the **GHCR package is Public** (Step 4) and Actions still run on the public repo.
 
 ---
 
