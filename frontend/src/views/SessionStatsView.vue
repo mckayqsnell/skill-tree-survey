@@ -86,7 +86,7 @@
               <p class="text-info font-semibold">
                 <span v-if="summary.completion_time_minutes">{{ Math.round(summary.completion_time_minutes) }} min</span>
                 <span v-else-if="!summary.is_completed">{{ getElapsedTime() }}</span>
-                <span v-else>< 1 min</span>
+                <span v-else>&lt; 1 min</span>
               </p>
             </div>
             <div class="space-y-2">

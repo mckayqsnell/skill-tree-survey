@@ -40,6 +40,19 @@ tasks:
     cmds:
       - task: helpers:dev_smart
 
+  fe:
+    desc: "Run the frontend dev server (Vite); proxies /api to the backend on :8000"
+    dir: frontend
+    cmds:
+      - pnpm install
+      - pnpm dev
+
+  dev:
+    desc: "Start the full local stack: backend (Docker) then the frontend dev server"
+    cmds:
+      - task: start
+      - task: fe
+
   down:
     desc: "Stop the dev environment (docker compose down)"
     cmds:
