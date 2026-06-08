@@ -1,0 +1,73 @@
+name: Cleanup Old Container Images
+
+# Keeps GHCR tidy: retain the last N prod-<sha> images, delete the rest + all
+# untagged layers. Public packages are free, so this is hygiene, not cost control.
+on:
+  schedule:
+    - cron: '0 2 * * 0' # Sundays 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      keep_versions:
+        description: 'Number of prod- versions to keep'
+        required: false
+        default: '5'
+      dry_run:
+        description: 'Dry run (show what would be deleted)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  cleanup-ghcr:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    env:
+      PACKAGE_NAME: skill-tree-survey-api
+      KEEP_VERSIONS: ${{ github.event.inputs.keep_versions || '5' }}
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Cleanup container images
+        run: |
+          set -euo pipefail
+          # HEAL-Engineering is an org, so use the /orgs/ packages API.
+          ORG=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          API="https://api.github.com/orgs/${ORG}/packages/container/${PACKAGE_NAME}/versions"
+          echo "🔍 Cleanup ${ORG}/${PACKAGE_NAME} (keep ${KEEP_VERSIONS}, dry_run=${DRY_RUN})"
+
+          delete_version() {
+            local id=$1 tag=$2
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "    [DRY RUN] would delete: $tag (ID: $id)"
+            else
+              code=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+                -H "Authorization: Bearer ${GH_TOKEN}" \
+                -H "Accept: application/vnd.github+json" "${API}/${id}")
+              [ "$code" = "204" ] && echo "    ✅ deleted $tag" || echo "    ❌ failed $tag (HTTP $code)"
+            fi
+          }
+
+          ALL=$(curl -s -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" "${API}?per_page=100")
+          if echo "$ALL" | jq -e '.message' >/dev/null 2>&1; then
+            echo "ℹ️ Package not found / no versions. Nothing to do."; exit 0
+          fi
+
+          echo "🚀 prod-* images (keep ${KEEP_VERSIONS})..."
+          PROD=$(echo "$ALL" | jq -c '[.[] | select(.metadata.container.tags[]? | startswith("prod-"))] | sort_by(.created_at) | reverse')
+          if [ "$(echo "$PROD" | jq 'length')" -gt "$KEEP_VERSIONS" ]; then
+            echo "$PROD" | jq -c ".[${KEEP_VERSIONS}:][]" | while read -r v; do
+              delete_version "$(echo "$v" | jq -r '.id')" "$(echo "$v" | jq -r '.metadata.container.tags | join(",")')"
+            done
+          else
+            echo "  nothing to delete"
+          fi
+
+          echo "❓ untagged images..."
+          UNTAGGED=$(echo "$ALL" | jq -c '[.[] | select(.metadata.container.tags | length == 0)]')
+          echo "$UNTAGGED" | jq -c '.[]' | while read -r v; do
+            delete_version "$(echo "$v" | jq -r '.id')" "untagged"
+          done
+          echo "📊 Done."
