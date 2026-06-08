@@ -1,0 +1,123 @@
+version: '3'
+
+# =============================================================================
+# Production deployment.
+#
+# Image updates are AUTOMATIC: push to main -> GitHub Actions builds & pushes to
+# GHCR -> Watchtower on the EC2 pulls within ~5 min. You do NOT deploy code here.
+#
+# `task prod:deploy` is only for CONFIG: it regenerates .env.prod from 1Password
+# (SKILL-TREE-PROD) and the compose file, ships them to the EC2, and restarts so
+# secret/compose changes take effect.
+#
+# Requires an SSH alias in ~/.ssh/config (default: skill-tree), e.g.:
+#   Host skill-tree
+#     HostName <ec2-public-ip>
+#     User ec2-user
+#     IdentityFile ~/.ssh/skill-tree-keypair.pem
+# =============================================================================
+
+vars:
+  REMOTE_HOST: '{{.REMOTE_HOST | default "skill-tree"}}'
+  REMOTE_DIR: '{{.REMOTE_DIR | default "~/skill-tree-survey"}}'
+  COMPOSE_FILE: docker-compose.prod.yml
+  ENV_FILE: .env.prod
+  # Optional: public health URL (Cloudflare hostname). If set, deploy verifies it too.
+  PROD_HEALTH_URL: '{{.PROD_HEALTH_URL | default ""}}'
+
+tasks:
+  deploy:
+    desc: "Deploy prod config: regenerate .env.prod from 1Password, ship + restart on the EC2"
+    cmds:
+      - task: _preflight
+      - task: _generate
+      - task: _ship
+      - task: _restart
+      - task: _verify
+
+  deploy:dry-run:
+    desc: "Show what `task prod:deploy` would do without changing anything"
+    silent: true
+    cmds:
+      - |
+        echo "Would deploy to: {{.REMOTE_HOST}}:{{.REMOTE_DIR}}"
+        echo "  1. op -> .env.prod (vault SKILL-TREE-PROD)"
+        echo "  2. scp .env.prod + {{.COMPOSE_FILE}} -> {{.REMOTE_HOST}}:{{.REMOTE_DIR}}/"
+        echo "  3. ssh {{.REMOTE_HOST}} 'cd {{.REMOTE_DIR}} && docker compose -f {{.COMPOSE_FILE}} up -d --force-recreate'"
+        echo "  4. verify backend healthy"
+
+  status:
+    desc: "Show running prod containers on the EC2"
+    cmds:
+      - ssh {{.REMOTE_HOST}} 'cd {{.REMOTE_DIR}} && docker compose -f {{.COMPOSE_FILE}} ps'
+
+  logs:
+    desc: "Tail backend logs on the EC2"
+    cmds:
+      - ssh {{.REMOTE_HOST}} 'cd {{.REMOTE_DIR}} && docker compose -f {{.COMPOSE_FILE}} logs -f backend'
+
+  _preflight:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        # Must be on main and in sync (override with FORCE=1).
+        BRANCH=$(git rev-parse --abbrev-ref HEAD)
+        if [ "$BRANCH" != "main" ] && [ "${FORCE:-0}" != "1" ]; then
+          echo "❌ Not on main (on '$BRANCH'). Re-run with FORCE=1 to override."; exit 1
+        fi
+        git remote update >/dev/null 2>&1 || true
+        if [ -n "$(git status --porcelain {{.COMPOSE_FILE}})" ]; then
+          echo "❌ {{.COMPOSE_FILE}} has uncommitted changes. Commit first."; exit 1
+        fi
+        # SSH reachable
+        if ! ssh -o ConnectTimeout=8 {{.REMOTE_HOST}} 'echo ok' >/dev/null 2>&1; then
+          echo "❌ Cannot SSH to '{{.REMOTE_HOST}}'. Add a Host block to ~/.ssh/config."; exit 1
+        fi
+        # 1Password signed in
+        if ! op account list >/dev/null 2>&1; then
+          echo "❌ Not signed in to 1Password (run: task env:setup)"; exit 1
+        fi
+        echo "✅ Preflight passed"
+
+  _generate:
+    internal: true
+    cmds:
+      - ./scripts/generate-env.sh prod
+
+  _ship:
+    internal: true
+    silent: true
+    cmds:
+      - ssh {{.REMOTE_HOST}} 'mkdir -p {{.REMOTE_DIR}}'
+      - scp {{.ENV_FILE}} {{.COMPOSE_FILE}} {{.REMOTE_HOST}}:{{.REMOTE_DIR}}/
+      - ssh {{.REMOTE_HOST}} 'chmod 600 {{.REMOTE_DIR}}/{{.ENV_FILE}}'
+      - echo "✅ Shipped .env.prod + {{.COMPOSE_FILE}}"
+
+  _restart:
+    internal: true
+    cmds:
+      - ssh {{.REMOTE_HOST}} 'cd {{.REMOTE_DIR}} && docker compose -f {{.COMPOSE_FILE}} up -d --force-recreate --remove-orphans'
+
+  _verify:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        echo "⏳ Verifying backend health on the EC2..."
+        OK=""
+        for _ in $(seq 1 20); do
+          if ssh {{.REMOTE_HOST}} 'docker exec skill-tree-survey-backend python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen(\"http://localhost:8000/health\",timeout=5).status==200 else 1)"' >/dev/null 2>&1; then
+            OK=1; break
+          fi
+          sleep 3
+        done
+        if [ -z "$OK" ]; then echo "❌ Backend did not become healthy"; exit 1; fi
+        echo "✅ Backend healthy on the EC2"
+        if [ -n "{{.PROD_HEALTH_URL}}" ]; then
+          if curl -fsS "{{.PROD_HEALTH_URL}}" >/dev/null 2>&1; then
+            echo "✅ Public health OK: {{.PROD_HEALTH_URL}}"
+          else
+            echo "⚠️  Public URL {{.PROD_HEALTH_URL}} not responding yet (Cloudflare tunnel may still be connecting)"
+          fi
+        fi

@@ -26,6 +26,9 @@ includes:
   helpers:
     taskfile: ./tasks/helpers.yml
     dir: .
+  prod:
+    taskfile: ./tasks/prod.yml
+    dir: .
 
 tasks:
   default:
