@@ -46,6 +46,9 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+        with:
+          # packageManager lives in frontend/package.json, not the repo root.
+          package_json_file: frontend/package.json
 
       - name: Setup Node
         uses: actions/setup-node@v4
