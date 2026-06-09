@@ -67,6 +67,14 @@ async def lifespan(app: FastAPI):
             if pokemon_category:
                 logger.info("Removing Pokemon from category orders")
                 category_dao.delete("Pokemon")
+        except Exception:
+            # uvicorn --workers N runs this lifespan in every worker process;
+            # whichever worker loses the seed/cleanup race must not die on the
+            # SQLite write conflict — the winner already did the work.
+            logger.warning(
+                "Startup seed/cleanup skipped (another worker likely won the race)",
+                exc_info=True,
+            )
         finally:
             db.close()
 
