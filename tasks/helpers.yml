@@ -1,0 +1,87 @@
+version: '3'
+
+# Internal helper tasks: Docker readiness, smart dev startup, cleanup.
+
+tasks:
+  check_docker:
+    silent: true
+    cmds:
+      - |
+        if ! docker info >/dev/null 2>&1; then
+          echo "❌ Docker daemon is not running."
+          echo "   Start Docker Desktop, then re-run."
+          printf "Press Enter once Docker is running, or Ctrl+C to cancel: "
+          read -r
+          if ! docker info >/dev/null 2>&1; then
+            echo "❌ Docker is still not running."; exit 1
+          fi
+        fi
+
+  dev_smart:
+    silent: true
+    cmds:
+      - |
+        echo "🚀 Starting skill-tree-survey backend..."
+        task helpers:check_docker
+
+        # Generate .env.local from 1Password if it's missing (optional — the app
+        # falls back to safe defaults for local development).
+        if [ ! -f .env.local ]; then
+          if op account list >/dev/null 2>&1; then
+            echo "📥 Generating .env.local from 1Password..."
+            task env:generate ENV=local
+          else
+            echo "ℹ️  No .env.local and not signed in to 1Password — using app defaults."
+            echo "   (Run 'task env:setup' to wire up secrets.)"
+            : > .env.local
+          fi
+        else
+          echo "✅ .env.local present"
+        fi
+
+        echo "🐳 Building & starting containers..."
+        if docker compose ps --status running 2>/dev/null | grep -q backend; then
+          docker compose up -d --build --remove-orphans
+          docker compose restart backend
+        else
+          docker compose up -d --build --remove-orphans
+        fi
+
+        echo "⏳ Waiting for backend health..."
+        for _ in $(seq 1 30); do
+          if curl -fsS "http://localhost:${EXTERNAL_PORT:-8000}/health" >/dev/null 2>&1; then
+            break
+          fi
+          sleep 1
+        done
+
+        echo ""
+        echo "✅ Backend ready at http://localhost:${EXTERNAL_PORT:-8000}"
+        echo "   • Docs:   http://localhost:${EXTERNAL_PORT:-8000}/docs"
+        echo "   • Health: http://localhost:${EXTERNAL_PORT:-8000}/health"
+        echo ""
+        echo "   Frontend (separate terminal): cd frontend && pnpm install && pnpm dev"
+        echo "   Logs: task logs   •   Stop: task down"
+
+  clean_environment:
+    silent: true
+    vars:
+      ALL: '{{.ALL | default "false"}}'
+    cmds:
+      - |
+        {{if eq .ALL "true"}}
+        echo "🗑️  Removing all project Docker resources + artifacts..."
+        docker compose down -v 2>/dev/null || echo "   ℹ️  No containers running"
+        IMAGES=$(docker compose images --format '{{`{{.ID}}`}}' 2>/dev/null | sort -u)
+        if [ -n "$IMAGES" ]; then echo "$IMAGES" | xargs -r docker rmi -f 2>/dev/null || true; fi
+        rm -rf backend/.venv backend/data
+        find backend -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+        find backend -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+        find backend -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
+        echo "✅ Clean all complete. Start fresh with 'task start'."
+        {{else}}
+        echo "🧹 Stopping containers and pruning dangling images..."
+        docker compose down 2>/dev/null || echo "   ℹ️  No containers running"
+        docker image prune -f >/dev/null 2>&1 || true
+        echo "✅ Cleaned (volumes & built images kept)."
+        {{end}}

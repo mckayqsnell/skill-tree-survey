@@ -1,0 +1,4 @@
+# pnpm settings (pnpm 10+/11 reads build allowlist config from here, not package.json).
+# Allow esbuild (Vite's bundler) to run its postinstall that fetches the native binary.
+allowBuilds:
+  esbuild: true

@@ -7,7 +7,7 @@ When making significant structural changes, new features, or architectural decis
 
 ### Core Development Principles
 1. **Defensive Programming**: ALWAYS use try-catch/try-except blocks with proper error handling
-2. **Logging**: Use comprehensive logging (logger.info, logger.error, logger.debug) for debugging
+2. **Logging**: Use the shared structured logger — `from app.core.config import settings; logger = settings.logger` — with structured kwargs (e.g. `logger.info("Created question", question_id=q.id)`). It routes to Sentry when `SENTRY_DSN` is set. Never use `print`.
 3. **Type Safety**: Use TypeScript strictly in frontend, type hints in Python backend
 4. **Componentization**: Break down UI into reusable components, especially in frontend
 5. **Separation of Concerns**: Follow DAO → Service → Route pattern in backend
@@ -34,8 +34,8 @@ A gamified employee skills assessment tool that uses branching question logic to
 ```
 backend/
 ├── app/
-│   ├── config/           # Environment settings
-│   │   └── settings.py   # Pydantic settings management
+│   ├── core/             # Settings + shared logger
+│   │   └── config.py     # Pydantic settings; Sentry struct logger as settings.logger
 │   ├── database/         # Database configuration
 │   │   └── connection.py # SQLAlchemy setup, Base class
 │   ├── models/           # SQLAlchemy ORM models
@@ -44,19 +44,21 @@ backend/
 │   │   ├── response.py   # Individual answers
 │   │   └── category_order.py # Display ordering
 │   ├── schemas/          # Pydantic validation schemas
-│   │   └── [matching model schemas with validation]
 │   ├── dao/              # Data Access Objects (database layer)
 │   │   ├── factory.py    # DAO Factory pattern
 │   │   ├── base.py       # Generic CRUD operations
 │   │   └── [model]_dao.py # Model-specific queries
 │   ├── services/         # Business logic layer
 │   │   └── [model]_service.py # Business rules, validation
-│   ├── routes/           # API endpoints
+│   ├── routes/           # API endpoints (questions, sessions, responses, categories, admin)
 │   │   ├── questions.py  # Public question endpoints
 │   │   ├── admin.py      # Protected admin endpoints
 │   │   └── [...]         # Other route modules
 │   └── seeders/          # Database initialization
-│       └── initial_questions.json # 60+ seed questions
+│       └── initial_questions.json # ~420 seed questions across categories
+├── tests/                # pytest (uv run pytest / task test)
+├── Dockerfile            # multi-stage: builder → dev → runtime
+└── pyproject.toml        # uv-managed deps, ruff, pytest config
 ```
 
 #### Backend Patterns & Best Practices
@@ -127,8 +129,9 @@ frontend/
 │   │   └── useAdminAuth.ts # Authentication state management
 │   ├── types/            # TypeScript type definitions
 │   │   └── index.ts      # Centralized types
-│   └── styles/           # Global styles
-│       └── style.css     # Tailwind + custom styles
+│   └── style.css         # Global styles (Tailwind v4 import + theme layers)
+├── vercel.json           # Vite SPA config for Vercel
+└── package.json          # pnpm-managed deps (Vue 3, Vite, Tailwind v4)
 ```
 
 ## 📊 Database Schema
@@ -149,63 +152,70 @@ See `/docs/database_schema.sql` for complete SQL schema with indexes and sample 
 
 ## 🐳 Docker & Deployment
 
-### Environment Files
-```
-environments/
-├── .env.development     # Local development
-├── .env.test           # Test environment
-└── .env.production     # Production environment
-```
+Full details in [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md). Quick model:
 
-### Docker Compose Configurations
-- `docker-compose.yml`: Development with hot-reload
-- `docker-compose.test.yml`: Test environment
-- `docker-compose.prod.yml`: Production with nginx
+### Secrets & environment
+
+No committed `.env` files. Secrets live in **1Password** (vaults `SKILL-TREE-LOCAL`,
+`SKILL-TREE-PROD`); `task env:generate [ENV=local|prod]` writes `.env.<env>`. Every
+setting has a safe default in `app/core/config.py`, so the app runs locally with no
+`.env` at all. Non-secret project constants live in the committed `.setup.config`.
+
+Internal infra IDs (VPC/subnet, AWS account, old instance/SG) live in a third vault,
+**`SKILL-TREE-INFRA`** — `task tf:gen` writes the **gitignored**
+`infrastructure/terraform/environments/prod.tfvars` from items tagged `tfvar`
+(titles lowercased). These are Terraform inputs only; they are **not** part of
+`.env.prod`. Only `prod.tfvars.example` is committed.
+
+### Docker Compose
+
+- `docker-compose.yml`: local **backend only** (`target: dev`, hot-reload, named
+  `sqlite_data` volume). The frontend runs separately via `pnpm dev` (`task fe`).
+- `docker-compose.prod.yml`: production stack — `backend` (GHCR image) + `cloudflared`
+  (Cloudflare Tunnel, TLS at the edge) + `watchtower` (auto-pull from GHCR). No nginx.
 
 ### Key Environment Variables
 ```bash
-# Backend
+# Backend (see app/core/config.py for the full list + defaults)
 DATABASE_URL=sqlite:////app/data/skill_survey.db
-ADMIN_PASSWORD=admin123  # CHANGE IN PRODUCTION!
+ADMIN_PASSWORD=admin123        # CHANGE IN PRODUCTION (sent as X-Admin-Password header)
 CORS_ORIGINS=["http://localhost:5173"]
+ENVIRONMENT=development
+SENTRY_DSN=                     # unset locally → logs to stdout only
 RESET_DATABASE=false
 API_PREFIX=/api
 
-# Frontend
+# Frontend (public VITE_ vars only — NEVER secrets)
 VITE_API_URL=http://localhost:8000
-VITE_ADMIN_PASSWORD=admin123
+VITE_CLOUDFRONT_URL=           # icon-asset host
 ```
 
-### Nginx Configuration
-- SSL termination with Let's Encrypt
-- Reverse proxy for frontend (port 80/443) and backend (/api)
-- Security headers (CSP, X-Frame-Options, etc.)
-- Health check endpoints
+### TLS / routing — Cloudflare Tunnel (no nginx, no certs)
+The `cloudflared` container opens an outbound tunnel; Cloudflare terminates TLS at
+its edge and routes the public hostname to `backend:8000`. The only inbound port on
+the EC2 is SSH. TLS certs are never managed on the box.
 
 ## 🚀 GitHub Actions Workflows
 
-### PR Validation (`pr-validation.yml`)
-- Triggers: PRs to main/develop
-- Builds Docker images
-- Runs health checks
-- Posts status to PR
+### CI (`ci.yml`)
+- Triggers: PRs to `main`/`develop` (+ manual)
+- Backend: `uv sync` → `ruff check` → `ruff format --check` → `pytest`
+- Frontend: `pnpm lint` → `pnpm typecheck` → `pnpm build`
 
-### Test Deployment (`deploy-test.yml`)
-- Triggers: Push to develop (automatic)
-- Deploys to test-skills-survey.heal.engineering
-- Container names: test-skill-survey-*
+### Build and Push (`build-and-push.yml`)
+- Triggers: push to `main` (paths `backend/**`) + manual
+- Builds the **linux/arm64** backend image, pushes to GHCR (`:latest` + `:prod-<sha>`)
+- Watchtower on the EC2 pulls `:latest` within ~5 min → auto-deploy
 
-### Production Deployment (`deploy-production.yml`)
-- Triggers: Manual only
-- Deploys to skills-survey.heal.engineering
-- Requires approval
-- Automatic backup before deployment
+### Cleanup Old Images (`cleanup-images.yml`)
+- Triggers: weekly (Sun 02:00 UTC) + manual
+- Keeps the last 5 `prod-*` images, deletes the rest + untagged layers
 
-### Docker Cleanup (`docker-cleanup.yml`)
-- Runs daily at 3 AM UTC
-- Removes unused images/containers
-- Cleans build cache
-- Maintains last 5 deployment backups
+### Claude PR Review (`claude-pr-review.yml`)
+- Org-synced; AI review on PRs
+
+> Frontend deploys via **Vercel's Git integration** (no Action). There is no
+> SSH-based deploy workflow — code ships through GHCR + Watchtower.
 
 ## 🎨 Styling & UI
 
@@ -242,9 +252,9 @@ VITE_ADMIN_PASSWORD=admin123
 
 ### Git Branching Strategy
 ```
-feature/<username>/<ticket>/<description> → develop → main
-                                                ↓        ↓
-                                             Test Env  Production
+feature/<username>/<ticket>/<description> → develop → main → build + auto-deploy
+                                                                ↓
+                                          GHCR + Watchtower (backend) · Vercel (frontend)
 ```
 
 ### Branch Naming
@@ -310,43 +320,47 @@ try {
 
 ### Development
 ```bash
-# Start development environment
-docker-compose up
+task dev                 # backend (Docker) + frontend (Vite) together
+task start               # backend only (Docker); generates .env.local from 1Password if signed in
+task fe                  # frontend dev server (Vite)
+task logs                # tail backend container logs
+task test                # backend tests (pytest in the container)
+task down                # stop the dev environment
+task clean:all           # wipe containers, volumes, images, caches
 
-# View logs
-docker-compose logs -f backend
-docker-compose logs -f frontend
+# Backend, outside Docker
+cd backend && uv sync && uv run uvicorn app.main:app --reload
+cd backend && uv run ruff check . && uv run pytest
 
-# Reset database
-docker-compose down -v && docker-compose up
-
-# Run specific service
-docker-compose up backend
+# Reset the local DB: RESET_DATABASE=true on the backend, or `task down` then remove the volume
 ```
 
 ### Production
+Code deploys automatically (push to `main` → GHCR → Watchtower). You do NOT deploy
+code by hand. `task prod:*` is only for config/secrets and inspection:
 ```bash
-# Deploy to production (after PR to main)
-# Go to GitHub Actions → Deploy to Production → Run workflow
+task prod:deploy:dry-run # preview
+task prod:deploy         # regenerate .env.prod from 1Password, ship + restart on the EC2
+task prod:status         # docker compose ps on the EC2
+task prod:logs           # tail backend logs on the EC2
 
-# SSH to production
-ssh ec2-user@skills-survey.heal.engineering
+task tf:gen              # write gitignored prod.tfvars from 1Password (SKILL-TREE-INFRA)
+task tf:plan             # terraform plan (auto-generates tfvars if missing)
+task tf:apply            # terraform apply
 
-# Check production logs
-docker-compose -f docker-compose.prod.yml logs --tail=100
-
-# Rollback if needed
-docker tag skill-survey-backend:rollback skill-survey-backend:latest
-docker-compose -f docker-compose.prod.yml up -d
+# Rollback: pin backend image to :prod-<good-sha> in docker-compose.prod.yml, then task prod:deploy
+# (see docs/DEPLOYMENT.md)
 ```
 
 ## 📚 Important Files Reference
 
 ### Configuration Files
-- `/backend/app/config/settings.py` - Environment configuration
-- `/frontend/.env` - Frontend environment variables
-- `/docker-compose.yml` - Development orchestration
-- `/infrastructure/nginx/production.conf` - Production nginx
+- `/backend/app/core/config.py` - Pydantic settings + shared Sentry logger
+- `/.setup.config` - Non-secret project constants (vault prefix, app name, port)
+- `/Taskfile.yml` + `/tasks/*.yml` - Task runner (env, helpers, prod)
+- `/docker-compose.yml` - Local backend orchestration
+- `/docker-compose.prod.yml` - Production stack (backend + cloudflared + watchtower)
+- `/infrastructure/terraform/` - Prod EC2 infrastructure as code
 
 ### Database
 - `/docs/database_schema.sql` - Complete SQL schema
@@ -379,6 +393,18 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 🔄 Recent Updates Log
 
+### 2026-06 — Modernization & open-source prep
+- Backend → **uv** + `pyproject.toml`; settings moved to `app/core/config.py` with the
+  Sentry struct logger exposed as `settings.logger`. Kept sync SQLAlchemy + SQLite.
+- Frontend **npm → pnpm**, **Tailwind v3 → v4**, latest Vue/Vite/TS; deploys to **Vercel**.
+- Adopted **Taskfile** + **1Password**-backed secrets (`task env:generate`); no committed `.env`.
+- Prod simplified: **Cloudflare Tunnel** (dropped nginx/certbot) + **Watchtower** auto-pull
+  from **GHCR**; dropped the test environment.
+- Added **Terraform** IaC for the prod EC2 (`infrastructure/terraform/`).
+- Workflows: `ci.yml`, `build-and-push.yml` (arm64), `cleanup-images.yml`; removed the
+  SSH-deploy workflows.
+- Added **MIT LICENSE** (HEAL USA Inc.) + docs overhaul for open-sourcing.
+
 ### 2024-09-19
 - Added dynamic category ordering with drag-and-drop admin interface
 - Fixed mobile responsiveness issues in admin panel
@@ -402,12 +428,14 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ## 📖 Additional Documentation
 
-- [README.md](./README.md) - Quick start guide
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Development workflow
-- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - CI/CD pipeline
-- [docs/WORKFLOW_EXAMPLES.md](./docs/WORKFLOW_EXAMPLES.md) - Common scenarios
+- [README.md](./README.md) - Quick start + architecture
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Dev setup, conventions, PR process
+- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - GHCR + Watchtower + Cloudflare pipeline
+- [docs/AWS_SETUP.md](./docs/AWS_SETUP.md) - EC2 + Docker + Cloudflare Tunnel host
+- [docs/GO_LIVE_CHECKLIST.md](./docs/GO_LIVE_CHECKLIST.md) - One-time go-live runbook
+- [infrastructure/terraform/README.md](./infrastructure/terraform/README.md) - Provisioning the EC2
 - [docs/database_schema.sql](./docs/database_schema.sql) - Database structure
-- [docs/AWS_SETUP.md](./docs/AWS_SETUP.md) - Infrastructure setup
+- [LICENSE](./LICENSE) - MIT (HEAL USA Inc.)
 
 ---
 

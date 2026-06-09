@@ -1,238 +1,116 @@
-# Deployment Pipeline
+# Deployment
 
-## 🔄 Pipeline Overview
+How Skill Tree Survey ships to production. The design goal is **no manual deploy
+step for code**: merge to `main` and the running container updates itself.
+
+> First-time setup (provisioning, Cloudflare, Vercel, DNS) is a separate, ordered
+> runbook — see [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md). This document covers
+> the steady-state pipeline once that's done.
+
+## Pipeline
 
 ```
-Feature Branch          Develop               Main
-     |                     |                    |
-     ├──PR + Review───────>├──PR + Approval────>|
-     |                     |                    |
-     |                Auto Deploy           Manual Deploy
-     |                     ↓                    ↓
-                   TEST Environment      PRODUCTION Environment
-              test-skills-survey.heal.   skills-survey.heal.
-                   engineering              engineering
+        ┌────────────────────────── Frontend ──────────────────────────┐
+push ──▶ Vercel Git integration ──▶ build (pnpm) ──▶ https://skills-survey.<domain>
+  │
+  │     ┌────────────────────────── Backend ───────────────────────────┐
+  └──▶ GitHub Actions (build-and-push.yml)
+            └─ build linux/arm64 image ──▶ GHCR :latest + :prod-<sha>
+                                              │
+                            Watchtower on EC2 polls GHCR every 5 min
+                                              │
+                                   recreates the backend container
+                                              │
+                       Cloudflare Tunnel ──▶ https://api.skills-survey.<domain>
 ```
 
-## 🌍 Environments
+- **Backend code** → push to `main` (paths `backend/**`) builds an arm64 image and
+  pushes it to `ghcr.io/heal-engineering/skill-tree-survey-api` (`:latest` +
+  `:prod-<sha>`). [Watchtower](https://github.com/nicholas-fedor/watchtower) on the
+  EC2 pulls `:latest` within ~5 minutes and recreates the container (rolling, waits
+  for healthy). The SQLite DB lives on a named volume, so it survives the swap.
+- **Frontend code** → Vercel's Git integration builds and deploys automatically on
+  push to `main` (and gives every PR a preview URL).
+- **TLS / routing** → [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
+  (`cloudflared` container) terminates TLS at Cloudflare's edge and forwards the
+  public hostname to `backend:8000`. It's outbound-only: **no ports are published on
+  the box and no certs live on it**.
 
-### Local Development
-- **URL**: http://localhost:5173 (frontend), http://localhost:8000 (backend)
-- **Purpose**: Individual developer testing
-- **Database**: Local SQLite
-- **Deployment**: `docker-compose up`
+## Environments
 
-### Test Environment
-- **URL**: https://test-skills-survey.heal.engineering
-- **Purpose**: Integration testing, QA
-- **Deployment**: **Automatic** on merge to `develop`
-- **Database**: Test SQLite database
-- **Container Names**: `test-skill-survey-backend`, `test-skill-survey-frontend`
+| Environment | Frontend | Backend | Deploy trigger |
+|-------------|----------|---------|----------------|
+| Local | Vite dev server (`task fe`) | Docker (`task start`) | manual |
+| Production | Vercel | EC2 (Graviton) via GHCR + Watchtower | push to `main` |
 
-### Production Environment
-- **URL**: https://skills-survey.heal.engineering
-- **Purpose**: Live application
-- **Deployment**: **Manual** trigger after merge to `main`
-- **Database**: Production SQLite database
-- **Container Names**: `skill-survey-backend`, `skill-survey-frontend`
+There is no separate test/staging environment. Vercel preview deployments cover
+frontend review; backend changes are validated by CI on the PR.
 
-## 📦 Deployment Process
+## Deploying configuration / secrets
 
-### To Test (Automatic)
-
-1. **Create PR** from feature branch to `develop`
-2. **PR Validation** workflow automatically runs:
-   - Builds Docker images
-   - Runs health checks
-   - Posts results to PR
-3. **After approval and merge**:
-   - Test deployment automatically triggered
-   - Docker images built and deployed
-   - Available at test URL within ~5 minutes
-4. **Monitor** in GitHub Actions tab
-
-### To Production (Manual)
-
-1. **Create PR** from `develop` to `main`
-2. **Requires** senior team member approval
-3. **After merge**:
-   ```
-   Go to GitHub → Actions tab → Deploy to Production
-   Click "Run workflow" → Add deployment message → Run
-   ```
-4. **Deployment steps**:
-   - Builds production Docker images
-   - Transfers to EC2
-   - Deploys with docker-compose.prod.yml
-   - Runs health checks
-5. **Verify** at production URL
-
-## 🔧 GitHub Actions Workflows
-
-### PR Validation (`pr-validation.yml`)
-- **Triggers**: PR to `main` or `develop`
-- **Actions**: Build, test, health check
-- **Duration**: ~3-5 minutes
-
-### Test Deployment (`deploy-test.yml`)
-- **Triggers**: Push to `develop` or manual
-- **Actions**: Build, deploy to test environment
-- **Duration**: ~5-7 minutes
-
-### Production Deployment (`deploy-production.yml`)
-- **Triggers**: Manual only
-- **Actions**: Build, deploy to production
-- **Duration**: ~5-7 minutes
-
-## 🔄 Rollback Procedures
-
-### Automatic Rollback (Recommended)
-The deployment process automatically backs up the current running images before deploying new ones.
-
-#### Test Environment Rollback
-```bash
-# SSH to test server
-ssh ec2-user@test-skills-survey.heal.engineering
-
-# Navigate to project
-cd /opt/skill-tree-survey
-
-# Stop current deployment
-docker-compose -f docker-compose.test.yml down
-
-# Restore previous images
-docker tag test-skill-survey-backend:rollback test-skill-survey-backend:latest
-docker tag test-skill-survey-frontend:rollback test-skill-survey-frontend:latest
-
-# Redeploy with previous images
-docker-compose -f docker-compose.test.yml up -d
-
-# Verify rollback
-docker-compose -f docker-compose.test.yml ps
-```
-
-#### Production Rollback
-```bash
-# SSH to production server
-ssh ec2-user@skills-survey.heal.engineering
-
-# Navigate to project
-cd /opt/skill-tree-survey
-
-# Stop current deployment
-docker-compose -f docker-compose.prod.yml down
-
-# Restore previous images
-docker tag skill-survey-backend:rollback skill-survey-backend:latest
-docker tag skill-survey-frontend:rollback skill-survey-frontend:latest
-
-# Redeploy with previous images
-docker-compose -f docker-compose.prod.yml up -d
-
-# Verify rollback
-docker-compose -f docker-compose.prod.yml ps
-```
-
-### Manual Rollback with Environment Files
-If you also need to restore environment variables:
+Code updates are automatic; **config and secrets are not**. When you change
+`docker-compose.prod.yml` or a value in the `SKILL-TREE-PROD` 1Password vault
+(e.g. `ADMIN_PASSWORD`, `CORS_ORIGINS`, `SENTRY_DSN`, `TUNNEL_TOKEN`), push it to
+the box with:
 
 ```bash
-# List available backups
-ls -la .env.backup.*
-
-# Restore specific backup
-cp .env.backup.YYYYMMDD_HHMMSS .env
-
-# Redeploy
-docker-compose -f docker-compose.[env].yml up -d
+task prod:deploy:dry-run   # preview what will happen
+task prod:deploy           # regenerate .env.prod from 1Password, scp it +
+                           # the compose file to the EC2, recreate the stack
 ```
 
-### Emergency Hotfix
+`prod:deploy` preflights that you're on `main`, the compose file is committed, the
+EC2 is reachable over SSH, and 1Password is signed in. It requires an SSH alias in
+`~/.ssh/config` (default `skill-tree`) — see [tasks/prod.yml](../tasks/prod.yml).
+
 ```bash
-# Create hotfix from main
-git checkout main
-git pull origin main
-git checkout -b <username>/HOTFIX/<description>
-
-# Make fix and push
-git push -u origin <username>/HOTFIX/<description>
-
-# PR directly to main
-# After deploy, cherry-pick to develop
+task prod:status   # docker compose ps on the EC2
+task prod:logs     # tail backend logs on the EC2
 ```
 
-## 📊 Monitoring
+## Rollback
 
-### Health Check Endpoints
-- Backend: `/health`
-- Full URL Test: `https://test-skills-survey.heal.engineering/health`
-- Full URL Prod: `https://skills-survey.heal.engineering/health`
+Watchtower follows `:latest`, so to pin a known-good build, point the backend image
+at a specific SHA tag and redeploy:
 
-### Viewing Logs
+```yaml
+# docker-compose.prod.yml
+backend:
+  image: ghcr.io/heal-engineering/skill-tree-survey-api:prod-<good-sha>
+```
+
 ```bash
-# On server
-docker-compose -f docker-compose.[env].yml logs -f backend
-docker-compose -f docker-compose.[env].yml logs -f frontend
-
-# View all logs
-docker-compose -f docker-compose.[env].yml logs --tail=100
+task prod:deploy   # ships the pinned compose + restarts
 ```
 
-### GitHub Actions
-- Go to repository → Actions tab
-- View workflow runs
-- Click on run for detailed logs
-- Check deployment summaries
+While pinned, remove the backend's `com.centurylinklabs.watchtower.enable=true`
+label (or stop the `watchtower` container) so it doesn't pull `:latest` back over
+your pin. To resume auto-updates, set the image back to `:latest`, restore the
+label, and `task prod:deploy`. Past images are retained in GHCR (the
+[cleanup workflow](../.github/workflows/cleanup-images.yml) keeps the last 5 `prod-*`).
 
-## 🔑 Environment Variables
+## Monitoring & verification
 
-### Test Environment
-Configured via GitHub Secrets (TEST_ prefix):
-- `TEST_EC2_HOST`
-- `TEST_EC2_USERNAME`
-- `TEST_EC2_SSH_KEY`
-- `TEST_ADMIN_PASSWORD`
-- `TEST_VITE_API_URL`
-- `TEST_CORS_ORIGINS`
+- **Health:** `curl https://api.skills-survey.<domain>/health` → `200` with valid
+  Cloudflare TLS. Set `PROD_HEALTH_URL` so `task prod:deploy` checks it for you.
+- **Containers:** `task prod:status` — `cloudflared`, `backend`, `watchtower` up.
+- **Tunnel:** `task prod:logs` (or the cloudflared logs) show "Registered tunnel connection".
+- **Errors:** Sentry receives events when `SENTRY_DSN` is set in `SKILL-TREE-PROD`.
+- **Data:** survey responses persist across image updates (SQLite on the
+  `sqlite_data` named volume).
 
-### Production Environment
-Configured via GitHub Secrets:
-- `EC2_HOST`
-- `EC2_USERNAME`
-- `EC2_SSH_KEY`
-- `ADMIN_PASSWORD`
-- `VITE_API_URL`
-- `CORS_ORIGINS`
+## Troubleshooting
 
-## 🚨 Troubleshooting
+| Symptom | Check |
+|---------|-------|
+| New code not live | Actions build green? `task prod:logs` for Watchtower pull; it polls every 5 min |
+| 502 / site down | `task prod:status`; is `backend` healthy and `cloudflared` connected? |
+| CORS errors in browser | `CORS_ORIGINS` in `SKILL-TREE-PROD` includes the Vercel origin → `task prod:deploy` |
+| Tunnel won't start | `TUNNEL_TOKEN` present in `.env.prod` (from 1Password)? |
+| Frontend can't reach API | `VITE_API_URL` in Vercel = `https://api.skills-survey.<domain>` |
 
-### Deployment Failed
-1. Check GitHub Actions logs
-2. SSH to server and check Docker logs
-3. Verify environment variables
-4. Check disk space: `df -h`
-5. Check Docker status: `docker ps`
+## Related
 
-### Health Checks Failing
-```bash
-# Check if containers are running
-docker ps
-
-# Check container logs
-docker logs skill-survey-backend
-docker logs skill-survey-frontend
-
-# Test endpoints directly
-curl http://localhost:8000/health
-curl http://localhost:8080
-```
-
-### Common Issues
-- **Port conflicts**: Check with `sudo lsof -i :8000`
-- **Docker space**: Run `docker system prune -a`
-- **Environment variables**: Verify `.env` file exists and is correct
-
-## 📚 Related Documentation
-- [Contributing Guidelines](../CONTRIBUTING.md)
-- [Workflow Examples](./WORKFLOW_EXAMPLES.md)
-- [AWS Infrastructure Setup](./AWS_SETUP.md)
+- [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md) — one-time go-live steps (Cloudflare, Vercel, DNS, AWS)
+- [AWS_SETUP.md](AWS_SETUP.md) — EC2 + Docker + Cloudflare Tunnel host setup
+- [infrastructure/terraform/README.md](../infrastructure/terraform/README.md) — provisioning the EC2 with Terraform

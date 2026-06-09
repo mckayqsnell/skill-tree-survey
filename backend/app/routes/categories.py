@@ -1,27 +1,27 @@
 """
 Category-related API routes (public).
 """
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
-import logging
 
-from app.dao.factory import get_dao_factory, DAOFactory
-from app.services.category_service import CategoryService
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.core.config import settings
+from app.dao.factory import DAOFactory, get_dao_factory
 from app.schemas.category import CategoryOrderResponse
+from app.services.category_service import CategoryService
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
-logger = logging.getLogger(__name__)
+logger = settings.logger
 
 
-def get_category_service(dao_factory: DAOFactory = Depends(get_dao_factory)) -> CategoryService:
+def get_category_service(
+    dao_factory: DAOFactory = Depends(get_dao_factory),
+) -> CategoryService:
     """Get CategoryService instance."""
     return CategoryService(dao_factory)
 
 
-@router.get("/order", response_model=List[CategoryOrderResponse])
-def get_category_order(
-    service: CategoryService = Depends(get_category_service)
-):
+@router.get("/order", response_model=list[CategoryOrderResponse])
+def get_category_order(service: CategoryService = Depends(get_category_service)):
     """
     Get current category display order (public endpoint).
 
@@ -41,5 +41,5 @@ def get_category_order(
         logger.error(f"Error fetching category order: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve category order"
-        )
+            detail="Failed to retrieve category order",
+        ) from e

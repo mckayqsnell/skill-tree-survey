@@ -136,3 +136,9 @@ export interface SessionAnalytics {
   }>;
   category_breakdown: CategoryStatistics[];
 }
+
+export interface TechnologyIcon {
+  url: string;
+  alt: string;
+  ariaLabel: string;
+}

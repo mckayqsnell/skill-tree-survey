@@ -35,7 +35,7 @@ export function useAdminAuth() {
       }
       
       return true;
-    } catch (err) {
+    } catch {
       // Stored password is invalid, clear it
       sessionStorage.removeItem('adminPassword');
       adminClient.defaults.headers['X-Admin-Password'] = '';

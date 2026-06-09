@@ -1,0 +1,26 @@
+# Local Terraform state and working dirs — never commit these.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+crash.log
+crash.*.log
+
+# Override files are for local-only tweaks.
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI config that may hold credentials.
+.terraformrc
+terraform.rc
+
+# Real tfvars hold internal infra IDs (VPC/subnet) — they live in the
+# 1Password vault SKILL-TREE-INFRA and are generated locally with
+# `task tf:gen`. Only the placeholder example is committed.
+environments/*.tfvars
+!environments/*.tfvars.example
+
+# NOTE: .terraform.lock.hcl IS committed.

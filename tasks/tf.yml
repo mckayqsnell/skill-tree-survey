@@ -1,0 +1,50 @@
+version: '3'
+
+# =============================================================================
+# Terraform helpers for the prod EC2 (infrastructure/terraform/).
+#
+# prod.tfvars is GITIGNORED — the real infra IDs (VPC, subnet) live in the
+# 1Password vault ${VAULT_PREFIX}-INFRA and are written locally by `task tf:gen`.
+# These are Terraform inputs only; they are NOT part of .env.prod.
+# =============================================================================
+
+vars:
+  TF_DIR: infrastructure/terraform
+  TFVARS: environments/prod.tfvars
+
+tasks:
+  gen:
+    desc: "Write infrastructure/terraform/environments/prod.tfvars from 1Password (SKILL-TREE-INFRA)"
+    cmds:
+      - ./scripts/generate-tfvars.sh
+
+  plan:
+    desc: "terraform plan with the generated prod.tfvars (runs tf:gen if missing)"
+    dir: '{{.TF_DIR}}'
+    preconditions:
+      - sh: command -v terraform >/dev/null 2>&1
+        msg: "❌ terraform not installed"
+    cmds:
+      - task: _ensure_tfvars
+      - terraform plan -var-file={{.TFVARS}}
+
+  apply:
+    desc: "terraform apply with the generated prod.tfvars (runs tf:gen if missing)"
+    dir: '{{.TF_DIR}}'
+    preconditions:
+      - sh: command -v terraform >/dev/null 2>&1
+        msg: "❌ terraform not installed"
+    cmds:
+      - task: _ensure_tfvars
+      - terraform apply -var-file={{.TFVARS}}
+
+  # Runs at the repo root (include sets dir: .), unlike plan/apply above.
+  _ensure_tfvars:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        if [ ! -f "{{.TF_DIR}}/{{.TFVARS}}" ]; then
+          echo "prod.tfvars missing — generating from 1Password..."
+          ./scripts/generate-tfvars.sh
+        fi

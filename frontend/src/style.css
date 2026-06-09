@@ -1,8 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Custom theme tokens migrated from tailwind.config.js (Tailwind v4 CSS-first config).
+   Color namespace --color-* generates bg-/text-/from-/to- utilities (e.g. bg-space-dark). */
+@theme {
+  --color-space-dark: #0a0a0a;
+  --color-space-darker: #050505;
+  --color-space-purple: #8b5cf6;
+  --color-space-cyan: #06b6d4;
+  --color-space-pink: #ec4899;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite;
+
+  --blur-xs: 2px;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes glow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+}
 
 /* Terminal/Retro-futuristic styles */
 @layer base {
@@ -144,7 +167,7 @@
   
   /* Admin link styling */
   .admin-link {
-    @apply text-sm text-accent-dim hover:text-accent font-mono transition-colors;
+    @apply text-sm text-amber-500/70 hover:text-amber-500 font-mono transition-colors;
   }
   
   /* Background utilities */
@@ -305,7 +328,7 @@
 
   /* Clean white background */
   .stiff-mode.star-field {
-    @apply bg-gray-50 !important;
+    @apply bg-gray-50!;
   }
 
   .stiff-mode.star-field::before {
@@ -316,199 +339,199 @@
   .stiff-mode .text-cyan-400,
   .stiff-mode .text-cyan-400\/50,
   .stiff-mode .text-cyan-400\/60 {
-    @apply text-blue-600 !important;
+    @apply text-blue-600!;
   }
 
   /* Text colors - Apple style */
   .stiff-mode .text-primary {
-    @apply text-gray-900 !important;
+    @apply text-gray-900!;
   }
 
   .stiff-mode .text-primary-dim {
-    @apply text-gray-600 !important;
+    @apply text-gray-600!;
   }
 
   .stiff-mode .text-primary-dimmer {
-    @apply text-gray-400 !important;
+    @apply text-gray-400!;
   }
 
   .stiff-mode .text-primary-subtle {
-    @apply text-gray-700 !important;
+    @apply text-gray-700!;
   }
 
   .stiff-mode .text-primary-faint {
-    @apply text-gray-500 !important;
+    @apply text-gray-500!;
   }
 
   .stiff-mode .text-accent {
-    @apply text-blue-600 !important;
+    @apply text-blue-600!;
   }
 
   .stiff-mode .text-accent-dim {
-    @apply text-blue-500 !important;
+    @apply text-blue-500!;
   }
 
   .stiff-mode .text-danger {
-    @apply text-red-600 !important;
+    @apply text-red-600!;
   }
 
   /* Info colors - changed to dark gray in stiff mode */
   .stiff-mode .text-info {
-    @apply text-gray-700 !important;
+    @apply text-gray-700!;
   }
 
   .stiff-mode .text-info-dim {
-    @apply text-gray-600 !important;
+    @apply text-gray-600!;
   }
 
   .stiff-mode .text-info-dimmer {
-    @apply text-gray-500 !important;
+    @apply text-gray-500!;
   }
 
   .stiff-mode .text-info-faint {
-    @apply text-gray-400 !important;
+    @apply text-gray-400!;
   }
 
   .stiff-mode .fill-info {
-    @apply fill-gray-700 !important;
+    @apply fill-gray-700!;
   }
 
   /* Borders - subtle and clean */
   .stiff-mode .border-primary {
-    @apply border-gray-300 !important;
+    @apply border-gray-300!;
   }
 
   .stiff-mode .border-primary-dim {
-    @apply border-gray-200 !important;
+    @apply border-gray-200!;
   }
 
   .stiff-mode .border-primary-faint {
-    @apply border-gray-100 !important;
+    @apply border-gray-100!;
   }
 
   .stiff-mode .border-danger {
-    @apply border-red-300 !important;
+    @apply border-red-300!;
   }
 
   .stiff-mode .border-danger-dim {
-    @apply border-red-200 !important;
+    @apply border-red-200!;
   }
 
   .stiff-mode .border-info-faint {
-    @apply border-gray-200 !important;
+    @apply border-gray-200!;
   }
 
   .stiff-mode .border-info-dim {
-    @apply border-gray-300 !important;
+    @apply border-gray-300!;
   }
 
   /* Tooltip styles in stiff mode */
   .stiff-mode .tooltip-base {
-    @apply bg-gray-800 border-gray-600 !important;
+    @apply bg-gray-800! border-gray-600!;
   }
 
   .stiff-mode .tooltip-base.text-primary {
-    @apply text-white !important;
+    @apply text-white!;
   }
 
   .stiff-mode .tooltip-base.text-info {
-    @apply text-white !important;
+    @apply text-white!;
   }
 
   .stiff-mode .tooltip-base .text-primary {
-    @apply text-white !important;
+    @apply text-white!;
   }
 
   .stiff-mode .tooltip-base .text-info {
-    @apply text-white !important;
+    @apply text-white!;
   }
   
   /* Apple-style card */
   .stiff-mode .glass-card {
-    @apply bg-white border-gray-200 shadow-lg !important;
+    @apply bg-white! border-gray-200! shadow-lg!;
     backdrop-filter: none !important;
     border-radius: 16px !important;
   }
   
   /* Clean input fields */
   .stiff-mode .input-field {
-    @apply bg-gray-50 border-gray-300 text-gray-900 !important;
+    @apply bg-gray-50! border-gray-300! text-gray-900!;
     border-radius: 8px !important;
   }
   
   .stiff-mode .input-field:focus {
-    @apply border-blue-500 bg-white !important;
+    @apply border-blue-500! bg-white!;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   }
   
   .stiff-mode .input-field::placeholder {
-    @apply text-gray-400 !important;
+    @apply text-gray-400!;
   }
   
   /* Apple-style primary button */
   .stiff-mode .btn-primary {
-    @apply bg-blue-600 border-blue-600 text-white !important;
+    @apply bg-blue-600! border-blue-600! text-white!;
     border-radius: 8px !important;
     font-weight: 500 !important;
   }
   
   .stiff-mode .btn-primary:hover {
-    @apply bg-blue-700 border-blue-700 !important;
+    @apply bg-blue-700! border-blue-700!;
     transform: translateY(0) !important;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2) !important;
   }
   
   .stiff-mode .btn-primary:disabled {
-    @apply bg-gray-300 border-gray-300 !important;
+    @apply bg-gray-300! border-gray-300!;
   }
   
   /* Secondary button - Apple style */
   .stiff-mode .btn-secondary {
-    @apply bg-gray-200 border-gray-300 text-gray-700 !important;
+    @apply bg-gray-200! border-gray-300! text-gray-700!;
     border-radius: 8px !important;
     font-weight: 500 !important;
   }
   
   .stiff-mode .btn-secondary:hover {
-    @apply bg-gray-300 border-gray-400 !important;
+    @apply bg-gray-300! border-gray-400!;
     transform: translateY(0) !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   }
   
   /* Status section - clean design */
   .stiff-mode .bg-overlay {
-    @apply bg-blue-50 !important;
+    @apply bg-blue-50!;
     border-radius: 8px !important;
   }
   
   /* Metric cards in stiff mode */
   .stiff-mode .metric-card {
-    @apply bg-gray-50 !important;
+    @apply bg-gray-50!;
     border-radius: 12px !important;
   }
   
   .stiff-mode .metric-card:hover {
-    @apply bg-gray-100 !important;
+    @apply bg-gray-100!;
   }
   
   .stiff-mode .status-ready {
-    @apply text-orange-600 !important;
+    @apply text-orange-600!;
     font-weight: 500 !important;
   }
   
   .stiff-mode .status-info {
-    @apply text-gray-600 !important;
+    @apply text-gray-600!;
   }
   
   /* Error states */
   .stiff-mode .bg-danger-overlay {
-    @apply bg-red-50 !important;
+    @apply bg-red-50!;
     border-radius: 8px !important;
   }
   
   /* Admin link */
   .stiff-mode .admin-link {
-    @apply text-blue-600 hover:text-blue-800 !important;
+    @apply text-blue-600! hover:text-blue-800!;
     text-decoration: none !important;
   }
   
@@ -530,11 +553,11 @@
   
   /* Progress bar overrides */
   .stiff-mode .bg-primary {
-    @apply bg-blue-600 !important;
+    @apply bg-blue-600!;
   }
 
   .stiff-mode .from-primary {
-    @apply from-blue-600 !important;
+    @apply from-blue-600!;
   }
 
   .stiff-mode .bg-primary\/10 {
@@ -569,16 +592,16 @@
   
   /* Loading spinner */
   .stiff-mode .border-t-primary {
-    @apply border-t-blue-600 !important;
+    @apply border-t-blue-600!;
   }
   
   .stiff-mode .border-primary-faint {
-    @apply border-gray-200 !important;
+    @apply border-gray-200!;
   }
   
   /* Survey button overrides for Apple style */
   .stiff-mode .btn-yes {
-    @apply bg-blue-600 border-0 text-white !important;
+    @apply bg-blue-600! border-0! text-white!;
     border-radius: 24px !important;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
     width: 160px !important;
@@ -587,18 +610,18 @@
   }
 
   .stiff-mode .btn-yes:hover {
-    @apply bg-blue-700 !important;
+    @apply bg-blue-700!;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
   }
 
   .stiff-mode .btn-yes-active {
-    @apply bg-blue-700 !important;
+    @apply bg-blue-700!;
     transform: scale(0.98) !important;
   }
 
   .stiff-mode .btn-yes-text {
-    @apply text-white !important;
+    @apply text-white!;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     font-weight: 600 !important;
     font-size: 1.25rem !important;
@@ -606,7 +629,7 @@
   }
 
   .stiff-mode .btn-no {
-    @apply bg-red-600 border-0 text-white !important;
+    @apply bg-red-600! border-0! text-white!;
     border-radius: 24px !important;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
     width: 160px !important;
@@ -615,18 +638,18 @@
   }
 
   .stiff-mode .btn-no:hover {
-    @apply bg-red-700 !important;
+    @apply bg-red-700!;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
   }
 
   .stiff-mode .btn-no-active {
-    @apply bg-red-700 !important;
+    @apply bg-red-700!;
     transform: scale(0.98) !important;
   }
 
   .stiff-mode .btn-no-text {
-    @apply text-white !important;
+    @apply text-white!;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     font-weight: 600 !important;
     font-size: 1.25rem !important;
@@ -635,7 +658,7 @@
   
   /* Style keyboard hints professionally in stiff mode */
   .stiff-mode .kbd-key {
-    @apply bg-white/20 border text-white/90 !important;
+    @apply bg-white/20! border! text-white/90!;
     border-color: rgba(255, 255, 255, 0.3) !important;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     font-size: 11px !important;
@@ -645,12 +668,12 @@
   }
 
   .stiff-mode .kbd-yes {
-    @apply bg-white/20 border text-white/90 !important;
+    @apply bg-white/20! border! text-white/90!;
     border-color: rgba(255, 255, 255, 0.3) !important;
   }
 
   .stiff-mode .kbd-no {
-    @apply bg-white/20 border text-white/90 !important;
+    @apply bg-white/20! border! text-white/90!;
     border-color: rgba(255, 255, 255, 0.3) !important;
   }
 
@@ -666,7 +689,7 @@
 
   .stiff-mode .btn-yes div:has(.kbd-key) span,
   .stiff-mode .btn-no div:has(.kbd-key) span {
-    @apply text-white/70 !important;
+    @apply text-white/70!;
     font-size: 11px !important;
   }
 
@@ -678,58 +701,58 @@
   
   /* Tab buttons in stiff mode */
   .stiff-mode .tab-active {
-    @apply bg-blue-600 border-blue-600 text-white !important;
+    @apply bg-blue-600! border-blue-600! text-white!;
     border-radius: 6px !important;
   }
   
   .stiff-mode .tab-inactive {
-    @apply bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200 hover:border-gray-400 hover:text-gray-800 !important;
+    @apply bg-gray-100! border-gray-300! text-gray-600! hover:bg-gray-200! hover:border-gray-400! hover:text-gray-800!;
     border-radius: 6px !important;
   }
   
   /* Analytics cards in stiff mode */
   .stiff-mode .stat-card {
-    @apply bg-white border-gray-200 shadow-sm !important;
+    @apply bg-white! border-gray-200! shadow-sm!;
     border-radius: 12px !important;
   }
   
   .stiff-mode .stat-card-red {
-    @apply bg-red-50 border-red-200 !important;
+    @apply bg-red-50! border-red-200!;
     border-radius: 12px !important;
   }
   
   .stiff-mode .stat-card-amber {
-    @apply bg-amber-50 border-amber-200 !important;
+    @apply bg-amber-50! border-amber-200!;
     border-radius: 12px !important;
   }
   
   .stiff-mode .analytics-card {
-    @apply bg-white border-gray-200 shadow-sm !important;
+    @apply bg-white! border-gray-200! shadow-sm!;
     border-radius: 12px !important;
   }
   
   .stiff-mode .skill-badge {
-    @apply bg-gray-100 border-gray-200 !important;
+    @apply bg-gray-100! border-gray-200!;
     border-radius: 8px !important;
   }
   
   /* View stats button in stiff mode */
   .stiff-mode .btn-view-stats {
-    @apply text-xs px-2 py-1 bg-blue-50 border-blue-300 text-blue-600 hover:bg-blue-100 hover:border-blue-400 transition-all !important;
+    @apply text-xs! px-2! py-1! bg-blue-50! border-blue-300! text-blue-600! hover:bg-blue-100! hover:border-blue-400! transition-all!;
     border-radius: 6px !important;
   }
   
   /* Analytics text colors */
   .stiff-mode .text-cyan-400 {
-    @apply text-blue-600 !important;
+    @apply text-blue-600!;
   }
   
   .stiff-mode .text-red-400 {
-    @apply text-red-600 !important;
+    @apply text-red-600!;
   }
   
   .stiff-mode .text-red-400\/50 {
-    @apply text-red-500 !important;
+    @apply text-red-500!;
   }
   
   .stiff-mode .text-amber-500 {
@@ -750,13 +773,13 @@
   }
   
   .stiff-mode .border-accent-dim {
-    @apply border-blue-500 !important;
+    @apply border-blue-500!;
   }
   
   /* Style keyboard hint for undo button in stiff mode */
   .stiff-mode .undo-button kbd {
     display: inline-block !important;
-    @apply bg-gray-100 border-gray-300 text-gray-600 !important;
+    @apply bg-gray-100! border-gray-300! text-gray-600!;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     font-size: 10px !important;
     padding: 2px 8px !important;
@@ -775,7 +798,7 @@
 
   /* Undo button styles for stiff mode */
   .stiff-mode .undo-button {
-    @apply bg-white text-gray-700 hover:text-gray-900 !important;
+    @apply bg-white! text-gray-700! hover:text-gray-900!;
     padding: 8px 16px !important;
     border: 1px solid #e5e5e5 !important;
     border-radius: 8px !important;
@@ -783,12 +806,12 @@
   }
 
   .stiff-mode .undo-button:hover {
-    @apply bg-gray-50 !important;
+    @apply bg-gray-50!;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
   }
 
   .stiff-mode .undo-button span {
-    @apply text-gray-700 !important;
+    @apply text-gray-700!;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   }
 
@@ -798,17 +821,17 @@
 
   /* Mobile undo button for stiff mode */
   .stiff-mode .mobile-undo-button {
-    @apply bg-white text-gray-700 hover:text-gray-900 !important;
+    @apply bg-white! text-gray-700! hover:text-gray-900!;
     border: 1px solid #e5e5e5 !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
   }
 
   .stiff-mode .mobile-undo-button:hover {
-    @apply bg-gray-50 !important;
+    @apply bg-gray-50!;
   }
 
   .stiff-mode .mobile-undo-button svg {
-    @apply text-gray-700 !important;
+    @apply text-gray-700!;
   }
 
   /* Regular mode undo button improvements */
@@ -830,7 +853,7 @@
 
   /* Fix kbd (BACKSPACE) element color in regular mode */
   .undo-button kbd {
-    @apply bg-amber-500/10 border-amber-500/50 text-amber-500/80 !important;
+    @apply bg-amber-500/10! border-amber-500/50! text-amber-500/80!;
   }
 
   /* Mobile undo button regular mode improvements */
@@ -1039,12 +1062,12 @@
   .mobile-input {
     min-height: 44px !important;
     font-size: 16px !important;
-    @apply py-3 !important;
+    @apply py-3!;
   }
 
   /* Ensure glass cards don't have too much padding on mobile */
   .glass-card {
-    @apply p-4 !important;
+    @apply p-4!;
     backdrop-filter: blur(5px);
   }
 
@@ -1052,7 +1075,7 @@
   .btn-primary,
   .btn-secondary {
     min-height: 48px !important;
-    @apply text-sm font-medium !important;
+    @apply text-sm! font-medium!;
   }
 
   /* Faster animations for mobile */
@@ -1074,11 +1097,11 @@
 
   /* Adjust text sizes for better readability */
   h1 {
-    @apply text-2xl !important;
+    @apply text-2xl!;
   }
 
   h2 {
-    @apply text-xl !important;
+    @apply text-xl!;
   }
 
   /* Prevent horizontal scroll */
@@ -1132,7 +1155,7 @@
 /* Tablet adjustments */
 @media (min-width: 768px) and (max-width: 1023px) {
   .glass-card {
-    @apply p-5 !important;
+    @apply p-5!;
   }
 }
 

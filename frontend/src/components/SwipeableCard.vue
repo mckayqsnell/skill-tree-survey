@@ -13,6 +13,26 @@
         {{ text }}
       </h2>
 
+      <!-- Technology Icons -->
+      <div v-if="detectedTechnologies.length > 0" class="mt-4 flex flex-wrap justify-center gap-2">
+        <div
+          v-for="tech in detectedTechnologies"
+          :key="tech.key"
+          class="flex items-center gap-1 px-2 py-1"
+        >
+          <img
+            :src="tech.icon.url"
+            :alt="tech.icon.alt"
+            :aria-label="tech.icon.ariaLabel"
+            :data-tech-key="tech.key"
+            :class="getTechnologyIconClasses(tech.key, 'card')"
+            loading="lazy"
+            decoding="async"
+            @error="handleImageError"
+          />
+        </div>
+      </div>
+
       <div
         v-if="swipe.state.isSwiping && swipe.state.direction"
         class="swipe-indicator"
@@ -46,6 +66,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useSwipeGestures } from '@/composables/useSwipeGestures';
+import { icons } from '@/constants/icons';
+import { technologyPatterns } from '@/constants/technologyPatterns';
+import { getTechnologyIconClasses, formatTechnologyName } from '@/utils/iconClasses';
+import type { TechnologyIcon } from '@/types';
+import { logger } from '@/api/client';
 
 interface Props {
   text: string;
@@ -64,6 +89,43 @@ const emit = defineEmits<{
 const cardElement = ref<HTMLElement | null>(null);
 const isAnimatingOut = ref(false);
 
+// Handle image loading errors
+const handleImageError = (event: Event) => {
+  const img = event.target as HTMLImageElement;
+  logger.warn(`Failed to load icon: ${img.src}`);
+  // Hide the broken image
+  img.style.display = 'none';
+};
+
+// Detect technologies mentioned in the question text
+const detectedTechnologies = computed(() => {
+  const technologies: Array<{ key: string; name: string; icon: TechnologyIcon }> = [];
+  
+  for (const [key, pattern] of Object.entries(technologyPatterns)) {
+    if (pattern.test(props.text)) {
+      const iconKey = key as keyof typeof icons;
+      if (icons[iconKey]) {
+        const name = formatTechnologyName(iconKey);
+        technologies.push({
+          key,
+          name,
+          icon: icons[iconKey]
+        });     
+      }
+    }
+  }
+  
+  // Remove duplicates and limit to 4 technologies max
+  const unique = technologies.filter((tech, index, self) => 
+    index === self.findIndex(t => t.key === tech.key)
+  ).slice(0, 4);
+  
+  if (import.meta.env.DEV && unique.length > 0) {
+    logger.info(`Final detected technologies:`, unique.map(t => t.key));
+  }
+  
+  return unique;
+});
 const swipe = useSwipeGestures({
   threshold: 80,
   velocityThreshold: 300,
@@ -147,6 +209,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+
 .swipeable-container {
   position: relative;
   width: 100%;
@@ -286,6 +349,47 @@ onUnmounted(() => {
   }
 }
 
+/* Technology icons styling */
+.technology-icon {
+  transition: all 0.2s ease;
+}
+
+.technology-icon img {
+  transition: opacity 0.3s ease;
+}
+
+.technology-icon img[style*="display: none"] {
+  opacity: 0;
+}
+
+.technology-icon:hover {
+  transform: scale(1.05);
+  background: rgba(74, 222, 128, 0.15);
+}
+
+.technology-icon img {
+  filter: brightness(0.9);
+  transition: filter 0.2s ease;
+}
+
+.technology-icon:hover img {
+  filter: brightness(1.1);
+}
+
+/* Stiff mode technology icons */
+.stiff-mode .technology-icon {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+
+.stiff-mode .technology-icon:hover {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.stiff-mode .technology-icon span {
+  color: #1e40af;
+}
+
 @media (min-width: 768px) {
   .swipeable-card {
     padding: 3rem 2rem;
@@ -293,3 +397,5 @@ onUnmounted(() => {
   }
 }
 </style>
+
+

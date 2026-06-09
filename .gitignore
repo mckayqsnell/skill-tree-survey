@@ -1,242 +1,65 @@
-# Environment files (keep examples)
+# ============================================================================
+# Secrets & environment — values live in 1Password, never committed.
+# (.setup.config IS committed: it holds non-secret project constants.)
+# ============================================================================
 .env
-.env.local
-.env.production
-.env.test
-.env.development
+.env.*
+.1password.yml
 
-# Docker overrides
-docker-compose.override.yml
-
-# SSL certificates (never commit these!)
+# SSL/certs (should never exist locally now that Cloudflare handles TLS)
 *.pem
 *.key
 *.crt
 
-# Nginx logs
-nginx/logs/
-
-# Python
+# ============================================================================
+# Python / backend (uv-managed)
+# ============================================================================
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-*.manifest
-*.spec
-pip-log.txt
-pip-delete-this-directory.txt
-htmlcov/
-.tox/
-.nox/
+.venv/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
 coverage.xml
-*.cover
-*.py,cover
+htmlcov/
 .hypothesis/
-.pytest_cache/
-cover/
-*.mo
-*.pot
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-instance/
-.webassets-cache
-.scrapy
-docs/_build/
-.pybuilder/
-target/
-.ipynb_checkpoints
-profile_default/
-ipython_config.py
-.pdm.toml
-__pypackages__/
-celerybeat-schedule
-celerybeat.pid
-*.sage.py
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-.spyderproject
-.spyproject
-.ropeproject
-/site
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.pytype/
-cython_debug/
 
-# Node.js / Vue.js / Frontend
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-.npm
-.eslintcache
-.stylelintcache
-.node_repl_history
-*.tgz
-.yarn-integrity
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.cache
-.parcel-cache
-.next
-out
-.nuxt
-dist
-dist-ssr
-*.local
-.cache/
-.vuepress/dist
-.temp
-.cache
-.serverless/
-.fusebox/
-.dynamodb/
-.tern-port
-.vscode-test
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
-
-# Vite
-.vite/
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# TypeScript cache
-*.tsbuildinfo
-
-# SQLite
+# SQLite databases & the backend data dir
 *.sqlite
 *.sqlite3
 *.db
-skill_survey.db
+backend/data/
 
-# IDE files
-.vscode/
+# ============================================================================
+# Node / frontend (pnpm + Vite)
+# ============================================================================
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+.eslintcache
+*-debug.log*
+.vite/
+
+# Vercel
+.vercel
+
+# ============================================================================
+# Docker
+# ============================================================================
+docker-compose.override.yml
+
+# ============================================================================
+# Editors & OS
+# ============================================================================
+.vscode/*
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
 Thumbs.db
-*.sublime-project
-*.sublime-workspace
-.project
-.classpath
-.settings/
-*.launch
-.tmproj
-*.tmproj
-*.iml
-.vs/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Docker
-.dockerignore
-docker-compose.override.yml
-
-# Testing
-.coverage
-htmlcov/
-.tox/
-.pytest_cache/
-.hypothesis/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
-*.swp
-*.swo
-*~
-
-# Project specific
-/backend/skill_survey.db
-/backend/.env
-/frontend/.env
-/frontend/dist
-# Environment files (keep examples)
-.env
-.env.local
-.env.production
-.env.test
-.env.development
-
-# Docker overrides
-docker-compose.override.yml
-
-*.pem
-*.key
-*.crt
-
-# Nginx logs
-nginx/logs/
-
