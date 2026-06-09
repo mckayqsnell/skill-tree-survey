@@ -161,6 +161,12 @@ No committed `.env` files. Secrets live in **1Password** (vaults `SKILL-TREE-LOC
 setting has a safe default in `app/core/config.py`, so the app runs locally with no
 `.env` at all. Non-secret project constants live in the committed `.setup.config`.
 
+Internal infra IDs (VPC/subnet, AWS account, old instance/SG) live in a third vault,
+**`SKILL-TREE-INFRA`** — `task tf:gen` writes the **gitignored**
+`infrastructure/terraform/environments/prod.tfvars` from items tagged `tfvar`
+(titles lowercased). These are Terraform inputs only; they are **not** part of
+`.env.prod`. Only `prod.tfvars.example` is committed.
+
 ### Docker Compose
 
 - `docker-compose.yml`: local **backend only** (`target: dev`, hot-reload, named
@@ -337,6 +343,10 @@ task prod:deploy:dry-run # preview
 task prod:deploy         # regenerate .env.prod from 1Password, ship + restart on the EC2
 task prod:status         # docker compose ps on the EC2
 task prod:logs           # tail backend logs on the EC2
+
+task tf:gen              # write gitignored prod.tfvars from 1Password (SKILL-TREE-INFRA)
+task tf:plan             # terraform plan (auto-generates tfvars if missing)
+task tf:apply            # terraform apply
 
 # Rollback: pin backend image to :prod-<good-sha> in docker-compose.prod.yml, then task prod:deploy
 # (see docs/DEPLOYMENT.md)

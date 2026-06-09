@@ -46,10 +46,30 @@ Tunnel, so most of heal-api's moving parts don't apply here.
 ## Prerequisites
 
 1. **Terraform** ≥ 1.14
-2. **AWS credentials** for account `463932052589`, region `us-east-2`, with
-   access to EC2 + the shared `heal-terraform-state` S3 bucket (and its KMS key).
-3. No 1Password wrapper is needed here — there are **no sensitive Terraform
-   variables** (every secret lives in `.env.prod`, shipped by `task prod:deploy`).
+2. **AWS credentials** for the HEAL AWS account (1Password → `SKILL-TREE-INFRA`
+   → `AWS_ACCOUNT_ID`), region `us-east-2`, with access to EC2 + the shared
+   `heal-terraform-state` S3 bucket (and its KMS key).
+3. **1Password CLI signed in** — the tfvars are generated from it (below).
+   There are no *secret* Terraform variables (secrets live in `.env.prod`,
+   shipped by `task prod:deploy`), but the internal infra IDs are kept out of
+   the public repo.
+
+## Variables (tfvars from 1Password)
+
+`environments/prod.tfvars` is **gitignored** — the real values (VPC + subnet
+IDs) live in the 1Password vault **`SKILL-TREE-INFRA`** (items tagged `tfvar`,
+titles lowercased into keys). Generate the file locally:
+
+```bash
+task tf:gen        # writes environments/prod.tfvars (from the repo root)
+```
+
+Only inputs **without defaults** in `variables.tf` are needed; everything else
+(instance type, key pair, volume size, SSH CIDRs) uses its default — override
+by adding a tagged item to the vault. A placeholder
+`environments/prod.tfvars.example` is committed for shape reference. The vault
+also holds reference-only records (no `tfvar` tag): `AWS_ACCOUNT_ID`,
+`OLD_INSTANCE_ID`, `OLD_SG_ID`.
 
 ## State
 
@@ -67,9 +87,9 @@ environment ⇒ no workspaces; run plain `terraform` with the tfvars.
 
 We **stand up a brand-new instance** and cut over to it, rather than importing
 the old hand-built box. The new box auto-installs Docker via `user_data`, then
-`task prod:deploy` ships the app onto it. The old instance
-(`i-0ae247d6ac4fff53a`) is terminated **manually** afterward — it's not in
-Terraform state.
+`task prod:deploy` ships the app onto it. The old instance (1Password →
+`SKILL-TREE-INFRA` → `OLD_INSTANCE_ID`) is terminated **manually** afterward —
+it's not in Terraform state.
 
 `prevent_destroy` is **false** during stand-up (see `ec2.tf`) so the first apply
 runs cleanly and can be re-run freely. You flip it to `true` once prod is live.
@@ -81,6 +101,9 @@ runs cleanly and can be re-run freely. You flip it to `true` once prod is live.
 ### Runbook (run with AWS creds present)
 
 ```bash
+# 0. From the repo root: write the gitignored tfvars from 1Password.
+task tf:gen
+
 cd infrastructure/terraform
 
 # 1. Initialize the S3 backend (creates the state object under our key).
@@ -97,6 +120,9 @@ terraform apply -var-file=environments/prod.tfvars
 terraform output elastic_ip          # e.g. 3.x.x.x
 terraform output ssh_command         # ready-made ssh line
 ```
+
+(`task tf:plan` / `task tf:apply` from the repo root wrap steps 2–3 and
+auto-generate the tfvars if missing.)
 
 Point the **`skill-tree`** SSH host (used by `task prod:deploy`) at that IP:
 
@@ -118,11 +144,14 @@ task prod:deploy                            # ships compose + .env.prod, starts 
 
 ```bash
 # 6. (Optional) migrate existing survey data from the OLD box, THEN terminate it.
-#    Old box still answers at its old IP (3.21.168.170) until you change DNS/SSH.
+#    The old box still answers at its old public IP until you change DNS/SSH.
 #      - copy the old SQLite file into the new box's sqlite_data volume, or skip.
-aws ec2 terminate-instances --instance-ids i-0ae247d6ac4fff53a --region us-east-2
+#    IDs: 1Password → SKILL-TREE-INFRA → OLD_INSTANCE_ID / OLD_SG_ID
+aws ec2 terminate-instances --region us-east-2 \
+  --instance-ids "$(op read 'op://SKILL-TREE-INFRA/OLD_INSTANCE_ID/password')"
 #    (optional) delete the old security group once nothing else uses it:
-aws ec2 delete-security-group --group-id sg-0522c32dc40fb86e4 --region us-east-2
+aws ec2 delete-security-group --region us-east-2 \
+  --group-id "$(op read 'op://SKILL-TREE-INFRA/OLD_SG_ID/password')"
 
 # 7. Lock prod down: set `prevent_destroy = true` in ec2.tf, then:
 terraform apply -var-file=environments/prod.tfvars   # no-op change, just arms the guard
@@ -133,10 +162,12 @@ terraform apply -var-file=environments/prod.tfvars   # no-op change, just arms t
 ## Day-to-day
 
 ```bash
-terraform plan  -var-file=environments/prod.tfvars   # always review first
-terraform apply -var-file=environments/prod.tfvars
-terraform output                                     # IPs, instance id, etc.
+task tf:plan       # from the repo root — review first (generates tfvars if missing)
+task tf:apply
+terraform -chdir=infrastructure/terraform output     # IPs, instance id, etc.
 ```
+
+(`prod.tfvars` is local-only; on a fresh clone run `task tf:gen` once.)
 
 ## Bootstrap (user_data)
 

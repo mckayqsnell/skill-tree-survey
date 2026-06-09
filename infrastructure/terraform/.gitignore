@@ -16,5 +16,10 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# NOTE: .terraform.lock.hcl and environments/*.tfvars ARE committed
-# (the tfvars here contain only non-secret infra IDs).
+# Real tfvars hold internal infra IDs (VPC/subnet) — they live in the
+# 1Password vault SKILL-TREE-INFRA and are generated locally with
+# `task tf:gen`. Only the placeholder example is committed.
+environments/*.tfvars
+!environments/*.tfvars.example
+
+# NOTE: .terraform.lock.hcl IS committed.

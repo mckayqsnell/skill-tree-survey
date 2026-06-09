@@ -1,0 +1,12 @@
+# Placeholder Terraform inputs for prod — copy nothing by hand:
+# the real file is generated from 1Password with `task tf:gen`
+# (vault SKILL-TREE-INFRA, items tagged `tfvar`, titles lowercased).
+#
+# Only inputs WITHOUT defaults in variables.tf are required here.
+# Everything else (environment, instance_type, key_pair_name,
+# root_volume_size, ssh_allowed_cidrs) uses its variables.tf default;
+# override by adding a tagged item to the vault.
+
+# Networking — the account's default VPC + a subnet in it (sets the AZ).
+vpc_id    = "vpc-xxxxxxxxxxxxxxxxx"
+subnet_id = "subnet-xxxxxxxxxxxxxxxxx"

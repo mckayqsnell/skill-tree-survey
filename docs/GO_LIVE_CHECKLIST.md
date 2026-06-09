@@ -59,8 +59,8 @@ human runbook that ties it together.
 
 **Gate:** before running Terraform (Step 3).
 
-1. [ ] Have AWS CLI creds for account **`463932052589`**, region **`us-east-2`**, with EC2 + access to the shared `heal-terraform-state` S3 bucket (and its KMS key).
-2. [ ] Confirm: `aws sts get-caller-identity` → account `463932052589`.
+1. [ ] Have AWS CLI creds for the HEAL AWS account (**1Password → `SKILL-TREE-INFRA` → `AWS_ACCOUNT_ID`**), region **`us-east-2`**, with EC2 + access to the shared `heal-terraform-state` S3 bucket (and its KMS key).
+2. [ ] Confirm: `aws sts get-caller-identity` → that account ID.
 
 ---
 
@@ -71,13 +71,14 @@ human runbook that ties it together.
 
 We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for now.
 
-1. [ ] `terraform init`
-2. [ ] `terraform plan -var-file=environments/prod.tfvars` → expect **creates only** (instance, EIP, association, SG). Nothing destroyed.
-3. [ ] `terraform apply -var-file=environments/prod.tfvars`
-4. [ ] ⚠️ **Grab the new IP and update SSH** — Claude will remind you here:
+1. [ ] `task tf:gen` (repo root) — writes the **gitignored** `prod.tfvars` from 1Password vault `SKILL-TREE-INFRA` (VPC + subnet IDs).
+2. [ ] `terraform init`
+3. [ ] `terraform plan -var-file=environments/prod.tfvars` → expect **creates only** (instance, EIP, association, SG). Nothing destroyed.
+4. [ ] `terraform apply -var-file=environments/prod.tfvars`
+5. [ ] ⚠️ **Grab the new IP and update SSH** — Claude will remind you here:
    - `terraform output elastic_ip`
    - Point `~/.ssh/config` `Host skill-tree` → that IP (this is the alias `task prod:deploy` uses).
-5. [ ] Wait for first-boot Docker install: `ssh skill-tree 'cloud-init status --wait'` (~1–3 min).
+6. [ ] Wait for first-boot Docker install: `ssh skill-tree 'cloud-init status --wait'` (~1–3 min).
 
 (The old box keeps running on its old IP until you terminate it in Step 6 — zero downtime cutover.)
 
@@ -119,8 +120,10 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 **Where:** AWS (us-east-2) + `infrastructure/terraform/`.
 
 1. [ ] ⚠️ **Data:** the new box started with an **empty** SQLite DB. To keep existing survey responses, copy the old DB across **before** terminating (locate it on the old box — old docker volume / `/app/data/skill_survey.db`). A clean slate? Skip.
-2. [ ] Terminate the old hand-built instance: `aws ec2 terminate-instances --instance-ids i-0ae247d6ac4fff53a --region us-east-2`.
-3. [ ] (Optional) delete its old security group once nothing uses it: `aws ec2 delete-security-group --group-id sg-0522c32dc40fb86e4 --region us-east-2`.
+2. [ ] Terminate the old hand-built instance (ID in **1Password → `SKILL-TREE-INFRA` → `OLD_INSTANCE_ID`**):
+   `aws ec2 terminate-instances --region us-east-2 --instance-ids "$(op read 'op://SKILL-TREE-INFRA/OLD_INSTANCE_ID/password')"`
+3. [ ] (Optional) delete its old security group once nothing uses it (→ `OLD_SG_ID`):
+   `aws ec2 delete-security-group --region us-east-2 --group-id "$(op read 'op://SKILL-TREE-INFRA/OLD_SG_ID/password')"`
 4. [ ] **Arm the guard:** set `prevent_destroy = true` in `infrastructure/terraform/ec2.tf`, then `terraform apply -var-file=environments/prod.tfvars` (no-op apply, just enables the guard). Commit the change.
 
 ---
@@ -171,7 +174,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 **Where:** GitHub repo settings.
 
 1. [ ] ⚠️ **Secret scrub — current tree AND git history.** Old compose/docs had placeholder creds (`admin123`); make sure no **real** secret, token, or cert was ever committed. If history has a real secret → **rotate it** and/or rewrite history (`git filter-repo`) before going public. _(Phase 7 verified the current tree: no `.env*`, private keys, tokens, or Sentry DSNs are tracked. History still needs a pass.)_
-2. [ ] ⚠️ **Internal infrastructure identifiers** — not secrets, but decide before publishing. The AWS **account ID**, **instance/VPC/subnet/SG IDs**, and **Elastic IP** appear in `infrastructure/terraform/environments/prod.tfvars` (VPC + subnet) and in this checklist. Options: gitignore `*.tfvars` and commit a `prod.tfvars.example` with placeholders, and/or move this checklist to an internal location. Decide with the team.
+2. [ ] ✅ **Internal infrastructure identifiers — moved to 1Password.** They live in vault **`SKILL-TREE-INFRA`** (VPC_ID + SUBNET_ID tagged `tfvar` → pulled into the now-**gitignored** `prod.tfvars` by `task tf:gen`; AWS_ACCOUNT_ID / OLD_INSTANCE_ID / OLD_SG_ID as reference records). The committed tree only has the placeholder `prod.tfvars.example`. Remaining: they're still in **git history** (pre-scrub commits) — covered by item 1's history pass.
 3. [ ] Confirm `LICENSE` (MIT, `HEAL USA Inc.`) + accurate `README` are present.
 4. [ ] GitHub → **Settings → General → Danger Zone → Change visibility → Public**.
 5. [ ] Confirm the **GHCR package is Public** (Step 4) and Actions still run on the public repo.

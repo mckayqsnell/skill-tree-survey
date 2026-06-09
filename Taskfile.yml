@@ -29,6 +29,9 @@ includes:
   prod:
     taskfile: ./tasks/prod.yml
     dir: .
+  tf:
+    taskfile: ./tasks/tf.yml
+    dir: .
 
 tasks:
   default:

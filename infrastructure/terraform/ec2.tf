@@ -2,8 +2,8 @@
 # EC2 instance for skill-tree-survey (backend + cloudflared + watchtower).
 #
 # We PROVISION A FRESH instance and cut over to it. The old hand-built box
-# (i-0ae247d6ac4fff53a) is NOT in Terraform state and is terminated manually
-# after cutover. See README.md → "Provision the production instance".
+# (1Password → SKILL-TREE-INFRA → OLD_INSTANCE_ID) is NOT in Terraform state
+# and is terminated manually after cutover. See README.md → "Provision the production instance".
 #
 # prevent_destroy is intentionally FALSE for the initial stand-up so the first
 # apply can create cleanly and be re-run freely.
