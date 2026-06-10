@@ -2,3 +2,8 @@
 # Allow esbuild (Vite's bundler) to run its postinstall that fetches the native binary.
 allowBuilds:
   esbuild: true
+  # sharp's postinstall has never run here and the build is fine without it.
+  sharp: false
+  # workerd is wrangler's runtime; its postinstall must run or `wrangler deploy`
+  # fails its install check (locally and in Workers Builds).
+  workerd: true

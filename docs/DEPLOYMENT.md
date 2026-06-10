@@ -7,11 +7,11 @@ step for code**: merge to `main` and the running container updates itself.
 
 | You want to… | Do this |
 |--------------|---------|
-| **Ship code** | Merge a PR to `main`. Done — the backend image builds → Watchtower swaps it in (~5 min); Vercel ships the frontend. |
+| **Ship code** | Merge a PR to `main`. Done — the backend image builds → Watchtower swaps it in (~5 min); Workers Builds ships the frontend. |
 | **Change a secret / config** | Edit the item in 1Password (`SKILL-TREE-PROD` vault) → `task prod:deploy` |
 | **Roll back the backend** | Pin `image: …:prod-<good-sha>` in `docker-compose.prod.yml` → `task prod:deploy` (details [below](#rollback)) |
 
-> First-time setup (provisioning, Cloudflare, Vercel, DNS) is a separate, ordered
+> First-time setup (provisioning, Cloudflare, Workers Builds, DNS) is a separate, ordered
 > runbook — see [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md). This document covers
 > the steady-state pipeline once that's done.
 
@@ -19,7 +19,7 @@ step for code**: merge to `main` and the running container updates itself.
 
 ```
         ┌────────────────────────── Frontend ──────────────────────────┐
-push ──▶ Vercel Git integration ──▶ build (pnpm) ──▶ https://skills-survey.<domain>
+push ──▶ CF Workers Builds ──▶ build (pnpm)       ──▶ https://skills-survey.<domain>
   │
   │     ┌────────────────────────── Backend ───────────────────────────┐
   └──▶ GitHub Actions (build-and-push.yml)
@@ -37,7 +37,7 @@ push ──▶ Vercel Git integration ──▶ build (pnpm) ──▶ https://s
   `:prod-<sha>`). [Watchtower](https://github.com/nicholas-fedor/watchtower) on the
   EC2 pulls `:latest` within ~5 minutes and recreates the container (rolling, waits
   for healthy). The SQLite DB lives on a named volume, so it survives the swap.
-- **Frontend code** → Vercel's Git integration builds and deploys automatically on
+- **Frontend code** → Cloudflare Workers Builds builds and deploys automatically on
   push to `main` (and gives every PR a preview URL).
 - **TLS / routing** → [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/)
   (`cloudflared` container) terminates TLS at Cloudflare's edge and forwards the
@@ -79,9 +79,9 @@ group has no 80/443 and why there are no certificates to manage or renew.
 | Environment | Frontend | Backend | Deploy trigger |
 |-------------|----------|---------|----------------|
 | Local | Vite dev server (`task fe`) | Docker (`task start`) | manual |
-| Production | Vercel | EC2 (Graviton) via GHCR + Watchtower | push to `main` |
+| Production | Cloudflare Workers | EC2 (Graviton) via GHCR + Watchtower | push to `main` |
 
-There is no separate test/staging environment. Vercel preview deployments cover
+There is no separate test/staging environment. Workers Builds preview URLs cover
 frontend review; backend changes are validated by CI on the PR.
 
 ## Deploying configuration / secrets
@@ -143,12 +143,12 @@ label, and `task prod:deploy`. Past images are retained in GHCR (the
 |---------|-------|
 | New code not live | Actions build green? `task prod:logs` for Watchtower pull; it polls every 5 min |
 | 502 / site down | `task prod:status`; is `backend` healthy and `cloudflared` connected? |
-| CORS errors in browser | `CORS_ORIGINS` in `SKILL-TREE-PROD` includes the Vercel origin → `task prod:deploy` |
+| CORS errors in browser | `CORS_ORIGINS` in `SKILL-TREE-PROD` includes the frontend origin → `task prod:deploy` |
 | Tunnel won't start | `TUNNEL_TOKEN` present in `.env.prod` (from 1Password)? |
-| Frontend can't reach API | `VITE_API_URL` in Vercel = `https://skills-survey-api.<domain>` |
+| Frontend can't reach API | `VITE_API_URL` build var in Workers Builds = `https://skills-survey-api.<domain>` |
 
 ## Related
 
-- [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md) — one-time go-live steps (Cloudflare, Vercel, DNS, AWS)
+- [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md) — one-time go-live steps (Cloudflare, Workers, DNS, AWS)
 - [AWS_SETUP.md](AWS_SETUP.md) — EC2 + Docker + Cloudflare Tunnel host setup
 - [infrastructure/terraform/README.md](../infrastructure/terraform/README.md) — provisioning the EC2 with Terraform

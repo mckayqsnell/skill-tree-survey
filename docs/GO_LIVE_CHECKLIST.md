@@ -14,7 +14,7 @@ human runbook that ties it together.
 ## Decisions (confirmed)
 
 - ✅ **Backend hostname** (Cloudflare Tunnel): `skills-survey-api.heal.engineering`
-- ✅ **Frontend hostname** (Vercel): `skills-survey.heal.engineering`
+- ✅ **Frontend hostname** (Cloudflare Workers): `skills-survey.heal.engineering`
 - ✅ **MIT LICENSE copyright holder**: `HEAL USA Inc.`
 
 ---
@@ -30,7 +30,7 @@ human runbook that ties it together.
 | 4 | Build image to GHCR + make package **public** | before first prod deploy | ✅ done |
 | 5 | First `task prod:deploy` to the new box + verify tunnel | after 1, 3, 4 | ✅ done (200 + valid TLS via edge) |
 | 6 | Terminate the **OLD** box + arm `prevent_destroy` | after 5 verifies green | ⬜ |
-| 7 | Vercel project + domain (frontend) | after backend hostname is live | ⬜ |
+| 7 | Cloudflare Workers project + domain (frontend) | after backend hostname is live | ⬜ |
 | 8 | **Drop the test EC2** + test DNS | after prod confirmed healthy | ⬜ |
 | 9 | Make repo public (open-source) | after Phase 7 docs + secret scrub | ⬜ |
 | 10 | Final end-to-end verification | last | ⬜ |
@@ -136,26 +136,29 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 
 ---
 
-## Step 7 — Vercel (frontend hosting)
+## Step 7 — Cloudflare Workers (frontend hosting)
 
 **Gate:** after the backend hostname is live (Step 1/5) so `VITE_API_URL` is correct.
-**Where:** Vercel dashboard + Cloudflare DNS.
+**Where:** Cloudflare dashboard (same account as the tunnel + DNS). Config lives in
+`frontend/wrangler.jsonc` (assets-only Worker, SPA routing).
 
-1. [ ] **Add New Project** → import GitHub repo `HEAL-Engineering/skill-tree-survey`.
-2. [ ] Settings:
-   - **Root Directory: `frontend`**
-   - Framework Preset: **Vite** (`vercel.json` already sets the SPA rewrite; pnpm auto-detected via `packageManager`).
-   - Build `pnpm build`, Output `dist` (defaults).
-   - **Production Branch: `main`**.
-3. [ ] **Environment Variables** (Production) — both are `VITE_` = **public/client-exposed, never put secrets here**:
+1. [ ] **Workers & Pages → Create → Import a repository** → connect GitHub (org
+   `HEAL-Engineering`, repo `skill-tree-survey` only) → select the repo.
+2. [ ] Build settings:
+   - **Root directory: `frontend`**
+   - Build command: **`pnpm build`** (pnpm version auto-read from `packageManager`)
+   - Deploy command: **`pnpm run deploy`** (pinned wrangler devDependency; reads `wrangler.jsonc`)
+3. [ ] **Build variables** — both are `VITE_` = **public/client-exposed, never put secrets here**:
    - [ ] `VITE_API_URL` = `https://skills-survey-api.heal.engineering`
-   - [ ] `VITE_CLOUDFRONT_URL` = your icon-asset host. ⚠️ Without it, survey icons fall back to a dead `https://example.cloudfront.net` placeholder. Use the value prod used previously, or host the icons and set it.
-4. [ ] Deploy. Then **Settings → Domains → add `skills-survey.heal.engineering`** → Vercel shows a DNS record → add it in **Cloudflare DNS** (follow Vercel's proxy guidance).
+   - [ ] `VITE_CLOUDFRONT_URL` = `https://d1pt5sl9lqd6j3.cloudfront.net` (the icon-asset CDN; without it icons fall back to a dead placeholder).
+4. [ ] Save & Deploy → sanity-check the `*.workers.dev` URL.
+5. [ ] **Custom domain:** Cloudflare DNS → delete the stale `skills-survey` **A** record (points at the terminated old box) → Worker → **Settings → Domains & Routes → Add → Custom domain** → `skills-survey.heal.engineering` (Cloudflare creates the DNS record itself).
 
 **Verify:**
-- [ ] `https://skills-survey.heal.engineering` loads; complete a survey end-to-end; admin loads (analytics + drag-drop).
-- [ ] Browser Network tab → API calls hit `skills-survey-api…` and succeed (**no CORS errors** — confirms `CORS_ORIGINS` includes the Vercel domain).
+- [ ] `https://skills-survey.heal.engineering` loads; complete a survey end-to-end; admin loads (analytics + drag-drop); deep-link `/admin` works (SPA `not_found_handling`).
+- [ ] Browser Network tab → API calls hit `skills-survey-api…` and succeed (**no CORS errors** — confirms `CORS_ORIGINS` includes the frontend domain).
 - [ ] Survey **icons render** (the `VITE_CLOUDFRONT_URL` check).
+- [ ] Open a test PR → Workers Builds posts a **preview URL**.
 
 ---
 
@@ -169,7 +172,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 2. [ ] **Terminate** it: `aws ec2 terminate-instances --instance-ids <test-id> --region us-east-2`.
 3. [ ] Release any **test Elastic IP** (else it bills): `aws ec2 release-address --allocation-id <alloc-id> --region us-east-2`.
 4. [ ] Delete the test-only security group (if dedicated).
-5. [ ] **Cloudflare DNS** (records live in Cloudflare now, not Namecheap): no `test-skills-survey` record exists anymore. ⚠️ Do **NOT** touch `test-api.heal.engineering` — that's **heal-api's** test environment, not skill-tree's. The old-prod `skills-survey` A record (old box IP) gets repointed to Vercel in Step 7 (don't delete it before then).
+5. [ ] **Cloudflare DNS** (records live in Cloudflare now, not Namecheap): no `test-skills-survey` record exists anymore. ⚠️ Do **NOT** touch `test-api.heal.engineering` — that's **heal-api's** test environment, not skill-tree's. The old-prod `skills-survey` A record (old box IP) gets replaced by the Workers custom domain in Step 7 (don't delete it before then).
 6. [ ] **GitHub → Settings → Environments:** delete any `test` environment + its secrets. (Test deploy workflows were already removed in Phase 5.)
 
 **Verify:** [ ] nothing resolves/deploys to the test host anymore.
@@ -191,7 +194,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 
 ## Step 10 — Final end-to-end verification
 
-- [ ] Frontend (Vercel domain) loads; survey + admin fully work in both themes.
+- [ ] Frontend (Workers domain) loads; survey + admin fully work in both themes.
 - [ ] Backend health via tunnel = `200`, valid TLS.
 - [ ] **Auto-deploy loop:** push a trivial backend change to `main` → Actions builds → **Watchtower** updates the container within ~5 min (`task prod:logs`).
 - [ ] **Sentry** receives events (check the project after a deploy / handled error).
@@ -206,7 +209,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 ```
 Decisions (confirmed)
    ├─▶ Step 1 Cloudflare Tunnel (TUNNEL_TOKEN, CORS) ─┐
-   └─▶ Step 7 Vercel (VITE_API_URL, CORS) ◀───────────┤ (needs backend hostname)
+   └─▶ Step 7 CF Workers (VITE_API_URL, CORS) ◀───────────┤ (needs backend hostname)
 Step 2 AWS creds ─▶ Step 3 Terraform (fresh box + public IP) ─▶ update SSH ─┐
 Step 4 GHCR image (public) ───────────────────────────────────────────┤
                                                                        ▼

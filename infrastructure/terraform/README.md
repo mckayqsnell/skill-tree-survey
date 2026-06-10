@@ -22,7 +22,7 @@ Tunnel, so most of heal-api's moving parts don't apply here.
         │   Inbound SG: 22 (SSH) only        Outbound: all                   │
         └────────────────────────────────────────────────────────────────────┘
 
-   Frontend (Vue) is hosted separately on Vercel — not managed here.
+   Frontend (Vue) is hosted separately on Cloudflare Workers — not managed here.
 ```
 
 ## What this manages
