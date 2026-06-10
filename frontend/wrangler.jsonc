@@ -1,6 +1,8 @@
 // Cloudflare Workers config — assets-only (static Vite SPA, no server code).
-// Deployed by Workers Builds on push to main: build `pnpm build` → `npx wrangler deploy`.
+// Deployed by Workers Builds on push to main: build `pnpm build` → `pnpm run deploy`
+// (wrangler is a pinned devDependency, so deploys don't float with npx).
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "skill-tree-survey-frontend",
   "compatibility_date": "2026-06-10",
   "assets": {

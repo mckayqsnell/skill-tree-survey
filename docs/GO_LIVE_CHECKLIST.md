@@ -147,7 +147,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 2. [ ] Build settings:
    - **Root directory: `frontend`**
    - Build command: **`pnpm build`** (pnpm version auto-read from `packageManager`)
-   - Deploy command: **`npx wrangler deploy`** (reads `wrangler.jsonc`)
+   - Deploy command: **`pnpm run deploy`** (pinned wrangler devDependency; reads `wrangler.jsonc`)
 3. [ ] **Build variables** — both are `VITE_` = **public/client-exposed, never put secrets here**:
    - [ ] `VITE_API_URL` = `https://skills-survey-api.heal.engineering`
    - [ ] `VITE_CLOUDFRONT_URL` = `https://d1pt5sl9lqd6j3.cloudfront.net` (the icon-asset CDN; without it icons fall back to a dead placeholder).
