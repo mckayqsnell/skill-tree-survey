@@ -69,10 +69,10 @@ Patterns and code templates: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Frontend** (`frontend/src/`): `views/` · `components/` · `composables/` ·
   `api/` (axios) · `types/`. Tailwind v4, two themes in `style.css`.
 - **Deploy model:** merge to `main` → GHCR image (arm64) → Watchtower
-  auto-pulls on the EC2 (~5 min). Frontend auto-deploys via Vercel. TLS via
+  auto-pulls on the EC2 (~5 min). Frontend auto-deploys via Cloudflare Workers Builds. TLS via
   Cloudflare Tunnel — no certs, no inbound ports except SSH.
 - **Infra:** one EC2 (Terraform-managed, `infrastructure/terraform/`) +
-  Cloudflare (DNS + tunnel) + Vercel.
+  Cloudflare (DNS + tunnel + Workers frontend).
 
 ---
 
@@ -110,7 +110,7 @@ Skip docs for bug fixes/refactors that change no documented claim.
 - **Add endpoint:** schema → route → service → DAO if needed → tests.
 - **Add a setting:** field in `app/core/config.py` → 1Password item →
   `task env:generate`.
-- **Deploy code:** merge PR to `main`. That's it (Watchtower + Vercel).
+- **Deploy code:** merge PR to `main`. That's it (Watchtower + Workers Builds).
 - **Deploy secrets/config:** edit 1Password → `task prod:deploy`.
   See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 - **Change infra:** edit Terraform → `task tf:plan` → `task tf:apply`.

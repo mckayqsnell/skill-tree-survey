@@ -8,7 +8,7 @@ things *ship* see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ```
         Browser
-           │  https://skills-survey.heal.engineering   (frontend, Vercel)
+           │  https://skills-survey.heal.engineering   (frontend, CF Workers)
            │  https://skills-survey-api.heal.engineering (backend, via tunnel)
            ▼
    ① DNS — the heal.engineering zone is served by Cloudflare
@@ -127,7 +127,7 @@ frontend/
 │   ├── composables/      # useAdminAuth (sessionStorage + X-Admin-Password header)
 │   ├── types/index.ts    # centralized TS types
 │   └── style.css         # Tailwind v4 import + both theme layers
-├── vercel.json           # Vite SPA rewrite for Vercel
+├── wrangler.jsonc        # Cloudflare Workers config (static assets, SPA routing)
 └── package.json          # pnpm; packageManager pins the version
 ```
 

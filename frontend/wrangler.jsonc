@@ -1,0 +1,12 @@
+// Cloudflare Workers config — assets-only (static Vite SPA, no server code).
+// Deployed by Workers Builds on push to main: build `pnpm build` → `npx wrangler deploy`.
+{
+  "name": "skill-tree-survey-frontend",
+  "compatibility_date": "2026-06-10",
+  "assets": {
+    "directory": "./dist",
+    // Serve index.html for any path that isn't a static asset (SPA routing,
+    // e.g. /admin) — replaces the old vercel.json rewrite.
+    "not_found_handling": "single-page-application"
+  }
+}

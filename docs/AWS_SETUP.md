@@ -51,7 +51,7 @@ task prod:deploy                   # scp .env.prod + compose, docker compose up 
 ```
 
 See [GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md) for the full first-time sequence
-(Cloudflare Tunnel token, GHCR image, Vercel, DNS).
+(Cloudflare Tunnel token, GHCR image, Workers Builds, DNS).
 
 ## Provisioning (manual fallback)
 

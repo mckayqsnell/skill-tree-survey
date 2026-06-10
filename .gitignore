@@ -44,8 +44,8 @@ dist-ssr/
 *-debug.log*
 .vite/
 
-# Vercel
-.vercel
+# Cloudflare Workers (local wrangler cache)
+.wrangler/
 
 # ============================================================================
 # Docker

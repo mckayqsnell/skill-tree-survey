@@ -28,7 +28,7 @@ back end, and a retro terminal UI (with a clean "stiff mode" alternative).
 | Backend | FastAPI, SQLAlchemy 2 (sync), Pydantic v2, SQLite |
 | Tooling | [uv](https://docs.astral.sh/uv/) (Python), [pnpm](https://pnpm.io/) (Node), [Task](https://taskfile.dev/) (orchestration), [1Password CLI](https://developer.1password.com/docs/cli/) (secrets) |
 | Observability | Sentry via `sentry-struct-logger` (structured logging) |
-| Deploy | Frontend → Vercel · Backend → Docker on AWS EC2, image from GHCR, auto-updated by [Watchtower](https://github.com/nicholas-fedor/watchtower), TLS via [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) |
+| Deploy | Frontend → [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) (static assets) · Backend → Docker on AWS EC2, image from GHCR, auto-updated by [Watchtower](https://github.com/nicholas-fedor/watchtower), TLS via [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) |
 
 ## Architecture
 
@@ -37,7 +37,7 @@ back end, and a retro terminal UI (with a clean "stiff mode" alternative).
                    │
         ┌──────────┴───────────┐
         ▼                      ▼
-   Vercel (SPA)        Cloudflare Tunnel  ──TLS at edge──┐
+   CF Workers (SPA)    Cloudflare Tunnel  ──TLS at edge──┐
    Vue 3 + Vite                                          │ outbound-only
         │  VITE_API_URL                                  ▼
         └──────── HTTPS ───────────────────►  EC2 (Graviton / AL2023)
@@ -50,7 +50,7 @@ back end, and a retro terminal UI (with a clean "stiff mode" alternative).
 
 Code ships automatically: push to `main` → GitHub Actions builds the backend image
 and pushes to GHCR → Watchtower on the EC2 pulls it within ~5 minutes. The frontend
-auto-deploys from Vercel's Git integration. There is no SSH-based deploy step.
+auto-deploys via Cloudflare Workers Builds. There is no SSH-based deploy step.
 
 ## Quick start (local)
 
@@ -149,7 +149,7 @@ frontend/
 │   ├── composables/      # useAdminAuth, etc.
 │   ├── api/             # Axios client + per-resource modules
 │   └── types/           # TypeScript definitions
-└── vercel.json          # Vite SPA config for Vercel
+└── wrangler.jsonc       # Cloudflare Workers config (static assets, SPA routing)
 infrastructure/terraform/ # IaC for the prod EC2 (see its README)
 tasks/                    # Task includes: env, helpers, prod
 docs/                     # Deployment, AWS, go-live runbook, DB schema

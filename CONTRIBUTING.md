@@ -42,12 +42,12 @@ Trunk-based — one protected branch:
 ```
 feature branch ──PR──▶ main ──▶ build + auto-deploy
                                  ├─ backend: GHCR image → Watchtower (~5 min)
-                                 └─ frontend: Vercel
+                                 └─ frontend: Cloudflare Workers
 ```
 
 - **`main`** — the only long-lived branch, protected. Merging a PR here *is* the
   deploy: the GHCR image build kicks off, Watchtower rolls it onto the EC2, and
-  Vercel ships the frontend.
+  Workers Builds ships the frontend.
 - **Feature branches** — `<username>/<ticket-id>/<short-description>`,
   e.g. `nate/HEA-123/add-user-dashboard`. (External contributors: fork and open a
   PR against `main`; the branch name convention is optional.)
