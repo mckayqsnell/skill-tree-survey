@@ -21,7 +21,7 @@ push ──▶ Vercel Git integration ──▶ build (pnpm) ──▶ https://s
                                               │
                                    recreates the backend container
                                               │
-                       Cloudflare Tunnel ──▶ https://api.skills-survey.<domain>
+                       Cloudflare Tunnel ──▶ https://skills-survey-api.<domain>
 ```
 
 - **Backend code** → push to `main` (paths `backend/**`) builds an arm64 image and
@@ -91,7 +91,7 @@ label, and `task prod:deploy`. Past images are retained in GHCR (the
 
 ## Monitoring & verification
 
-- **Health:** `curl https://api.skills-survey.<domain>/health` → `200` with valid
+- **Health:** `curl https://skills-survey-api.<domain>/health` → `200` with valid
   Cloudflare TLS. Set `PROD_HEALTH_URL` so `task prod:deploy` checks it for you.
 - **Containers:** `task prod:status` — `cloudflared`, `backend`, `watchtower` up.
 - **Tunnel:** `task prod:logs` (or the cloudflared logs) show "Registered tunnel connection".
@@ -107,7 +107,7 @@ label, and `task prod:deploy`. Past images are retained in GHCR (the
 | 502 / site down | `task prod:status`; is `backend` healthy and `cloudflared` connected? |
 | CORS errors in browser | `CORS_ORIGINS` in `SKILL-TREE-PROD` includes the Vercel origin → `task prod:deploy` |
 | Tunnel won't start | `TUNNEL_TOKEN` present in `.env.prod` (from 1Password)? |
-| Frontend can't reach API | `VITE_API_URL` in Vercel = `https://api.skills-survey.<domain>` |
+| Frontend can't reach API | `VITE_API_URL` in Vercel = `https://skills-survey-api.<domain>` |
 
 ## Related
 

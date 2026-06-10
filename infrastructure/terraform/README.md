@@ -139,7 +139,7 @@ Host skill-tree
 ssh skill-tree 'cloud-init status --wait'   # ~1-3 min on first boot
 #   ...from the repo root:
 task prod:deploy                            # ships compose + .env.prod, starts the stack
-#   verify: curl https://api.skills-survey.heal.engineering/health  → 200
+#   verify: curl https://skills-survey-api.heal.engineering/health  → 200
 ```
 
 ```bash

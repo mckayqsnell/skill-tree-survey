@@ -13,7 +13,7 @@ human runbook that ties it together.
 
 ## Decisions (confirmed)
 
-- ✅ **Backend hostname** (Cloudflare Tunnel): `api.skills-survey.heal.engineering`
+- ✅ **Backend hostname** (Cloudflare Tunnel): `skills-survey-api.heal.engineering`
 - ✅ **Frontend hostname** (Vercel): `skills-survey.heal.engineering`
 - ✅ **MIT LICENSE copyright holder**: `HEAL USA Inc.`
 
@@ -46,9 +46,9 @@ human runbook that ties it together.
 2. [ ] Copy the tunnel **token** (the long `eyJ…` string in the install command — just the token).
 3. [ ] Save it in **1Password → `SKILL-TREE-PROD` → item `TUNNEL_TOKEN`** (value in the password/credential field, tag `backend`).
 4. [ ] Add a **Public Hostname** to the tunnel:
-   - Subdomain `api.skills-survey`, Domain `heal.engineering`
+   - Subdomain `skills-survey-api`, Domain `heal.engineering` (single-level — two-level names aren't covered by free Universal SSL)
    - Service: **Type `HTTP`**, **URL `backend:8000`** ← the compose service name + port (cloudflared shares the compose network; **not** `localhost`).
-5. [ ] Save — Cloudflare auto-creates the DNS `CNAME` (`api.skills-survey…` → `<id>.cfargotunnel.com`).
+5. [ ] Save — Cloudflare auto-creates the DNS `CNAME` (`skills-survey-api…` → `<id>.cfargotunnel.com`).
 6. [ ] Set **1Password → `SKILL-TREE-PROD` → `CORS_ORIGINS`** to include the frontend origin: `["https://skills-survey.heal.engineering"]`.
 
 **Verify:** nothing yet (backend isn't deployed) — verified in Step 5.
@@ -108,7 +108,7 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
 3. [ ] `task prod:deploy` → regenerates `.env.prod` from `SKILL-TREE-PROD`, ships it + `docker-compose.prod.yml`, `compose up -d`, verifies the backend container is healthy.
 
 **Verify:**
-- [ ] `curl https://api.skills-survey.heal.engineering/health` → `200` with **valid TLS** (Cloudflare's edge cert — no cert work). Tip: set `PROD_HEALTH_URL=https://api.skills-survey.heal.engineering/health` so `task prod:deploy` checks it for you.
+- [ ] `curl https://skills-survey-api.heal.engineering/health` → `200` with **valid TLS** (Cloudflare's edge cert — no cert work). Tip: set `PROD_HEALTH_URL=https://skills-survey-api.heal.engineering/health` so `task prod:deploy` checks it for you.
 - [ ] `task prod:status` → `cloudflared`, `backend`, `watchtower` all up.
 - [ ] `task prod:logs` → cloudflared shows "Registered tunnel connection".
 
@@ -140,13 +140,13 @@ We stand up a brand-new box (no risky import). `prevent_destroy` is `false` for 
    - Build `pnpm build`, Output `dist` (defaults).
    - **Production Branch: `main`**.
 3. [ ] **Environment Variables** (Production) — both are `VITE_` = **public/client-exposed, never put secrets here**:
-   - [ ] `VITE_API_URL` = `https://api.skills-survey.heal.engineering`
+   - [ ] `VITE_API_URL` = `https://skills-survey-api.heal.engineering`
    - [ ] `VITE_CLOUDFRONT_URL` = your icon-asset host. ⚠️ Without it, survey icons fall back to a dead `https://example.cloudfront.net` placeholder. Use the value prod used previously, or host the icons and set it.
 4. [ ] Deploy. Then **Settings → Domains → add `skills-survey.heal.engineering`** → Vercel shows a DNS record → add it in **Cloudflare DNS** (follow Vercel's proxy guidance).
 
 **Verify:**
 - [ ] `https://skills-survey.heal.engineering` loads; complete a survey end-to-end; admin loads (analytics + drag-drop).
-- [ ] Browser Network tab → API calls hit `api.skills-survey…` and succeed (**no CORS errors** — confirms `CORS_ORIGINS` includes the Vercel domain).
+- [ ] Browser Network tab → API calls hit `skills-survey-api…` and succeed (**no CORS errors** — confirms `CORS_ORIGINS` includes the Vercel domain).
 - [ ] Survey **icons render** (the `VITE_CLOUDFRONT_URL` check).
 
 ---
