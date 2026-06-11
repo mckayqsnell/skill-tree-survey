@@ -29,11 +29,14 @@ human runbook that ties it together.
 | 3 | Terraform: provision **fresh** prod EC2 (**with Claude**) → update SSH config | after Phase 6 merged | ✅ done (no EIP — quota full; auto-assigned IP) |
 | 4 | Build image to GHCR + make package **public** | before first prod deploy | ✅ done |
 | 5 | First `task prod:deploy` to the new box + verify tunnel | after 1, 3, 4 | ✅ done (200 + valid TLS via edge) |
-| 6 | Terminate the **OLD** box + arm `prevent_destroy` | after 5 verifies green | ⬜ |
-| 7 | Cloudflare Workers project + domain (frontend) | after backend hostname is live | ⬜ |
-| 8 | **Drop the test EC2** + test DNS | after prod confirmed healthy | ⬜ |
-| 9 | Make repo public (open-source) | after Phase 7 docs + secret scrub | ⬜ |
-| 10 | Final end-to-end verification | last | ⬜ |
+| 6 | Terminate the **OLD** box + arm `prevent_destroy` | after 5 verifies green | ✅ done (old data migrated + verified first: 26 sessions / 4,447 responses) |
+| 7 | Cloudflare Workers project + domain (frontend) | after backend hostname is live | ✅ done (Workers Builds, pivoted from Vercel — $0, same account) |
+| 8 | **Drop the test EC2** + test DNS | after prod confirmed healthy | ✅ done (test box + old SG deleted; no test DNS/EIP existed) |
+| 9 | Make repo public (open-source) | after Phase 7 docs + secret scrub | ✅ done (gitleaks: 110 commits, no leaks) |
+| 10 | Final end-to-end verification | last | ✅ done (Playwright E2E both themes, CORS, admin API, icons; auto-deploy loop verified by the very PR that ticked this row) |
+
+> 🎉 **All steps complete — the modernization is live.**
+> Frontend: <https://skills-survey.heal.engineering> · API: <https://skills-survey-api.heal.engineering/health>
 
 ---
 

@@ -71,7 +71,7 @@ class Settings(BaseSettings):
     # Application
     # -------------------------------------------------------------------------
     APP_NAME: str = "Skill Tree Survey"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "1.1.0"
     DEBUG: bool = False
 
     # -------------------------------------------------------------------------
