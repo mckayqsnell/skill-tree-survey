@@ -1,0 +1,19 @@
+# Dependabot keeps the SHA-pinned GitHub Actions in this repo's workflows
+# up to date. It bumps the pinned commit SHA AND rewrites the `# vX.Y.Z`
+# version comment, opening a PR for review — so pinning stays secure without
+# manual tracking. Updates are grouped into a single PR to reduce noise.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    # Wait a few days before adopting a freshly published release, so a
+    # compromised/yanked version has time to be caught (defense in depth
+    # against retargeting attacks). Only applies to version updates.
+    cooldown:
+      default-days: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
